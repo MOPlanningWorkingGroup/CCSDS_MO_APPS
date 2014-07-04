@@ -5,8 +5,8 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.ProcedureDefinitionServiceHelper;
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.provider.SubscribePublisher;
+import org.ccsds.moims.mo.automation.proceduredefinition.ProcedureDefinitionHelper;
+import org.ccsds.moims.mo.automation.proceduredefinition.provider.SubscribePublisher;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -88,7 +88,7 @@ public class ProcedureDefinitionServiceProvider {
 				null, new UInteger(0));
 		Properties props = System.getProperties();
 		serviceProvider = providerMgr.createProvider("ProcedureDefinition", null,
-				ProcedureDefinitionServiceHelper.PROCEDUREDEFINITIONSERVICE_SERVICE, new Blob("".getBytes()),
+				ProcedureDefinitionHelper.PROCEDUREDEFINITION_SERVICE, new Blob("".getBytes()),
 				procedureDefinitionService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				props, true, null);
 		LOGGER.info("Procedure Definition Service Provider started!");

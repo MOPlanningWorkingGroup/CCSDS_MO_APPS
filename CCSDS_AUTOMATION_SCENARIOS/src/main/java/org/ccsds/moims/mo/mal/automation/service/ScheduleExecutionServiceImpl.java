@@ -3,13 +3,13 @@ package org.ccsds.moims.mo.mal.automation.service;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.provider.MonitorExecutionPublisher;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.provider.ScheduleExecutionServiceInheritanceSkeleton;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.provider.SubscribePublisher;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.structures.Schedule;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.structures.ScheduleFilter;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.structures.ScheduleState;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.structures.ScheduleStatus;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorExecutionPublisher;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.ScheduleExecutionInheritanceSkeleton;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.SubscribePublisher;
+import org.ccsds.moims.mo.automation.scheduleexecution.structures.Schedule;
+import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleFilter;
+import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleState;
+import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleStatus;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
@@ -26,12 +26,13 @@ import org.ccsds.moims.mo.mal.structures.UInteger;
  *
  */
 public class ScheduleExecutionServiceImpl extends
-		ScheduleExecutionServiceInheritanceSkeleton {
+		ScheduleExecutionInheritanceSkeleton {
 	
 	private SubscribePublisher subscribePublisher;
 	private MonitorExecutionPublisher monitorExecutionPublisher;
 	private Map<Long, Schedule> schedules = new HashMap<Long, Schedule>();
 	private Map<Long, ScheduleStatus> scheduleStatuses = new HashMap<Long, ScheduleStatus>();
+	private Long autoincrement = 0L;
 
 	@Override
 	public SubscribePublisher createSubscribePublisher(IdentifierList domain,
@@ -55,11 +56,12 @@ public class ScheduleExecutionServiceImpl extends
 
 	public Long submitSchedule(Schedule schedule, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		schedules.put(schedule.getId(), schedule);
 		ScheduleStatus status = new ScheduleStatus();
-		status.setSchId(schedule.getId());
-		scheduleStatuses.put(schedule.getId(), status);
-		return schedule.getId();
+		autoincrement++;
+		Long id = autoincrement;
+		schedules.put(id, schedule);
+		scheduleStatuses.put(id, status);
+		return id;
 	}
 
 	public void updateSchedule(Long _Long0, Schedule schedule,
@@ -82,8 +84,8 @@ public class ScheduleExecutionServiceImpl extends
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
 		LongList list = new LongList();
-		for (Schedule schedule : schedules.values()) {
-			list.add(schedule.getId());
+		for (Long id : schedules.keySet()) {
+			list.add(id);
 		}
 		return list;
 	}
@@ -99,7 +101,6 @@ public class ScheduleExecutionServiceImpl extends
 			throw new MALException("Schedule is running already!");
 		}
 		status = new ScheduleStatus();
-		status.setSchId(_Long0);
 		status.setState(ScheduleState.RUNNING);
 		scheduleStatuses.put(_Long0, status);
 	}
@@ -114,7 +115,6 @@ public class ScheduleExecutionServiceImpl extends
 		if (status != null && status.getState() != ScheduleState.RUNNING) {
 			throw new MALException("Schedule is not running!");
 		}
-		status.setSchId(_Long0);
 		status.setState(ScheduleState.PAUSED);
 		scheduleStatuses.put(_Long0, status);
 	}
@@ -129,7 +129,6 @@ public class ScheduleExecutionServiceImpl extends
 		if (status != null && status.getState() != ScheduleState.PAUSED) {
 			throw new MALException("Schedule is not paused!");
 		}
-		status.setSchId(_Long0);
 		status.setState(ScheduleState.RUNNING);
 		scheduleStatuses.put(_Long0, status);
 	}
@@ -144,7 +143,6 @@ public class ScheduleExecutionServiceImpl extends
 		if (status != null && status.getState() != ScheduleState.RUNNING) {
 			throw new MALException("Schedule is not running!");
 		}
-		status.setSchId(_Long0);
 		status.setState(ScheduleState.ABORTED);
 		scheduleStatuses.put(_Long0, status);
 	}

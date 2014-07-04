@@ -18,12 +18,12 @@ import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
-import org.ccsds.moims.mo.planning.planningrequestservice.consumer.PlanningRequestServiceAdapter;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequest;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestFilter;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestGroup;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestList;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.StateEnum;
+import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilter;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestGroup;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
 import org.ccsds.moims.mo.mal.planning.provider.PlanningRequestServiceProvider;
 import org.ccsds.moims.mo.mal.planning.service.PlanningRequestServiceImpl;
 import org.junit.AfterClass;
@@ -39,10 +39,10 @@ public class PlanningRequestServiceTest {
 
 	public static final Logger LOGGER = Logger
 			.getLogger(PlanningRequestServiceTest.class.getName());
-	private static PlanningRequestServiceAdapter adapter = null;
+	private static PlanningRequestAdapter adapter = null;
 	private static PlanningRequestServiceProvider provider = null;
 	private static PlanningRequestServiceConsumer consumer = null;
-	private static Long PLANNING_REQUEST_ID = 12L;
+	private Long planningRequestId;
 
 	@BeforeClass
 	public static void testSetup() throws IOException, MALInteractionException, MALException {
@@ -77,9 +77,7 @@ public class PlanningRequestServiceTest {
 	public void submitPlanningRequest() throws MALInteractionException,
 			MALException {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setId(PLANNING_REQUEST_ID);
 		PlanningRequestGroup group = new PlanningRequestGroup();
-		group.setId(1L);
 		consumer.getPlanningRequestService().submitPlanningRequest(group, pr);
 		assertTrue(true);
 	}
@@ -88,12 +86,9 @@ public class PlanningRequestServiceTest {
 	public void getPlanningRequest() throws MALInteractionException,
 			MALException {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setId(PLANNING_REQUEST_ID);
 		PlanningRequestGroup group = new PlanningRequestGroup();
-		group.setId(1L);
-		consumer.getPlanningRequestService().submitPlanningRequest(group, pr);
-		pr = consumer.getPlanningRequestService().getPlanningRequest(
-				PLANNING_REQUEST_ID);
+		planningRequestId = consumer.getPlanningRequestService().submitPlanningRequest(group, pr);
+		pr = consumer.getPlanningRequestService().getPlanningRequest(planningRequestId);
 		assertTrue(pr != null && pr.getStatus() == StateEnum.SUBMITTED);
 	}
 
@@ -101,12 +96,11 @@ public class PlanningRequestServiceTest {
 	public void updatePlanningRequest() throws MALInteractionException,
 			MALException {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setId(PLANNING_REQUEST_ID);
 		pr.setStatus(StateEnum.ACCEPTED);
 		consumer.getPlanningRequestService().updatePlanningRequest(
-				PLANNING_REQUEST_ID, pr);
+				planningRequestId, pr);
 		pr = consumer.getPlanningRequestService().getPlanningRequest(
-				PLANNING_REQUEST_ID);
+				planningRequestId);
 		assertTrue(pr != null && pr.getStatus() == StateEnum.ACCEPTED);
 	}
 
@@ -114,9 +108,9 @@ public class PlanningRequestServiceTest {
 	public void removePlanningRequest() throws MALInteractionException,
 			MALException {
 		consumer.getPlanningRequestService().removePlanningRequest(
-				PLANNING_REQUEST_ID);
+				planningRequestId);
 		PlanningRequest pr = consumer.getPlanningRequestService()
-				.getPlanningRequest(PLANNING_REQUEST_ID);
+				.getPlanningRequest(planningRequestId);
 		assertTrue(pr == null);
 	}
 
@@ -124,53 +118,53 @@ public class PlanningRequestServiceTest {
 	public void getPlanningRequestStatus() throws MALInteractionException,
 			MALException {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setId(PLANNING_REQUEST_ID);
 		PlanningRequestGroup group = new PlanningRequestGroup();
-		group.setId(1L);
 		consumer.getPlanningRequestService().submitPlanningRequest(group, pr);
 		StateEnum status = consumer.getPlanningRequestService()
-				.getPlanningRequestStatus(PLANNING_REQUEST_ID);
-		assertTrue(status == StateEnum.SUBMITTED);
+				.getPlanningRequestStatus(planningRequestId);
+		assertTrue(status == StateEnum.ACCEPTED);
 	}
 
 	@Test
 	public void getPlanningRequestList() throws MALInteractionException,
 			MALException {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setId(100L);
 		PlanningRequestGroup group = new PlanningRequestGroup();
-		group.setId(1L);
 		consumer.getPlanningRequestService().submitPlanningRequest(group, pr);
 		PlanningRequestList list = consumer.getPlanningRequestService()
 				.getPlanningRequestList(new PlanningRequestFilter());
-		assertTrue(list.size() == 2);
+		assertTrue(list.size() == 4);
 	}
 
 	@Test
 	public void subscribingTest() throws MALInteractionException, MALException, InterruptedException, IOException {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setId(PLANNING_REQUEST_ID);
 		PlanningRequestGroup group = new PlanningRequestGroup();
-		group.setId(1L);
 		TestAdapter testAdapter = new TestAdapter();
 		consumer.getPlanningRequestService().asyncSubmitPlanningRequest(group, pr, testAdapter);
 		Thread.sleep(300);
 		pr.setStatus(StateEnum.ACCEPTED);
-		consumer.getPlanningRequestService().asyncUpdatePlanningRequest(PLANNING_REQUEST_ID, pr, testAdapter);
+		consumer.getPlanningRequestService().asyncUpdatePlanningRequest(testAdapter.getPlanningRequestId(), pr, testAdapter);
 		Thread.sleep(300);
-		consumer.getPlanningRequestService().asyncRemovePlanningRequest(PLANNING_REQUEST_ID, testAdapter);
+		consumer.getPlanningRequestService().asyncRemovePlanningRequest(testAdapter.getPlanningRequestId(), testAdapter);
 		assertTrue(testAdapter.counter > 0);
 	}
 	
-	private class TestAdapter extends PlanningRequestServiceAdapter {
+	private class TestAdapter extends PlanningRequestAdapter {
 		
 		public int counter = 0;
+		private Long planningRequestId;
+
+		public Long getPlanningRequestId() {
+			return planningRequestId;
+		}
 
 		@Override
-		public void submitPlanningRequestAckReceived(
-				MALMessageHeader msgHeader, Map qosProperties) {
+		public void submitPlanningRequestResponseReceived(
+				MALMessageHeader msgHeader, Long _Long0, Map qosProperties) {
 			counter++;
-			super.submitPlanningRequestAckReceived(msgHeader, qosProperties);
+			planningRequestId = _Long0;
+			super.submitPlanningRequestResponseReceived(msgHeader, _Long0, qosProperties);
 		}
 
 		@Override

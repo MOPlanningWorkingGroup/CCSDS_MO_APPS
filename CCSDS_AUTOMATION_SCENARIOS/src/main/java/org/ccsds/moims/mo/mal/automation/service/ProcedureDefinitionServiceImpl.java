@@ -3,9 +3,9 @@ package org.ccsds.moims.mo.mal.automation.service;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.provider.ProcedureDefinitionServiceInheritanceSkeleton;
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.structures.ProcedureDefinition;
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.structures.ProcedureDefinitionFilter;
+import org.ccsds.moims.mo.automation.proceduredefinition.provider.ProcedureDefinitionInheritanceSkeleton;
+import org.ccsds.moims.mo.automation.proceduredefinition.structures.ProcedureDefinition;
+import org.ccsds.moims.mo.automation.proceduredefinition.structures.ProcedureDefinitionFilter;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
@@ -17,7 +17,7 @@ import org.ccsds.moims.mo.mal.structures.LongList;
  *
  */
 public class ProcedureDefinitionServiceImpl extends
-		ProcedureDefinitionServiceInheritanceSkeleton {
+		ProcedureDefinitionInheritanceSkeleton {
 	
 	private static Map<Long, ProcedureDefinition> procedureDefinitions = new HashMap<Long, ProcedureDefinition>();
 	private Long autoincrement = 1L;
@@ -25,7 +25,7 @@ public class ProcedureDefinitionServiceImpl extends
 	public Long addProcedureDefinition(ProcedureDefinition procedureDefinition,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
-		procedureDefinition.setProcId(autoincrement++);
+		autoincrement++;
 		procedureDefinitions.put(autoincrement, procedureDefinition);
 		return autoincrement;
 	}
@@ -62,8 +62,8 @@ public class ProcedureDefinitionServiceImpl extends
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
 		LongList list = new LongList();
-		for (ProcedureDefinition pd : procedureDefinitions.values()) {
-			list.add(pd.getProcId());
+		for (Long id : procedureDefinitions.keySet()) {
+			list.add(id);
 		}
 		return list;
 	}

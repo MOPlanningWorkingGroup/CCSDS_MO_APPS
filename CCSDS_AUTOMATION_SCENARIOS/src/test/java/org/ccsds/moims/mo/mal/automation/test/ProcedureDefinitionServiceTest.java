@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.consumer.ProcedureDefinitionServiceAdapter;
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.structures.ProcedureDefinition;
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.structures.ProcedureDefinitionFilter;
+import org.ccsds.moims.mo.automation.proceduredefinition.consumer.ProcedureDefinitionAdapter;
+import org.ccsds.moims.mo.automation.proceduredefinition.structures.ProcedureDefinition;
+import org.ccsds.moims.mo.automation.proceduredefinition.structures.ProcedureDefinitionFilter;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
@@ -37,10 +37,9 @@ public class ProcedureDefinitionServiceTest {
 
 	public static final Logger LOGGER = Logger
 			.getLogger(ProcedureDefinitionServiceTest.class.getName());
-	private static ProcedureDefinitionServiceAdapter adapter = null;
+	private static ProcedureDefinitionAdapter adapter = null;
 	private static ProcedureDefinitionServiceProvider provider = null;
 	private static ProcedureDefinitionServiceConsumer consumer = null;
-	private final static long PROCEDURE_ID = 12;
 	
 	@BeforeClass
 	public static void testSetup() throws IOException, MALInteractionException, MALException {
@@ -102,42 +101,37 @@ public class ProcedureDefinitionServiceTest {
 	@Test
 	public void testAddProcedureDefinition() throws MALInteractionException, MALException {
 		ProcedureDefinition pd = new ProcedureDefinition();
-		pd.setProcId(PROCEDURE_ID);
-		consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
-		assertTrue(true);
+		Long procDefId = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
+		assertTrue(procDefId != null && procDefId > 0);
 	}
 	
 	@Test
 	public void testRemoveProcedureDefinition() throws MALInteractionException, MALException {
 		ProcedureDefinition pd = new ProcedureDefinition();
-		pd.setProcId(PROCEDURE_ID);
-		Long id = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
-		consumer.getProcedureDefinitionService().removeProcedureDefinition(id);
+		Long procDefId = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
+		consumer.getProcedureDefinitionService().removeProcedureDefinition(procDefId);
 		assertTrue(true);
 	}
 	
 	@Test
 	public void testUpdateProcedureDefinition() throws MALInteractionException, MALException {
 		ProcedureDefinition pd = new ProcedureDefinition();
-		pd.setProcId(PROCEDURE_ID);
-		Long id = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
-		consumer.getProcedureDefinitionService().updateProcedureDefinition(id, pd);
+		Long procDefId = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
+		consumer.getProcedureDefinitionService().updateProcedureDefinition(procDefId, pd);
 		assertTrue(true);
 	}
 	
 	@Test
 	public void testGetProcedureDefinition() throws MALInteractionException, MALException {
 		ProcedureDefinition pd = new ProcedureDefinition();
-		pd.setProcId(PROCEDURE_ID);
-		Long id = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
-		pd = consumer.getProcedureDefinitionService().getProcedureDefinition(id);
+		Long procDefId = consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
+		pd = consumer.getProcedureDefinitionService().getProcedureDefinition(procDefId);
 		assertTrue(pd != null);
 	}
 	
 	@Test
 	public void testGetProcedureDefinitionList() throws MALInteractionException, MALException {
 		ProcedureDefinition pd = new ProcedureDefinition();
-		pd.setProcId(PROCEDURE_ID);
 		consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		LongList list = consumer.getProcedureDefinitionService().getProcedureDefinitionList(new ProcedureDefinitionFilter());
 		assertTrue(list.size() > 0);
@@ -147,24 +141,30 @@ public class ProcedureDefinitionServiceTest {
 	public void subscribingTest() throws MALInteractionException, MALException, InterruptedException, IOException {
 		TestAdapter testAdapter = new TestAdapter();
 		ProcedureDefinition pd = new ProcedureDefinition();
-		pd.setProcId(PROCEDURE_ID);
 		consumer.getProcedureDefinitionService().asyncAddProcedureDefinition(pd, testAdapter);
+		Long procDefId = testAdapter.procDefId;
 		Thread.sleep(300);
-		consumer.getProcedureDefinitionService().asyncUpdateProcedureDefinition(pd.getProcId(), pd, testAdapter);
+		consumer.getProcedureDefinitionService().asyncUpdateProcedureDefinition(procDefId, pd, testAdapter);
 		Thread.sleep(300);
-		consumer.getProcedureDefinitionService().asyncRemoveProcedureDefinition(pd.getProcId(), testAdapter);
+		consumer.getProcedureDefinitionService().asyncRemoveProcedureDefinition(procDefId, testAdapter);
 		Thread.sleep(300);
 		assertTrue(testAdapter.counter > 0);
 	}
 	
-	private class TestAdapter extends ProcedureDefinitionServiceAdapter {
+	private class TestAdapter extends ProcedureDefinitionAdapter {
 		
 		public int counter = 0;
+		private Long procDefId;
+
+		public Long getProcDefId() {
+			return procDefId;
+		}
 
 		@Override
 		public void addProcedureDefinitionResponseReceived(
 				MALMessageHeader msgHeader, Long _Long0, Map qosProperties) {
 			counter++;
+			procDefId = _Long0;
 			super.addProcedureDefinitionResponseReceived(msgHeader, _Long0, qosProperties);
 		}
 

@@ -24,8 +24,8 @@ import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
-import org.ccsds.moims.mo.planning.planningrequestservice.PlanningRequestServiceHelper;
-import org.ccsds.moims.mo.planning.planningrequestservice.consumer.PlanningRequestServiceStub;
+import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
+import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 
 /**
  * PlanningRequest service consumer.
@@ -41,7 +41,7 @@ public class PlanningRequestServiceConsumer {
 	private MALContext mal;
 	private MALConsumerManager consumerMgr;
 	private MALConsumer tmConsumer = null;
-	private PlanningRequestServiceStub planningRequestService;
+	private PlanningRequestStub planningRequestService;
 	private String propertyFile;
 	private final IdentifierList domain = new IdentifierList();
 	private final Identifier network = new Identifier("GROUND");
@@ -122,14 +122,14 @@ public class PlanningRequestServiceConsumer {
 		consumerMgr = mal.createConsumerManager();
 		tmConsumer = consumerMgr.createConsumer((String) null, new URI(uri),
 				new URI(broker),
-				PlanningRequestServiceHelper.PLANNINGREQUESTSERVICE_SERVICE,
+				PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
-		planningRequestService = new PlanningRequestServiceStub(tmConsumer);
+		planningRequestService = new PlanningRequestStub(tmConsumer);
 		planningRequestService.subscribeRegister(subRequestWildcard, new PlanningRequestServiceConsumerAdapter());
 	}
 
-	public PlanningRequestServiceStub getPlanningRequestService() {
+	public PlanningRequestStub getPlanningRequestService() {
 		return planningRequestService;
 	}
 

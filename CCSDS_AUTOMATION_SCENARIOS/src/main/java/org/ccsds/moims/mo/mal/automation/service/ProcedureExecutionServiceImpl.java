@@ -3,12 +3,12 @@ package org.ccsds.moims.mo.mal.automation.service;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.ccsds.moims.mo.automation.procedureexecutionservice.provider.ProcedureExecutionServiceInheritanceSkeleton;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureInvocationDetails;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureOccurrence;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureOccurrenceFilter;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureState;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureStatus;
+import org.ccsds.moims.mo.automation.procedureexecution.provider.ProcedureExecutionInheritanceSkeleton;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureInvocationDetails;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureOccurrence;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureOccurrenceFilter;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureState;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureStatus;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -24,7 +24,7 @@ import org.ccsds.moims.mo.mal.structures.UOctet;
  *
  */
 public class ProcedureExecutionServiceImpl extends
-		ProcedureExecutionServiceInheritanceSkeleton {
+		ProcedureExecutionInheritanceSkeleton {
 	
 	private Map<Long, ProcedureOccurrence> procedureOccurrences = new HashMap<Long, ProcedureOccurrence>();
 
@@ -37,7 +37,7 @@ public class ProcedureExecutionServiceImpl extends
 		//}
 
 		MALOperation operation = MALContextFactory.lookupArea(new Identifier("Automation"), new UOctet())
-				.getServiceByName(new Identifier("ProcedureDefinitionService"))
+				.getServiceByName(new Identifier("ProcedureDefinition"))
 				.getOperationByName(new Identifier("getProcedureDefinition"));
 		
 		ProcedureOccurrence pe = procedureOccurrences.get(_Long0);
@@ -45,9 +45,7 @@ public class ProcedureExecutionServiceImpl extends
 			throw new MALException("Procedure is running already!");
 		}
 		pe = new ProcedureOccurrence();
-		pe.setProcId(_Long0);
 		ProcedureStatus status = new ProcedureStatus();
-		status.setProcId(_Long0);
 		status.setState(ProcedureState.RUNNING);
 		pe.setStatus(status);
 		procedureOccurrences.put(_Long0, pe);
@@ -94,8 +92,8 @@ public class ProcedureExecutionServiceImpl extends
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
 		LongList list = new LongList();
-		for (ProcedureOccurrence po : procedureOccurrences.values()) {
-			list.add(po.getProcId());
+		for (Long id : procedureOccurrences.keySet()) {
+			list.add(id);
 		}
 		return list;
 	}

@@ -5,9 +5,9 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.ProcedureDefinitionServiceHelper;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.ProcedureExecutionServiceHelper;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.provider.MonitorPublisher;
+import org.ccsds.moims.mo.automation.proceduredefinition.ProcedureDefinitionHelper;
+import org.ccsds.moims.mo.automation.procedureexecution.ProcedureExecutionHelper;
+import org.ccsds.moims.mo.automation.procedureexecution.provider.MonitorPublisher;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -94,11 +94,11 @@ public static final Logger LOGGER = Logger.getLogger(ProcedureDefinitionServiceP
 				null, new UInteger(0));
 		Properties props = System.getProperties();
 		serviceProvider = providerMgr.createProvider("ProcedureExecution", null,
-				ProcedureExecutionServiceHelper.PROCEDUREEXECUTIONSERVICE_SERVICE, new Blob("".getBytes()),
+				ProcedureExecutionHelper.PROCEDUREEXECUTION_SERVICE, new Blob("".getBytes()),
 				procedureExecutionService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				props, true, null);
 		procedureDefinitionServiceProvider = providerMgr.createProvider("ProcedureDefinition", null,
-				ProcedureDefinitionServiceHelper.PROCEDUREDEFINITIONSERVICE_SERVICE, new Blob("".getBytes()),
+				ProcedureDefinitionHelper.PROCEDUREDEFINITION_SERVICE, new Blob("".getBytes()),
 				procedureDefinitionService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				props, true, null);
 		LOGGER.info("Procedure Execution Service Provider started!");

@@ -21,9 +21,9 @@ import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.planning.PlanningHelper;
-import org.ccsds.moims.mo.planning.planningrequestservice.PlanningRequestServiceHelper;
-import org.ccsds.moims.mo.planning.planningrequestservice.provider.PlanningRequestServiceInheritanceSkeleton;
-import org.ccsds.moims.mo.planning.planningrequestservice.provider.SubscribePublisher;
+import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
+import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
+import org.ccsds.moims.mo.planning.planningrequest.provider.SubscribePublisher;
 import org.ccsds.moims.mo.mal.planning.service.PlanningRequestServiceImpl;
 
 /**
@@ -43,7 +43,7 @@ public class PlanningRequestServiceProvider {
 	private String propertyFile;
 	private SubscribePublisher publisher;
 	
-	public PlanningRequestServiceInheritanceSkeleton getTestService() {
+	public PlanningRequestInheritanceSkeleton getTestService() {
 		return planningRequestService;
 	}
 
@@ -86,7 +86,7 @@ public class PlanningRequestServiceProvider {
 
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
-		PlanningRequestServiceHelper.init(MALContextFactory.getElementFactoryRegistry());
+		PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
 
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
@@ -96,7 +96,7 @@ public class PlanningRequestServiceProvider {
 				null, new UInteger(0));
 		Properties props = System.getProperties();
 		serviceProvider = providerMgr.createProvider("RequestPlanning", null,
-				PlanningRequestServiceHelper.PLANNINGREQUESTSERVICE_SERVICE, new Blob("".getBytes()),
+				PlanningRequestHelper.PLANNINGREQUEST_SERVICE, new Blob("".getBytes()),
 				planningRequestService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				props, true, null);
 		LOGGER.info("Request Planning Provider started!");

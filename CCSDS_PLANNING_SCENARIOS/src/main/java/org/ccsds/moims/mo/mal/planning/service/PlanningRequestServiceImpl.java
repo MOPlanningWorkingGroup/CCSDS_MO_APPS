@@ -2,6 +2,7 @@ package org.ccsds.moims.mo.mal.planning.service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -17,22 +18,22 @@ import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
-import org.ccsds.moims.mo.planning.planningrequestservice.provider.PlanningRequestServiceInheritanceSkeleton;
-import org.ccsds.moims.mo.planning.planningrequestservice.provider.SubscribePublisher;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequest;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestEventList;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestFilter;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestEvent;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestGroup;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.PlanningRequestList;
-import org.ccsds.moims.mo.planning.planningrequestservice.structures.StateEnum;
+import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
+import org.ccsds.moims.mo.planning.planningrequest.provider.SubscribePublisher;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestEventList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilter;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestEvent;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestGroup;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
 
 /**
  * PlanningRequest service implementation.
  * @author krikse
  *
  */
-public class PlanningRequestServiceImpl extends PlanningRequestServiceInheritanceSkeleton {
+public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkeleton {
 	
 	private Map<Long, PlanningRequest> _PlanningRequest1Map = new HashMap<Long, PlanningRequest>();
 	private SubscribePublisher publisher;
@@ -47,13 +48,16 @@ public class PlanningRequestServiceImpl extends PlanningRequestServiceInheritanc
 		return publisher;
 	}
 
-	public void submitPlanningRequest(
+	public Long submitPlanningRequest(
 			PlanningRequestGroup _PlanningRequestGroup0,
 			PlanningRequest _PlanningRequest1, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		_PlanningRequest1.setStatus(StateEnum.SUBMITTED);
-		_PlanningRequest1Map.put(_PlanningRequest1.getId(), _PlanningRequest1);
-		publish(_PlanningRequest1.getId(), UpdateType.CREATION);
+		UUID uuId = UUID.randomUUID();
+		Long id = uuId.getMostSignificantBits();
+		_PlanningRequest1Map.put(id, _PlanningRequest1);
+		publish(id, UpdateType.CREATION);
+		return id;
 	}
 
 	public PlanningRequest getPlanningRequest(Long _Long0,
@@ -65,8 +69,8 @@ public class PlanningRequestServiceImpl extends PlanningRequestServiceInheritanc
 	public void updatePlanningRequest(Long _Long0,
 			PlanningRequest _PlanningRequest1, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		_PlanningRequest1Map.put(_PlanningRequest1.getId(), _PlanningRequest1);
-		publish(_PlanningRequest1.getId(), UpdateType.UPDATE);
+		_PlanningRequest1Map.put(_Long0, _PlanningRequest1);
+		publish(_Long0, UpdateType.UPDATE);
 	}
 
 	public void removePlanningRequest(Long _Long0, MALInteraction interaction)

@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.structures.ProcedureDefinition;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.consumer.ProcedureExecutionServiceAdapter;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureInvocationDetails;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureOccurrence;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureState;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.structures.ProcedureStatus;
+import org.ccsds.moims.mo.automation.proceduredefinition.structures.ProcedureDefinition;
+import org.ccsds.moims.mo.automation.procedureexecution.consumer.ProcedureExecutionAdapter;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureInvocationDetails;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureOccurrence;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureState;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureStatus;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
@@ -40,7 +40,7 @@ public class ProcedureExecutionServiceTest {
 	
 	public static final Logger LOGGER = Logger
 			.getLogger(ProcedureExecutionServiceTest.class.getName());
-	private static ProcedureExecutionServiceAdapter adapter = null;
+	private static ProcedureExecutionAdapter adapter = null;
 	private static ProcedureExecutionServiceProvider provider = null;
 	private static ProcedureExecutionServiceConsumer consumer = null;
 	
@@ -106,7 +106,6 @@ public class ProcedureExecutionServiceTest {
 		ProcedureDefinition pd = new ProcedureDefinition();
 		Long procId = 12L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		details.setProcId(procId);
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.RUNNING);
@@ -117,7 +116,6 @@ public class ProcedureExecutionServiceTest {
 		ProcedureDefinition pd = new ProcedureDefinition();
 		Long procId = 13L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		details.setProcId(procId);
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		consumer.getProcedureExecutionService().pauseProcedure(procId);
 		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
@@ -129,7 +127,6 @@ public class ProcedureExecutionServiceTest {
 		ProcedureDefinition pd = new ProcedureDefinition();
 		Long procId = 14L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		details.setProcId(procId);
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		consumer.getProcedureExecutionService().pauseProcedure(procId);
 		consumer.getProcedureExecutionService().resumeProcedure(procId);
@@ -142,7 +139,6 @@ public class ProcedureExecutionServiceTest {
 		ProcedureDefinition pd = new ProcedureDefinition();
 		Long procId = 15L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		details.setProcId(procId);
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		consumer.getProcedureExecutionService().terminateProcedure(procId);
 		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
@@ -154,7 +150,6 @@ public class ProcedureExecutionServiceTest {
 		ProcedureDefinition pd = new ProcedureDefinition();
 		Long procId = 16L; //;ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		details.setProcId(procId);
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		ProcedureStatus ps = consumer.getProcedureExecutionService().getStatus(procId);
 		assertTrue(ps != null && ps.getState() == ProcedureState.RUNNING);
@@ -166,7 +161,6 @@ public class ProcedureExecutionServiceTest {
 		ProcedureDefinition pd = new ProcedureDefinition();
 		Long procId = 17L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		details.setProcId(procId);
 		consumer.getProcedureExecutionService().asyncStartProcedure(procId, details, testAdapter);
 		Thread.sleep(300);
 		consumer.getProcedureExecutionService().asyncPauseProcedure(procId, testAdapter);
@@ -177,7 +171,7 @@ public class ProcedureExecutionServiceTest {
 		assertTrue(testAdapter.counter > 0);
 	}
 	
-	private class TestAdapter extends ProcedureExecutionServiceAdapter {
+	private class TestAdapter extends ProcedureExecutionAdapter {
 		
 		public int counter = 0;
 

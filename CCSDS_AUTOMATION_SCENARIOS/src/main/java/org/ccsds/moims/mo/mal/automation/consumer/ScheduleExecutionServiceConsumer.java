@@ -6,8 +6,8 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.ScheduleExecutionServiceHelper;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.consumer.ScheduleExecutionServiceStub;
+import org.ccsds.moims.mo.automation.scheduleexecution.ScheduleExecutionHelper;
+import org.ccsds.moims.mo.automation.scheduleexecution.consumer.ScheduleExecutionStub;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -41,7 +41,7 @@ public class ScheduleExecutionServiceConsumer {
 	private MALContext mal;
 	private MALConsumerManager consumerMgr;
 	private MALConsumer tmConsumer = null;
-	private ScheduleExecutionServiceStub scheduleExecutionService;
+	private ScheduleExecutionStub scheduleExecutionService;
 	private String propertyFile;
 	private final IdentifierList domain = new IdentifierList();
 	private final Identifier network = new Identifier("GROUND");
@@ -122,15 +122,15 @@ public class ScheduleExecutionServiceConsumer {
 		consumerMgr = mal.createConsumerManager();
 		tmConsumer = consumerMgr.createConsumer((String) null, new URI(uri),
 				new URI(broker),
-				ScheduleExecutionServiceHelper.SCHEDULEEXECUTIONSERVICE_SERVICE,
+				ScheduleExecutionHelper.SCHEDULEEXECUTION_SERVICE,
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
-		scheduleExecutionService = new ScheduleExecutionServiceStub(tmConsumer);
+		scheduleExecutionService = new ScheduleExecutionStub(tmConsumer);
 		scheduleExecutionService.subscribeRegister(subRequestWildcard, new ScheduleExecutionServiceConsumerAdapter());
 		scheduleExecutionService.monitorExecutionRegister(subRequestWildcard, new ScheduleExecutionServiceConsumerAdapter());
 	}
 
-	public ScheduleExecutionServiceStub getScheduleExecutionService() {
+	public ScheduleExecutionStub getScheduleExecutionService() {
 		return scheduleExecutionService;
 	}
 

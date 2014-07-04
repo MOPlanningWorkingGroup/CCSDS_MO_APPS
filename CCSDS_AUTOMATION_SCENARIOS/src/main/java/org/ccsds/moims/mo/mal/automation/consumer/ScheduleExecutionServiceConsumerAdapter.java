@@ -3,12 +3,7 @@ package org.ccsds.moims.mo.mal.automation.consumer;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.consumer.ScheduleExecutionServiceAdapter;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.structures.LevelOfDetailList;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.structures.ScheduleFilterList;
-import org.ccsds.moims.mo.mal.structures.Identifier;
-import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
+import org.ccsds.moims.mo.automation.scheduleexecution.consumer.ScheduleExecutionAdapter;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 
 /**
@@ -16,7 +11,7 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
  * @author krikse
  *
  */
-public class ScheduleExecutionServiceConsumerAdapter extends ScheduleExecutionServiceAdapter {
+public class ScheduleExecutionServiceConsumerAdapter extends ScheduleExecutionAdapter {
 	
 	public static final Logger LOGGER = Logger
 			.getLogger(ScheduleExecutionServiceConsumerAdapter.class.getName());

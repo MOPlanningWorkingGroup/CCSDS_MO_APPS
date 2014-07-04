@@ -6,8 +6,8 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.procedureexecutionservice.ProcedureExecutionServiceHelper;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.consumer.ProcedureExecutionServiceStub;
+import org.ccsds.moims.mo.automation.procedureexecution.ProcedureExecutionHelper;
+import org.ccsds.moims.mo.automation.procedureexecution.consumer.ProcedureExecutionStub;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -41,7 +41,7 @@ public class ProcedureExecutionServiceConsumer {
 	private MALContext mal;
 	private MALConsumerManager consumerMgr;
 	private MALConsumer tmConsumer = null;
-	private ProcedureExecutionServiceStub procedureExecutionService;
+	private ProcedureExecutionStub procedureExecutionService;
 	private String propertyFile;
 	private final IdentifierList domain = new IdentifierList();
 	private final Identifier network = new Identifier("GROUND");
@@ -122,14 +122,14 @@ public class ProcedureExecutionServiceConsumer {
 		consumerMgr = mal.createConsumerManager();
 		tmConsumer = consumerMgr.createConsumer((String) null, new URI(uri),
 				new URI(broker),
-				ProcedureExecutionServiceHelper.PROCEDUREEXECUTIONSERVICE_SERVICE,
+				ProcedureExecutionHelper.PROCEDUREEXECUTION_SERVICE,
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
-		procedureExecutionService = new ProcedureExecutionServiceStub(tmConsumer);
+		procedureExecutionService = new ProcedureExecutionStub(tmConsumer);
 		procedureExecutionService.monitorRegister(subRequestWildcard, new ProcedureExecutionServiceConsumerAdapter());
 	}
 
-	public ProcedureExecutionServiceStub getProcedureExecutionService() {
+	public ProcedureExecutionStub getProcedureExecutionService() {
 		return procedureExecutionService;
 	}
 

@@ -1,9 +1,9 @@
 package org.ccsds.moims.mo.mal.automation.provider;
 
 import org.ccsds.moims.mo.automation.AutomationHelper;
-import org.ccsds.moims.mo.automation.proceduredefinitionservice.ProcedureDefinitionServiceHelper;
-import org.ccsds.moims.mo.automation.procedureexecutionservice.ProcedureExecutionServiceHelper;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.ScheduleExecutionServiceHelper;
+import org.ccsds.moims.mo.automation.proceduredefinition.ProcedureDefinitionHelper;
+import org.ccsds.moims.mo.automation.procedureexecution.ProcedureExecutionHelper;
+import org.ccsds.moims.mo.automation.scheduleexecution.ScheduleExecutionHelper;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALHelper;
@@ -32,7 +32,7 @@ public class ProviderInitCenter {
 		if (!isProcedureDefinitionRunning) {
 			startBase();
 			isProcedureDefinitionRunning = true;
-			ProcedureDefinitionServiceHelper.init(MALContextFactory.getElementFactoryRegistry());
+			ProcedureDefinitionHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
 	}
 	
@@ -40,7 +40,7 @@ public class ProviderInitCenter {
 		if (!isProcedureExecutionRunning) {
 			startBase();
 			isProcedureExecutionRunning = true;
-			ProcedureExecutionServiceHelper.init(MALContextFactory.getElementFactoryRegistry());
+			ProcedureExecutionHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
 	}
 	
@@ -48,7 +48,7 @@ public class ProviderInitCenter {
 		if (!isScheduleExecutionRunning) {
 			startBase();
 			isScheduleExecutionRunning = true;
-			ScheduleExecutionServiceHelper.init(MALContextFactory.getElementFactoryRegistry());
+			ScheduleExecutionHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
 	}
 

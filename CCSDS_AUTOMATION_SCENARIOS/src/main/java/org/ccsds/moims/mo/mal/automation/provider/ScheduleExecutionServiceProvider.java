@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.ScheduleExecutionServiceHelper;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.provider.SubscribePublisher;
-import org.ccsds.moims.mo.automation.scheduleexecutionservice.provider.MonitorExecutionPublisher;
+import org.ccsds.moims.mo.automation.scheduleexecution.ScheduleExecutionHelper;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.SubscribePublisher;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorExecutionPublisher;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -92,7 +92,7 @@ public class ScheduleExecutionServiceProvider {
 				null, new UInteger(0));
 		Properties props = System.getProperties();
 		serviceProvider = providerMgr.createProvider("ScheduleExecution", null,
-				ScheduleExecutionServiceHelper.SCHEDULEEXECUTIONSERVICE_SERVICE, new Blob("".getBytes()),
+				ScheduleExecutionHelper.SCHEDULEEXECUTION_SERVICE, new Blob("".getBytes()),
 				scheduleExecutionService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				props, true, null);
 		LOGGER.info("Schedule Execution Service Provider started!");
