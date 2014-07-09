@@ -24,24 +24,19 @@ import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
-import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
-import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
+import org.ccsds.moims.mo.planning.task.TaskHelper;
+import org.ccsds.moims.mo.planning.task.consumer.TaskStub;
 
-/**
- * PlanningRequest service consumer.
- * @author krikse
- *
- */
-public class PlanningRequestServiceConsumer {
-
+public class TaskServiceConsumer {
+	
 	public static final Logger LOGGER = Logger
-			.getLogger(PlanningRequestServiceConsumer.class.getName());
-
+			.getLogger(TaskServiceConsumer.class.getName());
+	
 	private MALContextFactory malFactory;
 	private MALContext mal;
 	private MALConsumerManager consumerMgr;
 	private MALConsumer tmConsumer = null;
-	private PlanningRequestStub planningRequestService;
+	private TaskStub taskService;
 	private String propertyFile;
 	private final IdentifierList domain = new IdentifierList();
 	private final Identifier network = new Identifier("GROUND");
@@ -52,10 +47,10 @@ public class PlanningRequestServiceConsumer {
 	private String broker; // System.getProperty("broker");
 	private String consumerName;
 	
-	public PlanningRequestServiceConsumer(String consumerName) {
+	public TaskServiceConsumer(String consumerName) {
 		this.consumerName = consumerName;
 	}
-
+	
 	public void start() throws IOException {
 		try {
 			init();
@@ -128,23 +123,21 @@ public class PlanningRequestServiceConsumer {
 		consumerMgr = mal.createConsumerManager();
 		tmConsumer = consumerMgr.createConsumer((String) null, new URI(uri),
 				new URI(broker),
-				PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
+				TaskHelper.TASK_SERVICE,
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
-		planningRequestService = new PlanningRequestStub(tmConsumer);
-		planningRequestService.monitorRegister(subRequestWildcard, new PlanningRequestServiceConsumerAdapter(consumerName));
+		taskService = new TaskStub(tmConsumer);
 	}
 
-	public PlanningRequestStub getPlanningRequestService() {
-		return planningRequestService;
+	public TaskStub getTaskService() {
+		return taskService;
 	}
 
 	public void stop() throws MALException, MALInteractionException {
-		if (planningRequestService != null) {
+		if (taskService != null) {
 			Identifier subscriptionId = new Identifier(consumerName);
 			IdentifierList subLst = new IdentifierList();
 			subLst.add(subscriptionId);
-			planningRequestService.monitorDeregister(subLst);
 		}
 		if (tmConsumer != null)
 			tmConsumer.close();

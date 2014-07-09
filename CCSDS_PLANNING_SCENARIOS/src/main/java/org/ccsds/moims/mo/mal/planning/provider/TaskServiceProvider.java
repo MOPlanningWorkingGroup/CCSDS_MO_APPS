@@ -10,6 +10,7 @@ import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALHelper;
 import org.ccsds.moims.mo.mal.MALInteractionException;
+import org.ccsds.moims.mo.mal.planning.service.TaskServiceImpl;
 import org.ccsds.moims.mo.mal.provider.MALProvider;
 import org.ccsds.moims.mo.mal.provider.MALProviderManager;
 import org.ccsds.moims.mo.mal.structures.Blob;
@@ -18,40 +19,31 @@ import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
-import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.planning.PlanningHelper;
-import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
-import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
-import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPublisher;
-import org.ccsds.moims.mo.mal.planning.service.PlanningRequestServiceImpl;
+import org.ccsds.moims.mo.planning.task.TaskHelper;
+import org.ccsds.moims.mo.planning.task.provider.TaskInheritanceSkeleton;
 
-/**
- * PlanningRequest service provider.
- * @author krikse
- *
- */
-public class PlanningRequestServiceProvider {
+public class TaskServiceProvider {
 	
-	public static final Logger LOGGER = Logger.getLogger(PlanningRequestServiceProvider.class.getName());
-
+	public static final Logger LOGGER = Logger.getLogger(TaskServiceProvider.class.getName());
+	
 	private MALContextFactory malFactory;
 	private MALContext mal;
 	private MALProviderManager providerMgr;
 	private MALProvider serviceProvider;
-	private PlanningRequestServiceImpl planningRequestService;
+	private TaskServiceImpl taskService;
 	private String propertyFile;
-	private MonitorPublisher publisher;
 	
-	public PlanningRequestInheritanceSkeleton getTestService() {
-		return planningRequestService;
+	public TaskInheritanceSkeleton getTestService() {
+		return taskService;
 	}
 
-	public PlanningRequestServiceProvider(PlanningRequestServiceImpl testService) {
-		this.planningRequestService = testService;
+	public TaskServiceProvider(TaskServiceImpl testService) {
+		this.taskService = testService;
 	}
-
+	
 	public void start() {
 		try {
 			initProperties();
@@ -84,14 +76,12 @@ public class PlanningRequestServiceProvider {
 		malFactory = MALContextFactory.newFactory();
 		mal = malFactory.createMALContext(System.getProperties());
 		providerMgr = mal.createProviderManager();
-		ProviderInitCenter.startPlanningRequestRegistry();
+		ProviderInitCenter.startTaskRegistry();
+		ProviderInitCenter.startTaskRegistry();
 		
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
 		domain.add(new Identifier("mission"));
-		publisher = planningRequestService.createMonitorPublisher(domain, new Identifier("GROUND"),
-				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
-				null, new UInteger(0));
 		// start transport
 	    URI sharedBrokerURI = null;
 	    if ((null != System.getProperty("demo.provider.useSharedBroker"))
@@ -99,27 +89,32 @@ public class PlanningRequestServiceProvider {
 	    {
 	      sharedBrokerURI = new URI(System.getProperty("shared.broker.uri"));
 	    }
-		serviceProvider = providerMgr.createProvider("RequestPlanning", null,
-				PlanningRequestHelper.PLANNINGREQUEST_SERVICE, new Blob("".getBytes()),
-				planningRequestService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
+		serviceProvider = providerMgr.createProvider("Task", null,
+				TaskHelper.TASK_SERVICE, new Blob("".getBytes()),
+				taskService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				System.getProperties(), true, sharedBrokerURI);
 		
-		LOGGER.info("Request Planning Provider started!");
+		LOGGER.info("Task Provider started!");
 		final EntityKeyList lst = new EntityKeyList();
 		lst.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		publisher.register(lst, new PlanningRequestListener());
 	}
 	
 	public String getBrokerUri() {
-		return serviceProvider.getBrokerURI().getValue();
+		if (serviceProvider != null && serviceProvider.getBrokerURI() != null)
+			return serviceProvider.getBrokerURI().getValue();
+		else
+			return null;
 	}
 	
 	public String getUri() {
-		return serviceProvider.getURI().getValue();
+		if (serviceProvider != null && serviceProvider.getURI() != null)
+			return serviceProvider.getURI().getValue();
+		else
+			return null;
 	}
 
 	public void stop() throws MALException, MALInteractionException {
-		publisher.deregister();
+		//publisher.deregister();
 		if (null != serviceProvider) {
 			serviceProvider.close();
 		}
@@ -129,7 +124,7 @@ public class PlanningRequestServiceProvider {
 		if (null != mal) {
 			mal.close();
 		}
-		LOGGER.info("Request Planning Provider closed!");
+		LOGGER.info("Task Provider closed!");
 	}
 
 }

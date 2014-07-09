@@ -13,9 +13,9 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
  * @author krikse
  *
  */
-public class PublishInteractionListener implements MALPublishInteractionListener {
+public class PlanningRequestListener implements MALPublishInteractionListener {
 	
-	public static final Logger LOGGER = Logger.getLogger(PublishInteractionListener.class.getName());
+	public static final Logger LOGGER = Logger.getLogger(PlanningRequestListener.class.getName());
 	
 	public void publishRegisterAckReceived(MALMessageHeader header,
 			Map qosProperties) throws MALException {
@@ -36,5 +36,7 @@ public class PublishInteractionListener implements MALPublishInteractionListener
 			Map qosProperties) throws MALException {
 		LOGGER.info(" ***** PublishInteractionListener::publishDeregisterAckReceived");
 	}
+	
+	
 
 }
