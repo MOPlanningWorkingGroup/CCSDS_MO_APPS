@@ -36,5 +36,7 @@ public class PublishInteractionListener implements MALPublishInteractionListener
 			Map qosProperties) throws MALException {
 		LOGGER.info(" ***** PublishInteractionListener::publishDeregisterAckReceived");
 	}
+	
+	
 
 }

@@ -50,6 +50,11 @@ public class PlanningRequestServiceConsumer {
 	private Subscription subRequestWildcard;
 	private String uri; // System.getProperty("uri");
 	private String broker; // System.getProperty("broker");
+	private String consumerName;
+	
+	public PlanningRequestServiceConsumer(String consumerName) {
+		this.consumerName = consumerName;
+	}
 
 	public void start() throws IOException {
 		try {
@@ -96,27 +101,28 @@ public class PlanningRequestServiceConsumer {
 	}
 
 	private void initConsumer() throws MALInteractionException, MALException {
-		final Identifier subscriptionId = new Identifier("SUB");
-		// set up the wildcard subscription
-		{
-			final EntityKey entitykey = new EntityKey(new Identifier("*"), 0L,
-					0L, 0L);
+		final Identifier subscriptionId = new Identifier(consumerName);
+	    // set up the wildcard subscription
+	    {
+	      final EntityKey entitykey = new EntityKey(new Identifier("*"), 0L, 0L, 0L);
 
-			final EntityKeyList entityKeys = new EntityKeyList();
-			entityKeys.add(entitykey);
+	      final EntityKeyList entityKeys = new EntityKeyList();
+	      entityKeys.add(entitykey);
 
-			final EntityRequest entity = new EntityRequest(null, false, false,
-					false, false, entityKeys);
+	      final EntityRequest entity = new EntityRequest(null, false, false, false, false, entityKeys);
 
-			final EntityRequestList entities = new EntityRequestList();
-			entities.add(entity);
+	      final EntityRequestList entities = new EntityRequestList();
+	      entities.add(entity);
 
-			subRequestWildcard = new Subscription(subscriptionId, entities);
-		}
+	      subRequestWildcard = new Subscription(subscriptionId, entities);
+	    }
+
 	}
 
 	private void startConsumerService() throws MALException,
 			MalformedURLException, MALInteractionException {
+		domain.add(new Identifier("esa"));
+		domain.add(new Identifier("mission"));
 		malFactory = MALContextFactory.newFactory();
 		mal = malFactory.createMALContext(System.getProperties());
 		consumerMgr = mal.createConsumerManager();
@@ -126,7 +132,7 @@ public class PlanningRequestServiceConsumer {
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
 		planningRequestService = new PlanningRequestStub(tmConsumer);
-		planningRequestService.subscribeRegister(subRequestWildcard, new PlanningRequestServiceConsumerAdapter());
+		planningRequestService.monitorRegister(subRequestWildcard, new PlanningRequestServiceConsumerAdapter(consumerName));
 	}
 
 	public PlanningRequestStub getPlanningRequestService() {
@@ -135,10 +141,10 @@ public class PlanningRequestServiceConsumer {
 
 	public void stop() throws MALException, MALInteractionException {
 		if (planningRequestService != null) {
-			Identifier subscriptionId = new Identifier("SUB");
+			Identifier subscriptionId = new Identifier(consumerName);
 			IdentifierList subLst = new IdentifierList();
 			subLst.add(subscriptionId);
-			planningRequestService.subscribeDeregister(subLst);
+			planningRequestService.monitorDeregister(subLst);
 		}
 		if (tmConsumer != null)
 			tmConsumer.close();

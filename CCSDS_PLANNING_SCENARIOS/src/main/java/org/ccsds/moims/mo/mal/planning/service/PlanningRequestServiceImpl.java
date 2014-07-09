@@ -6,8 +6,14 @@ import java.util.UUID;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
+import org.ccsds.moims.mo.mal.planning.provider.PublishInteractionListener;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
+import org.ccsds.moims.mo.mal.provider.MALInvoke;
+import org.ccsds.moims.mo.mal.provider.MALProgress;
+import org.ccsds.moims.mo.mal.provider.MALRequest;
+import org.ccsds.moims.mo.mal.provider.MALSubmit;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
@@ -18,14 +24,15 @@ import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
+import org.ccsds.moims.mo.mal.transport.MALMessageBody;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
-import org.ccsds.moims.mo.planning.planningrequest.provider.SubscribePublisher;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestEventList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilter;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestEvent;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestGroup;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestUpdate;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestUpdateList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
 
 /**
@@ -36,16 +43,55 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
 public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkeleton {
 	
 	private Map<Long, PlanningRequest> _PlanningRequest1Map = new HashMap<Long, PlanningRequest>();
-	private SubscribePublisher publisher;
+	private MonitorPublisher publisher;
+	private Long autoincrement = 0L;
+
+
 
 	@Override
-	public SubscribePublisher createSubscribePublisher(IdentifierList domain,
+	public MonitorPublisher createMonitorPublisher(IdentifierList domain,
 			Identifier networkZone, SessionType sessionType,
 			Identifier sessionName, QoSLevel qos, Map qosProps,
 			UInteger priority) throws MALException {
-		publisher = super.createSubscribePublisher(domain, networkZone, sessionType,
+		// TODO Auto-generated method stub
+		publisher = super.createMonitorPublisher(domain, networkZone, sessionType,
 				sessionName, qos, qosProps, priority);
 		return publisher;
+	}
+
+	@Override
+	public void handleSend(MALInteraction interaction, MALMessageBody body)
+			throws MALInteractionException, MALException {
+		// TODO Auto-generated method stub
+		super.handleSend(interaction, body);
+	}
+
+	@Override
+	public void handleSubmit(MALSubmit interaction, MALMessageBody body)
+			throws MALInteractionException, MALException {
+		// TODO Auto-generated method stub
+		super.handleSubmit(interaction, body);
+	}
+
+	@Override
+	public void handleRequest(MALRequest interaction, MALMessageBody body)
+			throws MALInteractionException, MALException {
+		// TODO Auto-generated method stub
+		super.handleRequest(interaction, body);
+	}
+
+	@Override
+	public void handleInvoke(MALInvoke interaction, MALMessageBody body)
+			throws MALInteractionException, MALException {
+		// TODO Auto-generated method stub
+		super.handleInvoke(interaction, body);
+	}
+
+	@Override
+	public void handleProgress(MALProgress interaction, MALMessageBody body)
+			throws MALInteractionException, MALException {
+		// TODO Auto-generated method stub
+		super.handleProgress(interaction, body);
 	}
 
 	public Long submitPlanningRequest(
@@ -53,8 +99,8 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 			PlanningRequest _PlanningRequest1, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		_PlanningRequest1.setStatus(StateEnum.SUBMITTED);
-		UUID uuId = UUID.randomUUID();
-		Long id = uuId.getMostSignificantBits();
+		autoincrement++;
+		Long id = autoincrement;
 		_PlanningRequest1Map.put(id, _PlanningRequest1);
 		publish(id, UpdateType.CREATION);
 		return id;
@@ -103,9 +149,9 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 		final EntityKey ekey = new EntityKey(new Identifier(String.valueOf(id)), null, null, null);
 	    final Time timestamp = new Time(System.currentTimeMillis());
 	    updateHeaderList.add(new UpdateHeader(timestamp, new URI("SomeURI"), updateType, ekey));
-	    PlanningRequestEventList eventList = new PlanningRequestEventList();
-	    eventList.add(new PlanningRequestEvent());
-		publisher.publish(updateHeaderList, eventList);
+	    PlanningRequestUpdateList list = new PlanningRequestUpdateList(); 
+	    list.add(new PlanningRequestUpdate());
+	    publisher.publish(updateHeaderList, list);
 	}
 	
 

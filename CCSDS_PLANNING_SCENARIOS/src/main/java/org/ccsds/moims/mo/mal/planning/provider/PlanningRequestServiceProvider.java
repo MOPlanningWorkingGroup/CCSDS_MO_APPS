@@ -20,10 +20,11 @@ import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
+import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
-import org.ccsds.moims.mo.planning.planningrequest.provider.SubscribePublisher;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPublisher;
 import org.ccsds.moims.mo.mal.planning.service.PlanningRequestServiceImpl;
 
 /**
@@ -41,7 +42,7 @@ public class PlanningRequestServiceProvider {
 	private MALProvider serviceProvider;
 	private PlanningRequestServiceImpl planningRequestService;
 	private String propertyFile;
-	private SubscribePublisher publisher;
+	private MonitorPublisher publisher;
 	
 	public PlanningRequestInheritanceSkeleton getTestService() {
 		return planningRequestService;
@@ -87,18 +88,25 @@ public class PlanningRequestServiceProvider {
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-
+		
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
 		domain.add(new Identifier("mission"));
-		publisher = planningRequestService.createSubscribePublisher(domain, new Identifier("GROUND"),
+		publisher = planningRequestService.createMonitorPublisher(domain, new Identifier("GROUND"),
 				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
 				null, new UInteger(0));
-		Properties props = System.getProperties();
+		// start transport
+	    URI sharedBrokerURI = null;
+	    if ((null != System.getProperty("demo.provider.useSharedBroker"))
+	            && (null != System.getProperty("shared.broker.uri")))
+	    {
+	      sharedBrokerURI = new URI(System.getProperty("shared.broker.uri"));
+	    }
 		serviceProvider = providerMgr.createProvider("RequestPlanning", null,
 				PlanningRequestHelper.PLANNINGREQUEST_SERVICE, new Blob("".getBytes()),
 				planningRequestService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
-				props, true, null);
+				System.getProperties(), true, sharedBrokerURI);
+		
 		LOGGER.info("Request Planning Provider started!");
 		final EntityKeyList lst = new EntityKeyList();
 		lst.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
