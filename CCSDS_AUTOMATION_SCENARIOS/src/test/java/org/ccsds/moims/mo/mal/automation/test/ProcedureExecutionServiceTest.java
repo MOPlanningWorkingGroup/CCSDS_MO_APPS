@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.automation.proceduredefinition.structures.ProcedureDefinition;
 import org.ccsds.moims.mo.automation.procedureexecution.consumer.ProcedureExecutionAdapter;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.Procedure;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureDefinition;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureInvocationDetails;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureOccurrence;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureState;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureStatus;
 import org.ccsds.moims.mo.mal.MALException;
@@ -20,12 +20,12 @@ import org.ccsds.moims.mo.mal.structures.EntityRequest;
 import org.ccsds.moims.mo.mal.structures.EntityRequestList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.mal.automation.consumer.ProcedureExecutionServiceConsumer;
 import org.ccsds.moims.mo.mal.automation.consumer.ProcedureExecutionServiceConsumerAdapter;
 import org.ccsds.moims.mo.mal.automation.provider.ProcedureExecutionServiceProvider;
-import org.ccsds.moims.mo.mal.automation.service.ProcedureDefinitionServiceImpl;
 import org.ccsds.moims.mo.mal.automation.service.ProcedureExecutionServiceImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -48,7 +48,7 @@ public class ProcedureExecutionServiceTest {
 	public static void testSetup() throws IOException, MALInteractionException, MALException {
 		adapter = new ProcedureExecutionServiceConsumerAdapter();
 		// set up provider
-		provider = new ProcedureExecutionServiceProvider(new ProcedureExecutionServiceImpl(), new ProcedureDefinitionServiceImpl());
+		provider = new ProcedureExecutionServiceProvider(new ProcedureExecutionServiceImpl());
 		provider.setPropertyFile("/demoProvider.properties");
 		provider.start();
 
@@ -107,18 +107,18 @@ public class ProcedureExecutionServiceTest {
 		Long procId = 12L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
-		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
+		Procedure po = consumer.getProcedureExecutionService().getProcedure(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.RUNNING);
 	}
 	
 	@Test
 	public void testPauseProcedure() throws MALInteractionException, MALException {
 		ProcedureDefinition pd = new ProcedureDefinition();
-		Long procId = 13L; //ProcedureDefinitionServiceTest.consumer.getProcedureDefinitionService().addProcedureDefinition(pd);
+		Long procId = 13L;
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		consumer.getProcedureExecutionService().pauseProcedure(procId);
-		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
+		Procedure po = consumer.getProcedureExecutionService().getProcedure(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.PAUSED);
 	}
 	
@@ -130,7 +130,7 @@ public class ProcedureExecutionServiceTest {
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		consumer.getProcedureExecutionService().pauseProcedure(procId);
 		consumer.getProcedureExecutionService().resumeProcedure(procId);
-		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
+		Procedure po = consumer.getProcedureExecutionService().getProcedure(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.RUNNING);
 	}
 	
@@ -141,7 +141,7 @@ public class ProcedureExecutionServiceTest {
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
 		consumer.getProcedureExecutionService().startProcedure(procId, details);
 		consumer.getProcedureExecutionService().terminateProcedure(procId);
-		ProcedureOccurrence po = consumer.getProcedureExecutionService().getProcedure(procId);
+		Procedure po = consumer.getProcedureExecutionService().getProcedure(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.ABORTED);
 	}
 	
@@ -202,9 +202,40 @@ public class ProcedureExecutionServiceTest {
 			counter++;
 			super.terminateProcedureAckReceived(msgHeader, qosProperties);
 		}
-
 		
-		
+	}
+	
+	public void testAddAndListDefinition() throws MALInteractionException, MALException {
+		ProcedureDefinition procedureDefinition = new ProcedureDefinition();
+		procedureDefinition.setName("test");
+		Long id = consumer.getProcedureExecutionService().addDefinition(procedureDefinition);
+		IdentifierList identifierList = new IdentifierList();
+		identifierList.add(new Identifier("test"));
+		LongList longList = consumer.getProcedureExecutionService().listDefinition(identifierList);
+		assertTrue(longList != null && longList.size() == 1 && longList.get(0).equals(id));
+	}
+	
+	public void testUpdateDefinition() throws MALInteractionException, MALException {
+		ProcedureDefinition procedureDefinition = new ProcedureDefinition();
+		procedureDefinition.setName("test");
+		Long id = consumer.getProcedureExecutionService().addDefinition(procedureDefinition);
+		procedureDefinition.setName("test2");
+		consumer.getProcedureExecutionService().updateDefinition(id, procedureDefinition);
+		IdentifierList identifierList = new IdentifierList();
+		identifierList.add(new Identifier("test2"));
+		LongList longList = consumer.getProcedureExecutionService().listDefinition(identifierList);
+		assertTrue(longList != null && longList.size() == 1 && longList.get(0).equals(id));
+	}
+	
+	public void testRemoveDefinition() throws MALInteractionException, MALException {
+		ProcedureDefinition procedureDefinition = new ProcedureDefinition();
+		procedureDefinition.setName("test");
+		Long id = consumer.getProcedureExecutionService().addDefinition(procedureDefinition);
+		consumer.getProcedureExecutionService().removeDefinition(id);
+		IdentifierList identifierList = new IdentifierList();
+		identifierList.add(new Identifier("test"));
+		LongList longList = consumer.getProcedureExecutionService().listDefinition(identifierList);
+		assertTrue(longList != null && longList.size() == 1 && longList.get(0).equals(id));
 	}
 
 }

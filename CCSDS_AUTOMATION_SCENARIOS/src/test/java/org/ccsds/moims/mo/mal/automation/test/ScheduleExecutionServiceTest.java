@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.automation.scheduleexecution.consumer.ScheduleExecutionAdapter;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.Schedule;
+import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleDefinition;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleFilter;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleState;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleStatus;
@@ -107,7 +108,7 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void testSubmitSchedule() throws MALInteractionException, MALException {
 		Schedule schedule = new Schedule();
-		schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		assertTrue(schId != null && schId > 0);
 	}
 	
@@ -129,7 +130,7 @@ public class ScheduleExecutionServiceTest {
 	public void testGetSchedule() throws MALInteractionException,
 			MALException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		schedule = consumer.getScheduleExecutionService().getSchedule(schId);
 		assertTrue(schedule != null);
 	}
@@ -141,7 +142,7 @@ public class ScheduleExecutionServiceTest {
 		LongList list = new LongList();
 		list.add(schId);
 		Schedule schedule = new Schedule();
-		consumer.getScheduleExecutionService().submitSchedule(schedule);
+		consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		list = consumer.getScheduleExecutionService().getScheduleList(filter);
 		assertTrue(list != null && list.size() == 1);
 	}
@@ -149,7 +150,7 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void testStartSchedule() throws MALInteractionException, MALException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		consumer.getScheduleExecutionService().startSchedule(schId);
 		ScheduleStatus status = consumer.getScheduleExecutionService().getScheduleStatus(schId);
 		assertTrue(status.getState() == ScheduleState.RUNNING);
@@ -158,7 +159,7 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void testPauseSchedule() throws MALInteractionException, MALException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		consumer.getScheduleExecutionService().startSchedule(schId);
 		consumer.getScheduleExecutionService().pauseSchedule(schId);
 		ScheduleStatus status = consumer.getScheduleExecutionService().getScheduleStatus(schId);
@@ -168,7 +169,7 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void testResumeSchedule() throws MALInteractionException, MALException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		consumer.getScheduleExecutionService().startSchedule(schId);
 		consumer.getScheduleExecutionService().pauseSchedule(schId);
 		consumer.getScheduleExecutionService().resumeSchedule(schId);
@@ -179,7 +180,7 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void testTerminateSchedule() throws MALInteractionException, MALException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		consumer.getScheduleExecutionService().startSchedule(schId);
 		consumer.getScheduleExecutionService().terminateSchedule(schId);
 		ScheduleStatus status = consumer.getScheduleExecutionService().getScheduleStatus(schId);
@@ -189,7 +190,7 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void testGetScheduleStatus() throws MALInteractionException, MALException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		consumer.getScheduleExecutionService().startSchedule(schId);
 		ScheduleStatus status = consumer.getScheduleExecutionService().getScheduleStatus(schId);
 		assertTrue(status.getState() == ScheduleState.RUNNING);
@@ -198,9 +199,9 @@ public class ScheduleExecutionServiceTest {
 	@Test
 	public void subscribingTest() throws MALInteractionException, MALException, InterruptedException, IOException {
 		Schedule schedule = new Schedule();
-		Long schId = consumer.getScheduleExecutionService().submitSchedule(schedule);
+		Long schId = consumer.getScheduleExecutionService().submitSchedule(1L, schedule);
 		TestAdapter testAdapter = new TestAdapter();
-		consumer.getScheduleExecutionService().asyncSubmitSchedule(schedule, testAdapter);
+		consumer.getScheduleExecutionService().asyncSubmitSchedule(1L, schedule, testAdapter);
 		Thread.sleep(300);
 		consumer.getScheduleExecutionService().asyncUpdateSchedule(schId, schedule, testAdapter);
 		Thread.sleep(300);
@@ -232,9 +233,40 @@ public class ScheduleExecutionServiceTest {
 			counter++;
 			super.removeScheduleAckReceived(msgHeader, qosProperties);
 		}
-
 		
-		
+	}
+	
+	public void testAddAndListDefinition() throws MALInteractionException, MALException {
+		ScheduleDefinition scheduleDefinition = new ScheduleDefinition();
+		scheduleDefinition.setName("test");
+		Long id = consumer.getScheduleExecutionService().addDefinition(scheduleDefinition);
+		IdentifierList identifierList = new IdentifierList();
+		identifierList.add(new Identifier("test"));
+		LongList longList = consumer.getScheduleExecutionService().listDefinition(identifierList);
+		assertTrue(longList != null && longList.size() == 1 && longList.get(0).equals(id));
+	}
+	
+	public void testUpdateDefinition() throws MALInteractionException, MALException {
+		ScheduleDefinition scheduleDefinition = new ScheduleDefinition();
+		scheduleDefinition.setName("test");
+		Long id = consumer.getScheduleExecutionService().addDefinition(scheduleDefinition);
+		scheduleDefinition.setName("test2");
+		consumer.getScheduleExecutionService().updateDefinition(id, scheduleDefinition);
+		IdentifierList identifierList = new IdentifierList();
+		identifierList.add(new Identifier("test2"));
+		LongList longList = consumer.getScheduleExecutionService().listDefinition(identifierList);
+		assertTrue(longList != null && longList.size() == 1 && longList.get(0).equals(id));
+	}
+	
+	public void testRemoveDefinition() throws MALInteractionException, MALException {
+		ScheduleDefinition scheduleDefinition = new ScheduleDefinition();
+		scheduleDefinition.setName("test");
+		Long id = consumer.getScheduleExecutionService().addDefinition(scheduleDefinition);
+		consumer.getScheduleExecutionService().removeDefinition(id);
+		IdentifierList identifierList = new IdentifierList();
+		identifierList.add(new Identifier("test"));
+		LongList longList = consumer.getScheduleExecutionService().listDefinition(identifierList);
+		assertTrue(longList != null && longList.size() == 1 && longList.get(0).equals(id));
 	}
 
 }

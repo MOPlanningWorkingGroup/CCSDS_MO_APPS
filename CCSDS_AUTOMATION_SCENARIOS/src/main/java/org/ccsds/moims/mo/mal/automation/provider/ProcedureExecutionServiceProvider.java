@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
-
-import org.ccsds.moims.mo.automation.proceduredefinition.ProcedureDefinitionHelper;
 import org.ccsds.moims.mo.automation.procedureexecution.ProcedureExecutionHelper;
 import org.ccsds.moims.mo.automation.procedureexecution.provider.MonitorPublisher;
 import org.ccsds.moims.mo.mal.MALContext;
@@ -22,7 +20,6 @@ import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
-import org.ccsds.moims.mo.mal.automation.service.ProcedureDefinitionServiceImpl;
 import org.ccsds.moims.mo.mal.automation.service.ProcedureExecutionServiceImpl;
 
 /**
@@ -32,22 +29,19 @@ import org.ccsds.moims.mo.mal.automation.service.ProcedureExecutionServiceImpl;
  */
 public class ProcedureExecutionServiceProvider {
 	
-public static final Logger LOGGER = Logger.getLogger(ProcedureDefinitionServiceProvider.class.getName());
+public static final Logger LOGGER = Logger.getLogger(ProcedureExecutionServiceProvider.class.getName());
 	
 	private MALContextFactory malFactory;
 	private MALContext mal;
 	private MALProviderManager providerMgr;
 	private MALProvider serviceProvider;
 	private ProcedureExecutionServiceImpl procedureExecutionService;
-	private ProcedureDefinitionServiceImpl procedureDefinitionService;
-	private MALProvider procedureDefinitionServiceProvider;
 	private String propertyFile;
 	private MonitorPublisher monitorPublisher;
 	
 	public ProcedureExecutionServiceProvider (
-			ProcedureExecutionServiceImpl procedureExecutionService, ProcedureDefinitionServiceImpl procedureDefinitionService) {
+			ProcedureExecutionServiceImpl procedureExecutionService) {
 		this.procedureExecutionService = procedureExecutionService;
-		this.procedureDefinitionService = procedureDefinitionService;
 	}
 	
 	public void start() {
@@ -83,7 +77,6 @@ public static final Logger LOGGER = Logger.getLogger(ProcedureDefinitionServiceP
 		mal = malFactory.createMALContext(System.getProperties());
 		providerMgr = mal.createProviderManager();
 
-		ProviderInitCenter.startProcedureDefinition();
 		ProviderInitCenter.startProcedureExecution();
 		
 		final IdentifierList domain = new IdentifierList();
@@ -96,10 +89,6 @@ public static final Logger LOGGER = Logger.getLogger(ProcedureDefinitionServiceP
 		serviceProvider = providerMgr.createProvider("ProcedureExecution", null,
 				ProcedureExecutionHelper.PROCEDUREEXECUTION_SERVICE, new Blob("".getBytes()),
 				procedureExecutionService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
-				props, true, null);
-		procedureDefinitionServiceProvider = providerMgr.createProvider("ProcedureDefinition", null,
-				ProcedureDefinitionHelper.PROCEDUREDEFINITION_SERVICE, new Blob("".getBytes()),
-				procedureDefinitionService, new QoSLevel[] { QoSLevel.ASSURED }, new UInteger(1),
 				props, true, null);
 		LOGGER.info("Procedure Execution Service Provider started!");
 		final EntityKeyList lst = new EntityKeyList();
@@ -119,9 +108,6 @@ public static final Logger LOGGER = Logger.getLogger(ProcedureDefinitionServiceP
 		monitorPublisher.deregister();
 		if (null != serviceProvider) {
 			serviceProvider.close();
-		}
-		if (null != procedureDefinitionServiceProvider) {
-			procedureDefinitionServiceProvider.close();
 		}
 		if (null != providerMgr) {
 			providerMgr.close();
