@@ -131,8 +131,7 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 			MALStandardError error = new MALStandardError(new UInteger(1), "Planning Request with this name exists already!");
 			throw new MALInteractionException(error);
 		}
-		autoincrementDefinition++;
-		Long id = autoincrementDefinition;
+		Long id = autoincrementDefinition + 1;
 		planningRequestDefinitionMap.put(id, planningRequestDefinition);
 		identifierMap.put(planningRequestDefinition.getName(), id);
 		return id;

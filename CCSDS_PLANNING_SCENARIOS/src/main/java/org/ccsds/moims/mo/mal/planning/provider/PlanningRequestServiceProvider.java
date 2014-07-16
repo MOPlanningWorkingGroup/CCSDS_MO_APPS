@@ -84,7 +84,10 @@ public class PlanningRequestServiceProvider {
 		malFactory = MALContextFactory.newFactory();
 		mal = malFactory.createMALContext(System.getProperties());
 		providerMgr = mal.createProviderManager();
-		ProviderInitCenter.startPlanningRequestRegistry();
+
+		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
+		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
+		PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
 		
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
@@ -107,7 +110,7 @@ public class PlanningRequestServiceProvider {
 		LOGGER.info("Request Planning Provider started!");
 		final EntityKeyList lst = new EntityKeyList();
 		lst.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		publisher.register(lst, new PlanningRequestListener());
+		publisher.register(lst, new PublishInteractionListener());
 	}
 	
 	public String getBrokerUri() {
