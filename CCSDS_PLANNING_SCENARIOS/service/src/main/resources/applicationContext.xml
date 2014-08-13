@@ -1,0 +1,63 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jpa="http://osgi.org/xmlns/jpa/v1.1.0"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<import resource="classpath:/jpaContext.xml" />
+	
+	<context:component-scan base-package="org.ccsds.moims.mo.mal.planning.service" />
+
+	<bean id="planningRequestService"
+		class="org.ccsds.moims.mo.mal.planning.service.PlanningRequestServiceImpl">
+	</bean>
+
+	<bean id="planningRequestServiceProvider"
+		class="org.ccsds.moims.mo.mal.planning.provider.PlanningRequestServiceProvider"
+		init-method="start" destroy-method="stop">
+		<constructor-arg index="0" ref="planningRequestService" />
+		<property name="propertyFile" value="/demoProvider.properties" />
+	</bean>
+
+	<bean id="planningRequestConsumer"
+		class="org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer"
+		init-method="start" destroy-method="stop" depends-on="planningRequestServiceProvider">
+		<constructor-arg index="0" value="SUB" />
+		<property name="propertyFile" value="/demoConsumer.properties" />
+		<property name="broker" value="#{planningRequestServiceProvider.brokerUri}" />
+		<property name="uri" value="#{planningRequestServiceProvider.uri}" />
+	</bean>
+
+	<bean id="planningRequestConsumer2"
+		class="org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer"
+		init-method="start" destroy-method="stop" depends-on="planningRequestServiceProvider">
+		<constructor-arg index="0" value="SUBLISTENER" />
+		<property name="propertyFile" value="/demoConsumer.properties" />
+		<property name="broker" value="#{planningRequestServiceProvider.brokerUri}" />
+		<property name="uri" value="#{planningRequestServiceProvider.uri}" />
+	</bean>
+
+	<bean id="taskService" class="org.ccsds.moims.mo.mal.planning.service.TaskServiceImpl">
+	</bean>
+
+	<bean id="taskServiceProvider"
+		class="org.ccsds.moims.mo.mal.planning.provider.TaskServiceProvider"
+		init-method="start" destroy-method="stop">
+		<constructor-arg index="0" ref="taskService" />
+		<property name="propertyFile" value="/demoProvider.properties" />
+	</bean>
+
+	<bean id="taskServiceConsumer"
+		class="org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer"
+		init-method="start" destroy-method="stop" depends-on="taskServiceProvider">
+		<constructor-arg index="0" value="TASK_SUB" />
+		<property name="propertyFile" value="/demoConsumer.properties" />
+		<property name="broker" value="#{taskServiceProvider.brokerUri}" />
+		<property name="uri" value="#{taskServiceProvider.uri}" />
+	</bean>
+
+</beans>
