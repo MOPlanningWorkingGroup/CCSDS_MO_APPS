@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Licensed under the European Space Agency Public License, Version 2.0 
+	You may not use this file except in compliance with the License. Except as 
+	expressly set forth in this License, the Software is provided to You on an 
+	"as is" basis and without warranties of any kind, including without limitation 
+	merchantability, fitness for a particular purpose, absence of defects or 
+	errors, accuracy or non-infringement of intellectual property rights. See 
+	the License for the specific language governing permissions and limitations 
+	under the License. -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>int.esa</groupId>
+		<artifactId>CCSDS_AUTOMATION_SCENARIOS</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<repositories>
+		<repository>
+			<id>EclipseLink</id>
+			<url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
+		</repository>
+	</repositories>
+	<artifactId>CCSDS_AUTOMATION_SCHEMA</artifactId>
+	<packaging>jar</packaging>
+	<name>CCSDS_AUTOMATION_SCHEMA</name>
+	<description>Project defines automation schemas</description>
+	<developers>
+		<developer>
+			<id>krixerx</id>
+			<name>Erki Kriks</name>
+			<email>erki.kriks@cgi.com</email>
+			<url>https://github.com/krixerx</url>
+		</developer>
+	</developers>
+	<properties>
+		<esa.stubgen.xmlDirectory>${basedir}/../../../CCSDS_MO_XML/MO_XML/src/main/resources/xml</esa.stubgen.xmlDirectory>
+		<esa.stubgen.xmlRefDirectory>${basedir}/../../../CCSDS_MO_XML/MO_XML/src/main/resources/xml-ref/xml</esa.stubgen.xmlRefDirectory>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_API</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_IMPL</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_TRANSPORT_RMI</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_ENCODING_STRING</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<resources>
+			<resource>
+				<directory>${basedir}/..</directory>
+				<includes>
+					<include>LICENCE.md</include>
+				</includes>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>int.esa</groupId>
+				<artifactId>CCSDS_MO_StubGenerator</artifactId>
+				<executions>
+					<execution>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<xmlDirectory>${esa.stubgen.xmlDirectory}</xmlDirectory>
+							<xmlRefDirectory>${esa.stubgen.xmlRefDirectory}</xmlRefDirectory>
+							<jaxbBindings>
+								<org.ccsds.moims.mo.xml.scheduling>http://www.ccsds.org/schema/moims/mo/xml/scheduling</org.ccsds.moims.mo.xml.scheduling>
+							</jaxbBindings>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${basedir}/target/generated-sources/stub</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
