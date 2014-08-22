@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ScheduleDaoImpl implements ScheduleDao {
 	
-	@PersistenceUnit(unitName="planning-persistence")
+	@PersistenceUnit(unitName="automation-persistence")
     private EntityManagerFactory factory;
 
 	public void insertUpdate(Schedule schedule) {

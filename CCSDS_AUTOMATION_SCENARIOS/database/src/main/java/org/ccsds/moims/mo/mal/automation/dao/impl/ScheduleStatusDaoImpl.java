@@ -20,7 +20,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ScheduleStatusDaoImpl implements ScheduleStatusDao {
 	
-	@PersistenceUnit(unitName="planning-persistence")
+	@PersistenceUnit(unitName="automation-persistence")
     private EntityManagerFactory factory;
 	
 	@Autowired

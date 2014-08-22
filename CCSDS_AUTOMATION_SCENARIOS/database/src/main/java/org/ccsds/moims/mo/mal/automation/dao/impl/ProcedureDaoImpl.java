@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ProcedureDaoImpl implements ProcedureDao {
 	
-	@PersistenceUnit(unitName="planning-persistence")
+	@PersistenceUnit(unitName="automation-persistence")
     private EntityManagerFactory factory;
 
 	public void insertUpdate(Procedure procedure) {

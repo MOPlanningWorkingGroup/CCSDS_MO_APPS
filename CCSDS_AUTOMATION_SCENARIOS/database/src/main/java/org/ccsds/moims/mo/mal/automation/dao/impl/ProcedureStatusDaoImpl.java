@@ -20,7 +20,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ProcedureStatusDaoImpl implements ProcedureStatusDao {
 	
-	@PersistenceUnit(unitName="planning-persistence")
+	@PersistenceUnit(unitName="automation-persistence")
     private EntityManagerFactory factory;
 	
 	@Autowired

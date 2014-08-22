@@ -4,10 +4,10 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
 http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
 	version="2.0">
-	<persistence-unit name="planning-persistence"
+	<persistence-unit name="automation-persistence"
 		transaction-type="RESOURCE_LOCAL">
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-		<non-jta-data-source>jdbc/planningDs</non-jta-data-source>
+		<non-jta-data-source>jdbc/automationDs</non-jta-data-source>
 		<class>org.ccsds.moims.mo.mal.automation.datamodel.Schedule</class>
 		<class>org.ccsds.moims.mo.mal.automation.datamodel.ScheduleArgumentDefinition</class>
 		<class>org.ccsds.moims.mo.mal.automation.datamodel.ScheduleArgumentValue</class>

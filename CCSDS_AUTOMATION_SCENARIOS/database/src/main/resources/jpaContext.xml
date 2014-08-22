@@ -10,7 +10,7 @@
 
 	<context:component-scan base-package="org.ccsds.moims.mo.mal.automation.dao" />
 
-	<bean id="planningDs"
+	<bean id="automationDs"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 		<property name="driverClassName" value="org.h2.Driver" />
 		<!--property name="url"
@@ -21,7 +21,8 @@
 	<!-- JPA EntityManagerFactory -->
 	<bean id="entityManagerFactory"
 		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-		<property name="dataSource" ref="planningDs" />
+		<property name="dataSource" ref="automationDs" />
+		<property name="persistenceUnitName" value="automation-persistence"/>
 		<property name="jpaVendorAdapter">
 			<bean
 				class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">

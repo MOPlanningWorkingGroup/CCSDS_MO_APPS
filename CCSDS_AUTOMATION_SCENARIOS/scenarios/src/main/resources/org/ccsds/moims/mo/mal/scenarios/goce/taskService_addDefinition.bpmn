@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<definitions id="Definition"
+             targetNamespace="http://www.jboss.org/drools"
+             typeLanguage="http://www.java.com/javaTypes"
+             expressionLanguage="http://www.mvel.org/2.0"
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:g="http://www.jboss.org/drools/flow/gpd"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             xmlns:tns="http://www.jboss.org/drools">
+
+  <itemDefinition id="_taskServiceConsumer" structureRef="org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer" />
+  <itemDefinition id="_taskDef" structureRef="org.ccsds.moims.mo.planning.task.structures.TaskDefinition" />
+  <itemDefinition id="_defId" structureRef="Long" />
+
+  <escalation id="null" escalationCode="null" />
+  <process processType="Private" isExecutable="true" id="taskService_addDefinition" name="taskService_addDefinition" >
+
+    <!-- process variables -->
+    <property id="taskServiceConsumer" itemSubjectRef="_taskServiceConsumer"/>
+    <property id="taskDef" itemSubjectRef="_taskDef"/>
+    <property id="defId" itemSubjectRef="_defId"/>
+
+    <!-- nodes -->
+    <startEvent id="_jbpm-unique-0" name="Start"  isInterrupting="false"/>
+    <endEvent id="_jbpm-unique-9" name="End" >
+        <terminateEventDefinition />
+    </endEvent>
+    <endEvent id="_jbpm-unique-10" name="Error" >
+      <escalationEventDefinition escalationRef="null" />
+    </endEvent>
+    <scriptTask id="_jbpm-unique-11" name="TaskService.addDefinition" scriptFormat="http://www.java.com/java" >
+      <script>
+        org.ccsds.moims.mo.planning.task.structures.TaskDefinitionList taskDefList = new org.ccsds.moims.mo.planning.task.structures.TaskDefinitionList();
+        taskDefList.add(taskDef);
+        kcontext.setVariable("defId", taskServiceConsumer.getTaskService().addDefinition(taskDefList).get(0));
+      </script>
+    </scriptTask>
+    <inclusiveGateway id="_jbpm-unique-12" name="Gateway" gatewayDirection="Diverging" />
+    <scriptTask id="_jbpm-unique-13" name="Log Error" >
+      <script>System.out.println("Definition adding failed!");</script>
+    </scriptTask>
+    <scriptTask id="_jbpm-unique-14" name="Log Definition ID" >
+      <script>System.out.println("Definition id is " + defId);</script>
+    </scriptTask>
+
+    <!-- connections -->
+    <sequenceFlow id="_jbpm-unique-14-_jbpm-unique-9" sourceRef="_jbpm-unique-14" targetRef="_jbpm-unique-9" />
+    <sequenceFlow id="_jbpm-unique-13-_jbpm-unique-10" sourceRef="_jbpm-unique-13" targetRef="_jbpm-unique-10" />
+    <sequenceFlow id="_jbpm-unique-0-_jbpm-unique-11" sourceRef="_jbpm-unique-0" targetRef="_jbpm-unique-11" />
+    <sequenceFlow id="_jbpm-unique-11-_jbpm-unique-12" sourceRef="_jbpm-unique-11" targetRef="_jbpm-unique-12" />
+    <sequenceFlow id="_jbpm-unique-12-_jbpm-unique-13" sourceRef="_jbpm-unique-12" targetRef="_jbpm-unique-13" name="error" tns:priority="1" >
+      <conditionExpression xsi:type="tFormalExpression" >return defId == null;</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_jbpm-unique-12-_jbpm-unique-14" sourceRef="_jbpm-unique-12" targetRef="_jbpm-unique-14" name="ok" tns:priority="1" >
+      <conditionExpression xsi:type="tFormalExpression" >return defId != null;</conditionExpression>
+    </sequenceFlow>
+
+  </process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="taskService_addDefinition" >
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-0" >
+        <dc:Bounds x="220" y="15" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-9" >
+        <dc:Bounds x="364" y="441" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-10" >
+        <dc:Bounds x="145" y="444" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-11" >
+        <dc:Bounds x="147" y="118" width="200" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-12" >
+        <dc:Bounds x="227" y="224" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-13" >
+        <dc:Bounds x="132" y="299" width="80" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-14" >
+        <dc:Bounds x="304" y="295" width="160" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-14-_jbpm-unique-9" >
+        <di:waypoint x="384" y="319" />
+        <di:waypoint x="388" y="465" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-13-_jbpm-unique-10" >
+        <di:waypoint x="172" y="323" />
+        <di:waypoint x="169" y="468" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-0-_jbpm-unique-11" >
+        <di:waypoint x="244" y="39" />
+        <di:waypoint x="247" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-11-_jbpm-unique-12" >
+        <di:waypoint x="247" y="142" />
+        <di:waypoint x="251" y="248" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-12-_jbpm-unique-13" >
+        <di:waypoint x="251" y="248" />
+        <di:waypoint x="172" y="323" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-12-_jbpm-unique-14" >
+        <di:waypoint x="251" y="248" />
+        <di:waypoint x="384" y="319" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</definitions>
