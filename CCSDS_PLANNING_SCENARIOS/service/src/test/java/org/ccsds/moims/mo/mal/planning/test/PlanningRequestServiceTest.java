@@ -34,7 +34,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/applicationContext.xml")
+@ContextConfiguration("classpath*:**/applicationPlanningContext.xml")
 public class PlanningRequestServiceTest {
 
 	public static final Logger LOGGER = Logger

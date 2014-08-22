@@ -8,7 +8,7 @@
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<import resource="classpath:/jpaContext.xml" />
+	<import resource="classpath*:/jpaContext.xml" />
 	
 	<context:component-scan base-package="org.ccsds.moims.mo.mal.automation.service" />
 

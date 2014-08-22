@@ -33,7 +33,7 @@ public class ProcedureStatusDaoTest {
 	@Autowired
 	private ProcedureDefinitionDaoImpl procedureDefinitionDaoImpl;
 	
-	@PersistenceUnit(unitName="planning-persistence")
+	@PersistenceUnit(unitName="automation-persistence")
     private EntityManagerFactory factory;
 	
 	@Test

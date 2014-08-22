@@ -33,7 +33,7 @@ public class ScheduleStatusDaoTest {
 	@Autowired
 	private ScheduleDefinitionDaoImpl scheduleDefinitionDaoImpl;
 
-	@PersistenceUnit(unitName = "planning-persistence")
+	@PersistenceUnit(unitName = "automation-persistence")
 	private EntityManagerFactory factory;
 
 	@Test
