@@ -27,7 +27,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/applicationPlanningContext.xml")
+@ContextConfiguration("classpath*:**/testPlanningContext.xml")
 public class PlanningRequestAddDefinitionTest extends JbpmJUnitBaseTestCase {
 	
 	private static final Logger logger = LoggerFactory.getLogger(InitMpsTest.class);
@@ -66,7 +66,7 @@ public class PlanningRequestAddDefinitionTest extends JbpmJUnitBaseTestCase {
     	prDef.setName("junittest");
     	prDef.setDescription("junit description");
     	Map<String, Object> params = new HashMap<String, Object>();
-        params.put("taskServiceConsumer", planningRequestConsumer);
+        params.put("planningRequestConsumer", planningRequestConsumer);
         params.put("prDef", prDef);
         ProcessInstance processInstance = ksession.startProcess("planningRequestService_addDefinition", params);
         logger.info("Stated completed");

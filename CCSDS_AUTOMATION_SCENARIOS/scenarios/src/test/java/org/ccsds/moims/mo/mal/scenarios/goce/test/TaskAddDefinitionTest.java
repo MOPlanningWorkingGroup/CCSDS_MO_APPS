@@ -30,7 +30,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/applicationPlanningContext.xml")
+@ContextConfiguration("classpath*:**/testPlanningContext.xml")
 public class TaskAddDefinitionTest extends JbpmJUnitBaseTestCase {
 	
 	private static final Logger logger = LoggerFactory.getLogger(InitMpsTest.class);
