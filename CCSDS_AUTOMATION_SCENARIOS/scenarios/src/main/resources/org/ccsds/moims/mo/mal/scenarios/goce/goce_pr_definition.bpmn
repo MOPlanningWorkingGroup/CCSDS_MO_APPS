@@ -108,8 +108,9 @@
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_18" drools:priority="1" name="" sourceRef="ScriptTask_3" targetRef="Task_6"/>
     <bpmn2:sequenceFlow id="SequenceFlow_19" drools:priority="1" name="" sourceRef="Task_6" targetRef="UserTask_2"/>
-    <bpmn2:endEvent id="EndEvent_1" name="">
+    <bpmn2:endEvent id="EndEvent_1" name="End Process">
       <bpmn2:incoming>SequenceFlow_9</bpmn2:incoming>
+      <bpmn2:terminateEventDefinition/>
     </bpmn2:endEvent>
     <bpmn2:startEvent id="StartEvent_3" name="PR Defining">
       <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>

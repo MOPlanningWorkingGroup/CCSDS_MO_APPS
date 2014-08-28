@@ -133,7 +133,7 @@
     <bpmn2:scriptTask id="ScriptTask_10" name="ScheduleExecutionService.getScheduleStatus" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>SequenceFlow_16</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_17</bpmn2:outgoing>
-      <bpmn2:script>kcontext.setVariable(&quot;scheduleStatus&quot;, scheduleExecutionServiceConsumer.getScheduleExecutionService().getScheduleStatus(scheduleId));</bpmn2:script>
+      <bpmn2:script>kcontext.setVariable(&quot;scheduleStatus&quot;, scheduleExecutionServiceConsumer.getScheduleExecutionService().getScheduleStatus(scheduleFilter, null));</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:scriptTask id="ScriptTask_11" name="Log Schedule Status" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>SequenceFlow_17</bpmn2:incoming>
