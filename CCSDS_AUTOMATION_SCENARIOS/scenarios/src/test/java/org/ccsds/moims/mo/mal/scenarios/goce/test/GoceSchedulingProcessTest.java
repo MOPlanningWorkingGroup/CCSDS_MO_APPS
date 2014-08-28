@@ -10,6 +10,7 @@ import org.jbpm.runtime.manager.impl.RuntimeEnvironmentBuilder;
 import org.jbpm.test.JbpmJUnitBaseTestCase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kie.api.io.ResourceType;
@@ -29,10 +30,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath*:**/testContext.xml")
+@Ignore
 public class GoceSchedulingProcessTest extends JbpmJUnitBaseTestCase {
 	
 	private static final Logger logger = LoggerFactory
-			.getLogger(InitMpsTest.class);
+			.getLogger(GoceSchedulingProcessTest.class);
 	private static RuntimeManager runtimeManager;
 	private KieSession ksession;
 	private RuntimeEngine runtimeEngine;

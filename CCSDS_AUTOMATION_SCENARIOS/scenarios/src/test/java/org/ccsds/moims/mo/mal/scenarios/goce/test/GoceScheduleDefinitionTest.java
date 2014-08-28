@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleDefinition;
 import org.ccsds.moims.mo.mal.automation.consumer.ScheduleExecutionServiceConsumer;
+import org.ccsds.moims.mo.mal.structures.LongList;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
 import org.jbpm.runtime.manager.impl.RuntimeEnvironmentBuilder;
 import org.jbpm.test.JbpmJUnitBaseTestCase;

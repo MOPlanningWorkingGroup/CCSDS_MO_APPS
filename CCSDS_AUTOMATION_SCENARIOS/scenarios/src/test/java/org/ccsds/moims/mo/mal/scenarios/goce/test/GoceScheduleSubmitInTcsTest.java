@@ -3,9 +3,9 @@ package org.ccsds.moims.mo.mal.scenarios.goce.test;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinition;
-import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
+import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleFilter;
+import org.ccsds.moims.mo.mal.automation.consumer.ScheduleExecutionServiceConsumer;
+import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.jbpm.runtime.manager.impl.RuntimeEnvironmentBuilder;
 import org.jbpm.test.JbpmJUnitBaseTestCase;
 import org.junit.After;
@@ -28,23 +28,23 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/testPlanningContext.xml")
-public class GocePrDefinitionTest extends JbpmJUnitBaseTestCase {
-
+@ContextConfiguration("classpath*:**/testContext.xml")
+public class GoceScheduleSubmitInTcsTest extends JbpmJUnitBaseTestCase {
+	
 	private static final Logger logger = LoggerFactory
-			.getLogger(GocePrDefinitionTest.class);
+			.getLogger(InitMpsTest.class);
 	private static RuntimeManager runtimeManager;
 	private KieSession ksession;
 	private RuntimeEngine runtimeEngine;
-
+	
 	@Autowired
-	private PlanningRequestServiceConsumer planningRequestConsumer;
-
+	private ScheduleExecutionServiceConsumer scheduleExecutionServiceConsumer;
+	
 	@Before
 	public void init() throws Exception {
 		logger.info("Loading goce_pr_definition.bpmn");
 		runtimeManager = getRuntimeManager(
-				"org/ccsds/moims/mo/mal/scenarios/goce/goce_pr_definition.bpmn");
+				"org/ccsds/moims/mo/mal/scenarios/goce/goce_schedule_service_tcs.bpmn");
 		runtimeEngine = runtimeManager.getRuntimeEngine(EmptyContext.get());
 		ksession = runtimeEngine.getKieSession();
 		TestWorkItemHandler testHandler = getTestWorkItemHandler();
@@ -71,18 +71,18 @@ public class GocePrDefinitionTest extends JbpmJUnitBaseTestCase {
 	
 	@Test
 	public void testProcess() {
-		ksession.getWorkItemManager().registerWorkItemHandler("Human Task", new SystemOutWorkItemHandler());
-		PlanningRequestDefinition prDef = new PlanningRequestDefinition();
-		prDef.setName("junittest");
-		prDef.setDescription("junit description");
+		ScheduleFilter scheduleFilter = new ScheduleFilter();
 		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("planningRequestConsumer", planningRequestConsumer);
-		params.put("prDef", prDef);
-		params.put("planningRequestGroup", null);
-		params.put("planningRequest", null);
+		params.put("i", 0);
+        params.put("scheduleFilter", scheduleFilter);
+        params.put("scheduleDefinitionList", null);
+        params.put("currentScheduleDefinition", null);
+        params.put("scheduleExecutionServiceConsumer", scheduleExecutionServiceConsumer);
+        IdentifierList identifierList = new IdentifierList();
+        params.put("identifierList", identifierList);
 		ProcessInstance processInstance = ksession.startProcess(
-				"goce_pr_definition", params);
+				"goce_schedule_service", params);
 		logger.info("Process completed");
 	}
-	
+
 }

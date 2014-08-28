@@ -1,6 +1,5 @@
 package org.ccsds.moims.mo.mal.automation.service;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorExecutionPublisher;
@@ -203,6 +202,7 @@ public class ScheduleExecutionServiceImpl extends
 	public LongList listDefinition(IdentifierList identifierList,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
+		/*
 		LongList longList = null;
 		if (identifierList != null) {
 			longList = new LongList();
@@ -213,6 +213,14 @@ public class ScheduleExecutionServiceImpl extends
 				if (def != null) {
 					longList.add(def.getId());
 				}
+			}
+		}
+		*/
+		List<org.ccsds.moims.mo.mal.automation.datamodel.ScheduleDefinition> list = scheduleDefinitionDaoImpl.getList();
+		LongList longList = new LongList();
+		if (list != null) {
+			for (org.ccsds.moims.mo.mal.automation.datamodel.ScheduleDefinition sd : list) {
+				longList.add(sd.getId());
 			}
 		}
 		return longList;
