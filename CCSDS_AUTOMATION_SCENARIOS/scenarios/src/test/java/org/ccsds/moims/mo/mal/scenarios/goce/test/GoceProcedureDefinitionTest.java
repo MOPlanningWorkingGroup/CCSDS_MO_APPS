@@ -3,13 +3,9 @@ package org.ccsds.moims.mo.mal.scenarios.goce.test;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer;
-import org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer;
-import org.ccsds.moims.mo.mal.structures.UOctet;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinition;
-import org.ccsds.moims.mo.planning.task.structures.TaskArgumentDefinition;
-import org.ccsds.moims.mo.planning.task.structures.TaskArgumentDefinitionList;
-import org.ccsds.moims.mo.planning.task.structures.TaskDefinition;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureDefinition;
+import org.ccsds.moims.mo.mal.automation.consumer.ProcedureExecutionServiceConsumer;
+import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
 import org.jbpm.runtime.manager.impl.RuntimeEnvironmentBuilder;
 import org.jbpm.test.JbpmJUnitBaseTestCase;
 import org.junit.After;
@@ -32,26 +28,23 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/testPlanningContext.xml")
-public class GocePrProcessTest extends JbpmJUnitBaseTestCase {
+@ContextConfiguration("classpath*:**/testContext.xml")
+public class GoceProcedureDefinitionTest extends JbpmJUnitBaseTestCase {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(GocePrProcessTest.class);
+			.getLogger(GoceProcedureDefinitionTest.class);
 	private static RuntimeManager runtimeManager;
 	private KieSession ksession;
 	private RuntimeEngine runtimeEngine;
 
 	@Autowired
-	private TaskServiceConsumer taskServiceConsumer;
-
-	@Autowired
-	private PlanningRequestServiceConsumer planningRequestConsumer;
+	private ProcedureExecutionServiceConsumer procedureExecutionServiceConsumer;
 
 	@Before
 	public void init() throws Exception {
-		logger.info("Loading goce_planningrequest.bpmn2");
+		logger.info("Loading goce_procedure_definition.bpmn");
 		runtimeManager = getRuntimeManager(
-				"org/ccsds/moims/mo/mal/scenarios/goce/goce_planningrequest.bpmn");
+				"org/ccsds/moims/mo/mal/scenarios/goce/goce_procedure_definition.bpmn");
 		runtimeEngine = runtimeManager.getRuntimeEngine(EmptyContext.get());
 		ksession = runtimeEngine.getKieSession();
 		TestWorkItemHandler testHandler = getTestWorkItemHandler();
@@ -75,31 +68,19 @@ public class GocePrProcessTest extends JbpmJUnitBaseTestCase {
 		return RuntimeManagerFactory.Factory.get().newSingletonRuntimeManager(
 				environment);
 	}
-
+	
 	@Test
 	public void testProcess() {
-		PlanningRequestDefinition prDef = new PlanningRequestDefinition();
-		prDef.setName("junittest");
-		prDef.setDescription("junit description");
-		TaskDefinition taskDef = new TaskDefinition();
-		taskDef.setName("junittest");
-		taskDef.setDescription("junit description");
-		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
-		TaskArgumentDefinition arg1 = new TaskArgumentDefinition();
-		arg1.setName("task argument");
-		arg1.setValueType(new UOctet((short) 2));
-		arguments.add(arg1);
-		taskDef.setArguments(arguments);
+		ksession.getWorkItemManager().registerWorkItemHandler("Human Task", new SystemOutWorkItemHandler());
+		ProcedureDefinition procedureDef = new ProcedureDefinition();
+		procedureDef.setName("junittest");
+		procedureDef.setDescription("junit description");
 		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("taskServiceConsumer", taskServiceConsumer);
-		params.put("taskDef", taskDef);
-		params.put("planningRequestConsumer", planningRequestConsumer);
-		params.put("prDef", prDef);
-		params.put("planningRequestGroup", null);
-		params.put("planningRequest", null);
+		params.put("procedureExecutionServiceConsumer", procedureExecutionServiceConsumer);
+		params.put("procedureDef", procedureDef);
 		ProcessInstance processInstance = ksession.startProcess(
-				"goce_planningrequest", params);
+				"goce_procedure_definition", params);
 		logger.info("Process completed");
 	}
-
+	
 }
