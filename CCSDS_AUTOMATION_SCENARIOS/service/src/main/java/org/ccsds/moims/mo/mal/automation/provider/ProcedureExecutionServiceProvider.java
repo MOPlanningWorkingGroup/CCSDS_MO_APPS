@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.ccsds.moims.mo.automation.procedureexecution.ProcedureExecutionHelper;
-import org.ccsds.moims.mo.automation.procedureexecution.provider.MonitorPublisher;
+import org.ccsds.moims.mo.automation.procedureexecution.provider.MonitorExecutionPublisher;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -37,7 +37,7 @@ public static final Logger LOGGER = Logger.getLogger(ProcedureExecutionServicePr
 	private MALProvider serviceProvider;
 	private ProcedureExecutionServiceImpl procedureExecutionService;
 	private String propertyFile;
-	private MonitorPublisher monitorPublisher;
+	private MonitorExecutionPublisher monitorPublisher;
 	
 	public ProcedureExecutionServiceProvider (
 			ProcedureExecutionServiceImpl procedureExecutionService) {
@@ -82,7 +82,7 @@ public static final Logger LOGGER = Logger.getLogger(ProcedureExecutionServicePr
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
 		domain.add(new Identifier("mission"));
-		monitorPublisher = procedureExecutionService.createMonitorPublisher(domain, new Identifier("GROUND"),
+		monitorPublisher = procedureExecutionService.createMonitorExecutionPublisher(domain, new Identifier("GROUND"),
 				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
 				null, new UInteger(0));
 		Properties props = System.getProperties();

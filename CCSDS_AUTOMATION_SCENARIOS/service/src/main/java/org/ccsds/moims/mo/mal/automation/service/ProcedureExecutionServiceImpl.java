@@ -44,7 +44,7 @@ public class ProcedureExecutionServiceImpl extends
 	@Autowired
 	private ProcedureStatusDaoImpl procedureStatusDaoImpl;
 
-	public Long startProcedure(Long procedureDefId,
+	public Long start(Long procedureDefId,
 			ProcedureInvocationDetails procedureInvocationDetails,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
@@ -62,7 +62,7 @@ public class ProcedureExecutionServiceImpl extends
 		return procedure.getId();
 	}
 
-	public void pauseProcedure(Long procedureId, MALInteraction interaction)
+	public void pause(Long procedureId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure = procedureDaoImpl
 				.get(procedureId);
@@ -78,7 +78,7 @@ public class ProcedureExecutionServiceImpl extends
 		procedureStatusDaoImpl.pause(procedureId);
 	}
 
-	public void resumeProcedure(Long procedureId, MALInteraction interaction)
+	public void resume(Long procedureId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure = procedureDaoImpl
 				.get(procedureId);
@@ -94,7 +94,7 @@ public class ProcedureExecutionServiceImpl extends
 		procedureStatusDaoImpl.resume(procedureId);
 	}
 
-	public void terminateProcedure(Long procedureId, MALInteraction interaction)
+	public void terminate(Long procedureId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure = procedureDaoImpl
 				.get(procedureId);
@@ -110,7 +110,7 @@ public class ProcedureExecutionServiceImpl extends
 		procedureStatusDaoImpl.terminate(procedureId);
 	}
 
-	public Procedure getProcedure(Long procedureId, MALInteraction interaction)
+	public Procedure get(Long procedureId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure = procedureDaoImpl
 				.get(procedureId);
@@ -119,7 +119,7 @@ public class ProcedureExecutionServiceImpl extends
 		return cast(dbProcedure, dbProcedureStatus);
 	}
 
-	public LongList getProcedureList(
+	public LongList list(
 			ProcedureOccurrenceFilter procedureOccurrenceFilter,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
@@ -132,16 +132,6 @@ public class ProcedureExecutionServiceImpl extends
 			}
 		}
 		return list;
-	}
-
-	public ProcedureStatus getStatus(Long procedureId,
-			MALInteraction interaction) throws MALInteractionException,
-			MALException {
-		org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure = procedureDaoImpl
-				.get(procedureId);
-		org.ccsds.moims.mo.mal.automation.datamodel.ProcedureStatus dbProcedureStatus = procedureStatusDaoImpl
-				.getCurrentStatus(dbProcedure);
-		return cast(dbProcedureStatus);
 	}
 
 	public Long addDefinition(ProcedureDefinition procedureDefinition,

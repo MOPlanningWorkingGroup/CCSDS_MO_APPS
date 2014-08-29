@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.ccsds.moims.mo.automation.scheduleexecution.ScheduleExecutionHelper;
-import org.ccsds.moims.mo.automation.scheduleexecution.provider.SubscribePublisher;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorSchedulesPublisher;
 import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorExecutionPublisher;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
@@ -38,7 +38,7 @@ public class ScheduleExecutionServiceProvider {
 	private MALProvider serviceProvider;
 	private ScheduleExecutionServiceImpl scheduleExecutionService;
 	private String propertyFile;
-	private SubscribePublisher subscribePublisher;
+	private MonitorSchedulesPublisher subscribePublisher;
 	private MonitorExecutionPublisher monitorExecutionPublisher;
 	
 	public ScheduleExecutionServiceProvider (
@@ -84,7 +84,7 @@ public class ScheduleExecutionServiceProvider {
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
 		domain.add(new Identifier("mission1"));
-		subscribePublisher = scheduleExecutionService.createSubscribePublisher(domain, new Identifier("GROUND"),
+		subscribePublisher = scheduleExecutionService.createMonitorSchedulesPublisher(domain, new Identifier("GROUND"),
 				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
 				null, new UInteger(0));
 		monitorExecutionPublisher = scheduleExecutionService.createMonitorExecutionPublisher(domain, new Identifier("GROUND"),

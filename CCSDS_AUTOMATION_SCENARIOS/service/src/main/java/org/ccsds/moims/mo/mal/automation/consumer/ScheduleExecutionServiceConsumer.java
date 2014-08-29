@@ -131,7 +131,7 @@ public class ScheduleExecutionServiceConsumer {
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
 		scheduleExecutionService = new ScheduleExecutionStub(tmConsumer);
-		scheduleExecutionService.subscribeRegister(subRequestWildcard, new ScheduleExecutionServiceConsumerAdapter());
+		scheduleExecutionService.monitorSchedulesRegister(subRequestWildcard, new ScheduleExecutionServiceConsumerAdapter());
 		scheduleExecutionService.monitorExecutionRegister(subRequestWildcard, new ScheduleExecutionServiceConsumerAdapter());
 	}
 
@@ -144,7 +144,7 @@ public class ScheduleExecutionServiceConsumer {
 			Identifier subscriptionId = new Identifier("SUB");
 			IdentifierList subLst = new IdentifierList();
 			subLst.add(subscriptionId);
-			scheduleExecutionService.subscribeDeregister(subLst);
+			scheduleExecutionService.monitorSchedulesDeregister(subLst);
 			scheduleExecutionService.monitorExecutionDeregister(subLst);
 		}
 		if (tmConsumer != null)

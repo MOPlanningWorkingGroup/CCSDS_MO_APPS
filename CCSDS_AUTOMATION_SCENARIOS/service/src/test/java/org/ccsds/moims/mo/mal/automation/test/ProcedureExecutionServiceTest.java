@@ -11,7 +11,6 @@ import org.ccsds.moims.mo.automation.procedureexecution.structures.Procedure;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureDefinition;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureInvocationDetails;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureState;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureStatus;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
@@ -88,7 +87,7 @@ public class ProcedureExecutionServiceTest {
 
 		Subscription subRequestWildcard = new Subscription(subscriptionId,
 				entities);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().monitorRegister(
+		procedureExecutionServiceConsumer.getProcedureExecutionService().monitorExecutionRegister(
 				subRequestWildcard, new ProcedureExecutionServiceConsumerAdapter());
 	}
 	
@@ -96,15 +95,15 @@ public class ProcedureExecutionServiceTest {
 		final Identifier subscriptionId = new Identifier("SUB2");
 		final IdentifierList subLst = new IdentifierList();
 		subLst.add(subscriptionId);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().monitorDeregister(subLst);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().monitorExecutionDeregister(subLst);
 	}
 	
 	@Test
 	public void testStartProcedure() throws MALInteractionException, MALException {
 		Long procedureDefId = addNewProcedureDefinition();
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		Long procId = procedureExecutionServiceConsumer.getProcedureExecutionService().startProcedure(procedureDefId, details);
-		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().getProcedure(procId);
+		Long procId = procedureExecutionServiceConsumer.getProcedureExecutionService().start(procedureDefId, details);
+		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().get(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.RUNNING);
 	}
 	
@@ -112,9 +111,9 @@ public class ProcedureExecutionServiceTest {
 	public void testPauseProcedure() throws MALInteractionException, MALException {
 		Long procedureDefId = addNewProcedureDefinition();
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		Long procId = procedureExecutionServiceConsumer.getProcedureExecutionService().startProcedure(procedureDefId, details);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().pauseProcedure(procId);
-		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().getProcedure(procId);
+		Long procId = procedureExecutionServiceConsumer.getProcedureExecutionService().start(procedureDefId, details);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().pause(procId);
+		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().get(procId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.PAUSED);
 	}
 	
@@ -122,10 +121,10 @@ public class ProcedureExecutionServiceTest {
 	public void testResumeProcedure() throws MALInteractionException, MALException {
 		Long procedureDefId = addNewProcedureDefinition();
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		Long procedureId = procedureExecutionServiceConsumer.getProcedureExecutionService().startProcedure(procedureDefId, details);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().pauseProcedure(procedureId);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().resumeProcedure(procedureId);
-		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().getProcedure(procedureId);
+		Long procedureId = procedureExecutionServiceConsumer.getProcedureExecutionService().start(procedureDefId, details);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().pause(procedureId);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().resume(procedureId);
+		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().get(procedureId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.RUNNING);
 	}
 	
@@ -133,19 +132,10 @@ public class ProcedureExecutionServiceTest {
 	public void testTerminateProcedure() throws MALInteractionException, MALException {
 		Long procedureDefId = addNewProcedureDefinition();
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		Long procedureId = procedureExecutionServiceConsumer.getProcedureExecutionService().startProcedure(procedureDefId, details);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().terminateProcedure(procedureId);
-		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().getProcedure(procedureId);
+		Long procedureId = procedureExecutionServiceConsumer.getProcedureExecutionService().start(procedureDefId, details);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().terminate(procedureId);
+		Procedure po = procedureExecutionServiceConsumer.getProcedureExecutionService().get(procedureId);
 		assertTrue(po != null && po.getStatus().getState() == ProcedureState.ABORTED);
-	}
-	
-	@Test
-	public void testGetStatus() throws MALInteractionException, MALException {
-		Long procedureDefId = addNewProcedureDefinition();
-		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		Long procedureId = procedureExecutionServiceConsumer.getProcedureExecutionService().startProcedure(procedureDefId, details);
-		ProcedureStatus ps = procedureExecutionServiceConsumer.getProcedureExecutionService().getStatus(procedureId);
-		assertTrue(ps != null && ps.getState() == ProcedureState.RUNNING);
 	}
 	
 	@Test
@@ -153,13 +143,13 @@ public class ProcedureExecutionServiceTest {
 		Long procedureDefId = addNewProcedureDefinition();
 		TestAdapter testAdapter = new TestAdapter();
 		ProcedureInvocationDetails details = new ProcedureInvocationDetails();
-		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncStartProcedure(procedureDefId, details, testAdapter);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncStart(procedureDefId, details, testAdapter);
 		Thread.sleep(300);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncPauseProcedure(testAdapter.procedureId, testAdapter);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncPause(testAdapter.procedureId, testAdapter);
 		Thread.sleep(300);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncResumeProcedure(testAdapter.procedureId, testAdapter);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncResume(testAdapter.procedureId, testAdapter);
 		Thread.sleep(300);
-		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncTerminateProcedure(testAdapter.procedureId, testAdapter);
+		procedureExecutionServiceConsumer.getProcedureExecutionService().asyncTerminate(testAdapter.procedureId, testAdapter);
 		assertTrue(testAdapter.counter > 0);
 	}
 	
@@ -169,33 +159,33 @@ public class ProcedureExecutionServiceTest {
 		public Long procedureId;
 
 		@Override
-		public void startProcedureResponseReceived(MALMessageHeader msgHeader,
+		public void startResponseReceived(MALMessageHeader msgHeader,
 				Long procedureId, Map qosProperties) {
 			// TODO Auto-generated method stub
 			counter++;
 			this.procedureId = procedureId;
-			super.startProcedureResponseReceived(msgHeader, procedureId, qosProperties);
+			super.startResponseReceived(msgHeader, procedureId, qosProperties);
 		}
 
 		@Override
-		public void pauseProcedureAckReceived(MALMessageHeader msgHeader,
+		public void pauseAckReceived(MALMessageHeader msgHeader,
 				Map qosProperties) {
 			counter++;
-			super.pauseProcedureAckReceived(msgHeader, qosProperties);
+			super.pauseAckReceived(msgHeader, qosProperties);
 		}
 
 		@Override
-		public void resumeProcedureAckReceived(MALMessageHeader msgHeader,
+		public void resumeAckReceived(MALMessageHeader msgHeader,
 				Map qosProperties) {
 			counter++;
-			super.resumeProcedureAckReceived(msgHeader, qosProperties);
+			super.resumeAckReceived(msgHeader, qosProperties);
 		}
 
 		@Override
-		public void terminateProcedureAckReceived(MALMessageHeader msgHeader,
+		public void terminateAckReceived(MALMessageHeader msgHeader,
 				Map qosProperties) {
 			counter++;
-			super.terminateProcedureAckReceived(msgHeader, qosProperties);
+			super.terminateAckReceived(msgHeader, qosProperties);
 		}
 		
 	}

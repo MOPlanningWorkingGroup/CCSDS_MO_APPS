@@ -131,7 +131,7 @@ public class ProcedureExecutionServiceConsumer {
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
 		procedureExecutionService = new ProcedureExecutionStub(tmConsumer);
-		procedureExecutionService.monitorRegister(subRequestWildcard, new ProcedureExecutionServiceConsumerAdapter());
+		procedureExecutionService.monitorExecutionRegister(subRequestWildcard, new ProcedureExecutionServiceConsumerAdapter());
 	}
 
 	public ProcedureExecutionStub getProcedureExecutionService() {
@@ -143,7 +143,7 @@ public class ProcedureExecutionServiceConsumer {
 			Identifier subscriptionId = new Identifier("SUB");
 			IdentifierList subLst = new IdentifierList();
 			subLst.add(subscriptionId);
-			procedureExecutionService.monitorDeregister(subLst);
+			procedureExecutionService.monitorExecutionDeregister(subLst);
 		}
 		if (tmConsumer != null)
 			tmConsumer.close();
