@@ -21,7 +21,8 @@ import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
-import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPublisher;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.mal.planning.service.PlanningRequestServiceImpl;
 
 /**
@@ -39,7 +40,8 @@ public class PlanningRequestServiceProvider {
 	private MALProvider serviceProvider;
 	private PlanningRequestServiceImpl planningRequestService;
 	private String propertyFile;
-	private MonitorPublisher publisher;
+	private MonitorPlanningRequestsPublisher publisher;
+	private MonitorTasksPublisher taskPublisher;
 	
 	public PlanningRequestInheritanceSkeleton getTestService() {
 		return planningRequestService;
@@ -86,7 +88,10 @@ public class PlanningRequestServiceProvider {
 		final IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("esa"));
 		domain.add(new Identifier("mission"));
-		publisher = planningRequestService.createMonitorPublisher(domain, new Identifier("GROUND"),
+		publisher = planningRequestService.createMonitorPlanningRequestsPublisher(domain, new Identifier("GROUND"),
+				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
+				null, new UInteger(0));
+		taskPublisher = planningRequestService.createMonitorTasksPublisher(domain, new Identifier("GROUND"),
 				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
 				null, new UInteger(0));
 		// start transport

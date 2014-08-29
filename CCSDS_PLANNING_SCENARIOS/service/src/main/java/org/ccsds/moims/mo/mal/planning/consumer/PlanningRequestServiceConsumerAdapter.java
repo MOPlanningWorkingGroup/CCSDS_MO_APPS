@@ -11,9 +11,8 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilterList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestUpdateList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
 
 /**
  * Adapter to listen events.
@@ -41,48 +40,40 @@ public class PlanningRequestServiceConsumerAdapter extends PlanningRequestAdapte
 	}
 
 	@Override
-	public void submitPlanningRequestResponseReceived(
+	public void addResponseReceived(
 			MALMessageHeader msgHeader, Long _Long0, Map qosProperties) {
-		LOGGER.info(" *** submitPlanningRequestResponseReceived " + name);
-		super.submitPlanningRequestResponseReceived(msgHeader, _Long0, qosProperties);
+		LOGGER.info(" *** addResponseReceived " + name);
+		super.addResponseReceived(msgHeader, _Long0, qosProperties);
 	}
 
 	@Override
-	public void updatePlanningRequestAckReceived(MALMessageHeader msgHeader,
+	public void updateAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** updatePlanningRequestAckReceived " + name);
-		super.updatePlanningRequestAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** updateAckReceived " + name);
+		super.updateAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void removePlanningRequestAckReceived(MALMessageHeader msgHeader,
+	public void removeAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** removePlanningRequestAckReceived " + name);
-		super.removePlanningRequestAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** removeAckReceived " + name);
+		super.removeAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void getPlanningRequestResponseReceived(MALMessageHeader msgHeader,
+	public void getResponseReceived(MALMessageHeader msgHeader,
 			PlanningRequest _PlanningRequest0, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestResponseReceived " + name);
-		super.getPlanningRequestResponseReceived(msgHeader, _PlanningRequest0,
+		LOGGER.info(" *** getResponseReceived " + name);
+		super.getResponseReceived(msgHeader, _PlanningRequest0,
 				qosProperties);
 	}
 
 	@Override
-	public void getPlanningRequestListResponseReceived(
+	public void listResponseReceived(
 			MALMessageHeader msgHeader,
 			PlanningRequestList _PlanningRequestList0, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestListResponseReceived " + name);
-		super.getPlanningRequestListResponseReceived(msgHeader, _PlanningRequestList0,
-				qosProperties);
-	}
-
-	@Override
-	public void getPlanningRequestStatusResponseReceived(
-			MALMessageHeader msgHeader, StateEnum _StateEnum0, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestStatusResponseReceived " + name);
-		super.getPlanningRequestStatusResponseReceived(msgHeader, _StateEnum0,
+		LOGGER.info(" *** listResponseReceived " + name);
+		super.listResponseReceived(msgHeader, _PlanningRequestList0,
 				qosProperties);
 	}
 
@@ -94,88 +85,79 @@ public class PlanningRequestServiceConsumerAdapter extends PlanningRequestAdapte
 	}
 
 	@Override
-	public void monitorRegisterAckReceived(MALMessageHeader msgHeader,
+	public void monitorPlanningRequestsRegisterAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** monitorRegisterAckReceived " + name);
-		super.monitorRegisterAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** monitorPlanningRequestsRegisterAckReceived " + name);
+		super.monitorPlanningRequestsRegisterAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void monitorRegisterErrorReceived(MALMessageHeader msgHeader,
+	public void monitorPlanningRequestsRegisterErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** monitorRegisterErrorReceived " + name);
-		super.monitorRegisterErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** monitorPlanningRequestsRegisterErrorReceived " + name);
+		super.monitorPlanningRequestsRegisterErrorReceived(msgHeader, error, qosProperties);
 	}
 
 	@Override
-	public void monitorDeregisterAckReceived(MALMessageHeader msgHeader,
+	public void monitorPlanningRequestsDeregisterAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** monitorDeregisterAckReceived " + name);
-		super.monitorDeregisterAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** monitorPlanningRequestsDeregisterAckReceived " + name);
+		super.monitorPlanningRequestsDeregisterAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void monitorNotifyReceived(MALMessageHeader msgHeader,
+	public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader,
 			Identifier _Identifier0, UpdateHeaderList _UpdateHeaderList1,
-			PlanningRequestUpdateList _PlanningRequestUpdateList2,
+			PlanningRequestFilterList _PlanningRequestFilterList2,
 			Map qosProperties) {
 		LOGGER.info(" *** monitorNotifyReceived " + name);
-		super.monitorNotifyReceived(msgHeader, _Identifier0, _UpdateHeaderList1,
-				_PlanningRequestUpdateList2, qosProperties);
+		super.monitorPlanningRequestsNotifyReceived(msgHeader, _Identifier0, _UpdateHeaderList1, _PlanningRequestFilterList2, qosProperties);
 		monitorNotifyReceivedCounter++;
 	}
 
 	@Override
-	public void monitorNotifyErrorReceived(MALMessageHeader msgHeader,
+	public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** monitorNotifyErrorReceived " + name);
-		super.monitorNotifyErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** monitorPlanningRequestsNotifyErrorReceived " + name);
+		super.monitorPlanningRequestsNotifyErrorReceived(msgHeader, error, qosProperties);
 		monitorNotifyErrorReceived++;
 	}
 
 	@Override
-	public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader,
+	public void addErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** submitPlanningRequestErrorReceived " + name);
-		super.submitPlanningRequestErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** addErrorReceived " + name);
+		super.addErrorReceived(msgHeader, error, qosProperties);
 	}
 
 	@Override
-	public void updatePlanningRequestErrorReceived(MALMessageHeader msgHeader,
+	public void updateErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** updatePlanningRequestErrorReceived " + name);
-		super.updatePlanningRequestErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** updateErrorReceived " + name);
+		super.updateErrorReceived(msgHeader, error, qosProperties);
 	}
 
 	@Override
-	public void removePlanningRequestErrorReceived(MALMessageHeader msgHeader,
+	public void removeErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** removePlanningRequestErrorReceived " + name);
-		super.removePlanningRequestErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** removeErrorReceived " + name);
+		super.removeErrorReceived(msgHeader, error, qosProperties);
 	}
 
 	@Override
-	public void getPlanningRequestErrorReceived(MALMessageHeader msgHeader,
+	public void getErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestErrorReceived " + name);
-		super.getPlanningRequestErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** getErrorReceived " + name);
+		super.getErrorReceived(msgHeader, error, qosProperties);
 	}
 
 	@Override
-	public void getPlanningRequestListErrorReceived(MALMessageHeader msgHeader,
+	public void listErrorReceived(MALMessageHeader msgHeader,
 			MALStandardError error, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestListErrorReceived " + name);
-		super.getPlanningRequestListErrorReceived(msgHeader, error, qosProperties);
+		LOGGER.info(" *** listErrorReceived " + name);
+		super.listErrorReceived(msgHeader, error, qosProperties);
 	}
 
-	@Override
-	public void getPlanningRequestStatusErrorReceived(
-			MALMessageHeader msgHeader, MALStandardError error,
-			Map qosProperties) {
-		LOGGER.info(" ***  getPlanningRequestStatusErrorReceived " + name);
-		super.getPlanningRequestStatusErrorReceived(msgHeader, error, qosProperties);
-	}
-	
 	
 
 }

@@ -28,7 +28,7 @@ public class PlanningRequestServiceUtil {
 		Subscription subRequestWildcard = new Subscription(subscriptionId,
 				entities);
 		PlanningRequestServiceConsumerAdapter listener = new PlanningRequestServiceConsumerAdapter(name);
-		consumer.getPlanningRequestService().monitorRegister(
+		consumer.getPlanningRequestService().monitorPlanningRequestsRegister(
 				subRequestWildcard, listener);
 		return listener;
 	}
@@ -37,7 +37,7 @@ public class PlanningRequestServiceUtil {
 		final Identifier subscriptionId = new Identifier(name);
 		final IdentifierList subLst = new IdentifierList();
 		subLst.add(subscriptionId);
-		consumer.getPlanningRequestService().monitorDeregister(subLst);
+		consumer.getPlanningRequestService().monitorPlanningRequestsDeregister(subLst);
 	}
 
 }

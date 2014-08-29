@@ -41,23 +41,4 @@
 		<property name="uri" value="#{planningRequestServiceProvider.uri}" />
 	</bean>
 
-	<bean id="taskService" class="org.ccsds.moims.mo.mal.planning.service.TaskServiceImpl">
-	</bean>
-
-	<bean id="taskServiceProvider"
-		class="org.ccsds.moims.mo.mal.planning.provider.TaskServiceProvider"
-		init-method="start" destroy-method="stop">
-		<constructor-arg index="0" ref="taskService" />
-		<property name="propertyFile" value="/demoProvider.properties" />
-	</bean>
-
-	<bean id="taskServiceConsumer"
-		class="org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer"
-		init-method="start" destroy-method="stop" depends-on="taskServiceProvider">
-		<constructor-arg index="0" value="TASK_SUB" />
-		<property name="propertyFile" value="/demoConsumer.properties" />
-		<property name="broker" value="#{taskServiceProvider.brokerUri}" />
-		<property name="uri" value="#{taskServiceProvider.uri}" />
-	</bean>
-
 </beans>

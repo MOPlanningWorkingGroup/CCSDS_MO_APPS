@@ -5,7 +5,6 @@ import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALHelper;
 import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
-import org.ccsds.moims.mo.planning.task.TaskHelper;
 
 /**
  * Helper class helps to manage service registrations.
@@ -31,14 +30,6 @@ public class ProviderInitCenter {
 			startBase();
 			isPlanningRequestRunning = true;
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-		}
-	}
-	
-	public static void startTaskRegistry() throws MALException {
-		if (!isTaskRunning) {
-			startBase();
-			isTaskRunning = true;
-			TaskHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
 	}
 

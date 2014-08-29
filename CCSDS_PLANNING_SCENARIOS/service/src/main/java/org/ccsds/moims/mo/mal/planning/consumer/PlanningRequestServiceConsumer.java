@@ -29,8 +29,9 @@ import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 
 /**
  * PlanningRequest service consumer.
+ * 
  * @author krikse
- *
+ * 
  */
 public class PlanningRequestServiceConsumer {
 
@@ -51,7 +52,7 @@ public class PlanningRequestServiceConsumer {
 	private String uri; // System.getProperty("uri");
 	private String broker; // System.getProperty("broker");
 	private String consumerName;
-	
+
 	public PlanningRequestServiceConsumer(String consumerName) {
 		this.consumerName = consumerName;
 	}
@@ -61,6 +62,7 @@ public class PlanningRequestServiceConsumer {
 			init();
 			initConsumer();
 			startConsumerService();
+			startTaskConsumerService();
 		} catch (Exception ex) {
 			LOGGER.severe(ex.getMessage());
 		}
@@ -102,20 +104,22 @@ public class PlanningRequestServiceConsumer {
 
 	private void initConsumer() throws MALInteractionException, MALException {
 		final Identifier subscriptionId = new Identifier(consumerName);
-	    // set up the wildcard subscription
-	    {
-	      final EntityKey entitykey = new EntityKey(new Identifier("*"), 0L, 0L, 0L);
+		// set up the wildcard subscription
+		{
+			final EntityKey entitykey = new EntityKey(new Identifier("*"), 0L,
+					0L, 0L);
 
-	      final EntityKeyList entityKeys = new EntityKeyList();
-	      entityKeys.add(entitykey);
+			final EntityKeyList entityKeys = new EntityKeyList();
+			entityKeys.add(entitykey);
 
-	      final EntityRequest entity = new EntityRequest(null, false, false, false, false, entityKeys);
+			final EntityRequest entity = new EntityRequest(null, false, false,
+					false, false, entityKeys);
 
-	      final EntityRequestList entities = new EntityRequestList();
-	      entities.add(entity);
+			final EntityRequestList entities = new EntityRequestList();
+			entities.add(entity);
 
-	      subRequestWildcard = new Subscription(subscriptionId, entities);
-	    }
+			subRequestWildcard = new Subscription(subscriptionId, entities);
+		}
 
 	}
 
@@ -127,12 +131,29 @@ public class PlanningRequestServiceConsumer {
 		mal = malFactory.createMALContext(System.getProperties());
 		consumerMgr = mal.createConsumerManager();
 		tmConsumer = consumerMgr.createConsumer((String) null, new URI(uri),
-				new URI(broker),
-				PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
+				new URI(broker), PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				new Blob("".getBytes()), domain, network, session, sessionName,
 				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
 		planningRequestService = new PlanningRequestStub(tmConsumer);
-		planningRequestService.monitorRegister(subRequestWildcard, new PlanningRequestServiceConsumerAdapter(consumerName));
+		planningRequestService.monitorPlanningRequestsRegister(
+				subRequestWildcard, new PlanningRequestServiceConsumerAdapter(
+						consumerName));
+	}
+
+	private void startTaskConsumerService() throws MALException,
+			MalformedURLException, MALInteractionException {
+		domain.add(new Identifier("esa"));
+		domain.add(new Identifier("mission"));
+		malFactory = MALContextFactory.newFactory();
+		mal = malFactory.createMALContext(System.getProperties());
+		consumerMgr = mal.createConsumerManager();
+		tmConsumer = consumerMgr.createConsumer((String) null, new URI(uri),
+				new URI(broker), PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
+				new Blob("".getBytes()), domain, network, session, sessionName,
+				QoSLevel.ASSURED, System.getProperties(), new UInteger(0));
+		planningRequestService = new PlanningRequestStub(tmConsumer);
+		planningRequestService.monitorTasksRegister(subRequestWildcard, new PlanningRequestServiceConsumerAdapter(
+						consumerName));
 	}
 
 	public PlanningRequestStub getPlanningRequestService() {
@@ -144,7 +165,8 @@ public class PlanningRequestServiceConsumer {
 			Identifier subscriptionId = new Identifier(consumerName);
 			IdentifierList subLst = new IdentifierList();
 			subLst.add(subscriptionId);
-			planningRequestService.monitorDeregister(subLst);
+			planningRequestService.monitorPlanningRequestsDeregister(subLst);
+			planningRequestService.monitorTasksDeregister(subLst);
 		}
 		if (tmConsumer != null)
 			tmConsumer.close();

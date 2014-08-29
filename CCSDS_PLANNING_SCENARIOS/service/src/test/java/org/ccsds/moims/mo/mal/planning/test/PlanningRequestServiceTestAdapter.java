@@ -3,11 +3,15 @@ package org.ccsds.moims.mo.mal.planning.test;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.ccsds.moims.mo.mal.structures.Identifier;
+import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskFilterList;
 
 /**
  * Adapter to listen events.
@@ -30,58 +34,68 @@ public class PlanningRequestServiceTestAdapter extends PlanningRequestAdapter {
 	public PlanningRequestServiceTestAdapter(String name) {
 		this.name = name;
 	}
+	
+	
 
 	@Override
-	public void submitPlanningRequestResponseReceived(
-			MALMessageHeader msgHeader, Long _Long0, Map qosProperties) {
-		LOGGER.info(" *** submitPlanningRequestResponseReceived " + name);
+	public void addResponseReceived(MALMessageHeader msgHeader,
+			Long planningRequestIdentifier, Map qosProperties) {
+		planningRequestId = planningRequestIdentifier;
 		counter++;
-		planningRequestId = _Long0;
-		super.submitPlanningRequestResponseReceived(msgHeader, _Long0, qosProperties);
+		super.addResponseReceived(msgHeader, planningRequestIdentifier, qosProperties);
 	}
 
 	@Override
-	public void updatePlanningRequestAckReceived(MALMessageHeader msgHeader,
-			Map qosProperties) {
-		LOGGER.info(" *** updatePlanningRequestAckReceived " + name);
+	public void listDefinitionResponseReceived(MALMessageHeader msgHeader,
+			LongList planningRequestDefinitionIdList, Map qosProperties) {
+		LOGGER.info(" *** listDefinitionResponseReceived " + name);
 		counter++;
-		super.updatePlanningRequestAckReceived(msgHeader, qosProperties);
+		super.listDefinitionResponseReceived(msgHeader,
+				planningRequestDefinitionIdList, qosProperties);
 	}
 
 	@Override
-	public void removePlanningRequestAckReceived(MALMessageHeader msgHeader,
-			Map qosProperties) {
-		LOGGER.info(" *** removePlanningRequestAckReceived " + name);
+	public void removeAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+		LOGGER.info(" *** removeAckReceived " + name);
 		counter++;
-		super.removePlanningRequestAckReceived(msgHeader, qosProperties);
+		super.removeAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void getPlanningRequestResponseReceived(MALMessageHeader msgHeader,
-			PlanningRequest _PlanningRequest0, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestResponseReceived " + name);
-		counter++;
-		super.getPlanningRequestResponseReceived(msgHeader, _PlanningRequest0,
-				qosProperties);
-	}
-
-	@Override
-	public void getPlanningRequestListResponseReceived(
-			MALMessageHeader msgHeader,
+	public void listResponseReceived(MALMessageHeader msgHeader,
 			PlanningRequestList _PlanningRequestList0, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestListResponseReceived " + name);
+		LOGGER.info(" *** listResponseReceived " + name);
 		counter++;
-		super.getPlanningRequestListResponseReceived(msgHeader, _PlanningRequestList0,
+		super.listResponseReceived(msgHeader, _PlanningRequestList0, qosProperties);
+	}
+
+	@Override
+	public void listTaskDefinitionResponseReceived(MALMessageHeader msgHeader,
+			LongList taskDefinitionIds, Map qosProperties) {
+		LOGGER.info(" *** listTaskDefinitionResponseReceived " + name);
+		counter++;
+		super.listTaskDefinitionResponseReceived(msgHeader, taskDefinitionIds,
 				qosProperties);
 	}
 
 	@Override
-	public void getPlanningRequestStatusResponseReceived(
-			MALMessageHeader msgHeader, StateEnum _StateEnum0, Map qosProperties) {
-		LOGGER.info(" *** getPlanningRequestStatusResponseReceived " + name);
+	public void updateTaskDefinitionAckReceived(MALMessageHeader msgHeader,
+			Map qosProperties) {
+		LOGGER.info(" *** updateTaskDefinitionAckReceived " + name);
 		counter++;
-		super.getPlanningRequestStatusResponseReceived(msgHeader, _StateEnum0,
-				qosProperties);
+		super.updateTaskDefinitionAckReceived(msgHeader, qosProperties);
 	}
+
+	@Override
+	public void monitorTasksNotifyReceived(MALMessageHeader msgHeader,
+			Identifier _Identifier0, UpdateHeaderList _UpdateHeaderList1,
+			TaskFilterList _TaskFilterList2, Map qosProperties) {
+		LOGGER.info(" *** monitorTasksNotifyReceived " + name);
+		counter++;
+		super.monitorTasksNotifyReceived(msgHeader, _Identifier0, _UpdateHeaderList1,
+				_TaskFilterList2, qosProperties);
+	}
+
+	
 
 }
