@@ -3,12 +3,12 @@
   <bpmn2:itemDefinition id="ItemDefinition_1" structureRef="String"/>
   <bpmn2:itemDefinition id="ItemDefinition_2" structureRef="Integer"/>
   <bpmn2:itemDefinition id="ItemDefinition_3" structureRef="Boolean"/>
-  <bpmn2:itemDefinition id="_taskServiceConsumer" structureRef="org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer"/>
-  <bpmn2:itemDefinition id="_taskDef" structureRef="org.ccsds.moims.mo.planning.task.structures.TaskDefinition"/>
+  <bpmn2:itemDefinition id="_planningRequestConsumer" structureRef="org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer"/>
+  <bpmn2:itemDefinition id="_taskDef" structureRef="org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinition"/>
   <bpmn2:itemDefinition id="_taskDefId" structureRef="Long"/>
   <bpmn2:process id="goce_task_definition" drools:version="1" drools:packageName="defaultPackage" drools:adHoc="false" name="goce_task_definition" isExecutable="true">
     <bpmn2:property id="taskDef" itemSubjectRef="_taskDef"/>
-    <bpmn2:property id="taskServiceConsumer" itemSubjectRef="_taskServiceConsumer"/>
+    <bpmn2:property id="planningRequestConsumer" itemSubjectRef="_planningRequestConsumer"/>
     <bpmn2:property id="taskDefId" itemSubjectRef="_taskDefId"/>
     <bpmn2:laneSet id="LaneSet_1" name="Lane Set 1">
       <bpmn2:lane id="Lane_1" name="MPS">
@@ -71,12 +71,12 @@
         </bpmn2:resourceAssignmentExpression>
       </bpmn2:potentialOwner>
     </bpmn2:userTask>
-    <bpmn2:scriptTask id="ScriptTask_1" name="TaskService.addTaskDefinition" scriptFormat="http://www.java.com/java">
+    <bpmn2:scriptTask id="ScriptTask_1" name="PlanningRequestService.addTaskDefinition" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
-      <bpmn2:script>org.ccsds.moims.mo.planning.task.structures.TaskDefinitionList taskDefList = new org.ccsds.moims.mo.planning.task.structures.TaskDefinitionList();&#xD;
+      <bpmn2:script>org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList taskDefList = new org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList();&#xD;
 taskDefList.add(taskDef);&#xD;
-kcontext.setVariable(&quot;taskDefId&quot;, taskServiceConsumer.getTaskService().addDefinition(taskDefList).get(0));</bpmn2:script>
+kcontext.setVariable(&quot;taskDefId&quot;, planningRequestConsumer.getPlanningRequestService().addTaskDefinition(taskDefList).get(0));</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:endEvent id="EndEvent_2" name="">
       <bpmn2:incoming>SequenceFlow_5</bpmn2:incoming>

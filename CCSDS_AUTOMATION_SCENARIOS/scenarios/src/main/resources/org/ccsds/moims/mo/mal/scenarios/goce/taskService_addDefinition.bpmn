@@ -1,114 +1,216 @@
-<?xml version="1.0" encoding="UTF-8"?> 
-<definitions id="Definition"
-             targetNamespace="http://www.jboss.org/drools"
-             typeLanguage="http://www.java.com/javaTypes"
-             expressionLanguage="http://www.mvel.org/2.0"
-             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
-             xmlns:g="http://www.jboss.org/drools/flow/gpd"
-             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-             xmlns:tns="http://www.jboss.org/drools">
-
-  <itemDefinition id="_taskServiceConsumer" structureRef="org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer" />
-  <itemDefinition id="_taskDef" structureRef="org.ccsds.moims.mo.planning.task.structures.TaskDefinition" />
-  <itemDefinition id="_defId" structureRef="Long" />
-
-  <escalation id="null" escalationCode="null" />
-  <process processType="Private" isExecutable="true" id="taskService_addDefinition" name="taskService_addDefinition" >
-
-    <!-- process variables -->
-    <property id="taskServiceConsumer" itemSubjectRef="_taskServiceConsumer"/>
-    <property id="taskDef" itemSubjectRef="_taskDef"/>
-    <property id="defId" itemSubjectRef="_defId"/>
-
-    <!-- nodes -->
-    <startEvent id="_jbpm-unique-0" name="Start"  isInterrupting="false"/>
-    <endEvent id="_jbpm-unique-9" name="End" >
-        <terminateEventDefinition />
-    </endEvent>
-    <endEvent id="_jbpm-unique-10" name="Error" >
-      <escalationEventDefinition escalationRef="null" />
-    </endEvent>
-    <scriptTask id="_jbpm-unique-11" name="TaskService.addDefinition" scriptFormat="http://www.java.com/java" >
-      <script>
-        org.ccsds.moims.mo.planning.task.structures.TaskDefinitionList taskDefList = new org.ccsds.moims.mo.planning.task.structures.TaskDefinitionList();
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:g="http://www.jboss.org/drools/flow/gpd" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+  <bpmn2:itemDefinition id="_planningServiceConsumer" structureRef="org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer"/>
+  <bpmn2:itemDefinition id="_taskDef" structureRef="org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinition"/>
+  <bpmn2:itemDefinition id="_defId" structureRef="Long"/>
+  <bpmn2:escalation id="null" escalationCode="null"/>
+  <bpmn2:process id="taskService_addDefinition" tns:version="1" tns:packageName="defaultPackage" tns:adHoc="false" name="taskService_addDefinition" isExecutable="true" processType="Private">
+    <bpmn2:property id="planningServiceConsumer" itemSubjectRef="_planningServiceConsumer"/>
+    <bpmn2:property id="taskDef" itemSubjectRef="_taskDef"/>
+    <bpmn2:property id="defId" itemSubjectRef="_defId"/>
+    <bpmn2:startEvent id="_jbpm-unique-0" name="Start" isInterrupting="false">
+      <bpmn2:outgoing>_jbpm-unique-0-_jbpm-unique-11</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:endEvent id="_jbpm-unique-9" name="End">
+      <bpmn2:incoming>_jbpm-unique-14-_jbpm-unique-9</bpmn2:incoming>
+      <bpmn2:terminateEventDefinition id="TerminateEventDefinition_1"/>
+    </bpmn2:endEvent>
+    <bpmn2:endEvent id="_jbpm-unique-10" name="Error">
+      <bpmn2:incoming>_jbpm-unique-13-_jbpm-unique-10</bpmn2:incoming>
+      <bpmn2:escalationEventDefinition id="EscalationEventDefinition_1" escalationRef="null"/>
+    </bpmn2:endEvent>
+    <bpmn2:scriptTask id="_jbpm-unique-11" name="PlanningRequestService.addTaskDefinition" scriptFormat="http://www.java.com/java">
+      <bpmn2:incoming>_jbpm-unique-0-_jbpm-unique-11</bpmn2:incoming>
+      <bpmn2:outgoing>_jbpm-unique-11-_jbpm-unique-12</bpmn2:outgoing>
+      <bpmn2:script>
+        org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList taskDefList = new org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList();
         taskDefList.add(taskDef);
-        kcontext.setVariable("defId", taskServiceConsumer.getTaskService().addDefinition(taskDefList).get(0));
-      </script>
-    </scriptTask>
-    <inclusiveGateway id="_jbpm-unique-12" name="Gateway" gatewayDirection="Diverging" />
-    <scriptTask id="_jbpm-unique-13" name="Log Error" >
-      <script>System.out.println("Definition adding failed!");</script>
-    </scriptTask>
-    <scriptTask id="_jbpm-unique-14" name="Log Definition ID" >
-      <script>System.out.println("Definition id is " + defId);</script>
-    </scriptTask>
-
-    <!-- connections -->
-    <sequenceFlow id="_jbpm-unique-14-_jbpm-unique-9" sourceRef="_jbpm-unique-14" targetRef="_jbpm-unique-9" />
-    <sequenceFlow id="_jbpm-unique-13-_jbpm-unique-10" sourceRef="_jbpm-unique-13" targetRef="_jbpm-unique-10" />
-    <sequenceFlow id="_jbpm-unique-0-_jbpm-unique-11" sourceRef="_jbpm-unique-0" targetRef="_jbpm-unique-11" />
-    <sequenceFlow id="_jbpm-unique-11-_jbpm-unique-12" sourceRef="_jbpm-unique-11" targetRef="_jbpm-unique-12" />
-    <sequenceFlow id="_jbpm-unique-12-_jbpm-unique-13" sourceRef="_jbpm-unique-12" targetRef="_jbpm-unique-13" name="error" tns:priority="1" >
-      <conditionExpression xsi:type="tFormalExpression" >return defId == null;</conditionExpression>
-    </sequenceFlow>
-    <sequenceFlow id="_jbpm-unique-12-_jbpm-unique-14" sourceRef="_jbpm-unique-12" targetRef="_jbpm-unique-14" name="ok" tns:priority="1" >
-      <conditionExpression xsi:type="tFormalExpression" >return defId != null;</conditionExpression>
-    </sequenceFlow>
-
-  </process>
-
-  <bpmndi:BPMNDiagram>
-    <bpmndi:BPMNPlane bpmnElement="taskService_addDefinition" >
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-0" >
-        <dc:Bounds x="220" y="15" width="48" height="48" />
+        kcontext.setVariable(&quot;defId&quot;, planningServiceConsumer.getPlanningRequestService().addTaskDefinition(taskDefList).get(0));
+      </bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:inclusiveGateway id="_jbpm-unique-12" name="Gateway" gatewayDirection="Diverging">
+      <bpmn2:incoming>_jbpm-unique-11-_jbpm-unique-12</bpmn2:incoming>
+      <bpmn2:outgoing>_jbpm-unique-12-_jbpm-unique-13</bpmn2:outgoing>
+      <bpmn2:outgoing>_jbpm-unique-12-_jbpm-unique-14</bpmn2:outgoing>
+    </bpmn2:inclusiveGateway>
+    <bpmn2:scriptTask id="_jbpm-unique-13" name="Log Error">
+      <bpmn2:incoming>_jbpm-unique-12-_jbpm-unique-13</bpmn2:incoming>
+      <bpmn2:outgoing>_jbpm-unique-13-_jbpm-unique-10</bpmn2:outgoing>
+      <bpmn2:script>System.out.println(&quot;Definition adding failed!&quot;);</bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:scriptTask id="_jbpm-unique-14" name="Log Definition ID">
+      <bpmn2:incoming>_jbpm-unique-12-_jbpm-unique-14</bpmn2:incoming>
+      <bpmn2:outgoing>_jbpm-unique-14-_jbpm-unique-9</bpmn2:outgoing>
+      <bpmn2:script>System.out.println(&quot;Definition id is &quot; + defId);</bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="_jbpm-unique-14-_jbpm-unique-9" tns:priority="1" name="" sourceRef="_jbpm-unique-14" targetRef="_jbpm-unique-9"/>
+    <bpmn2:sequenceFlow id="_jbpm-unique-13-_jbpm-unique-10" tns:priority="1" name="" sourceRef="_jbpm-unique-13" targetRef="_jbpm-unique-10"/>
+    <bpmn2:sequenceFlow id="_jbpm-unique-0-_jbpm-unique-11" tns:priority="1" name="" sourceRef="_jbpm-unique-0" targetRef="_jbpm-unique-11"/>
+    <bpmn2:sequenceFlow id="_jbpm-unique-11-_jbpm-unique-12" tns:priority="1" name="" sourceRef="_jbpm-unique-11" targetRef="_jbpm-unique-12"/>
+    <bpmn2:sequenceFlow id="_jbpm-unique-12-_jbpm-unique-13" tns:priority="1" name="error" sourceRef="_jbpm-unique-12" targetRef="_jbpm-unique-13">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_1">return defId == null;</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="_jbpm-unique-12-_jbpm-unique-14" tns:priority="1" name="ok" sourceRef="_jbpm-unique-12" targetRef="_jbpm-unique-14">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_2">return defId != null;</bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="taskService_addDefinition">
+      <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="_jbpm-unique-0">
+        <dc:Bounds height="48.0" width="48.0" x="220.0" y="15.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-9" >
-        <dc:Bounds x="364" y="441" width="48" height="48" />
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_1" bpmnElement="_jbpm-unique-9">
+        <dc:Bounds height="48.0" width="48.0" x="364.0" y="441.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-10" >
-        <dc:Bounds x="145" y="444" width="48" height="48" />
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_2" bpmnElement="_jbpm-unique-10">
+        <dc:Bounds height="48.0" width="48.0" x="145.0" y="444.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-11" >
-        <dc:Bounds x="147" y="118" width="200" height="48" />
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_1" bpmnElement="_jbpm-unique-11">
+        <dc:Bounds height="48.0" width="200.0" x="147.0" y="118.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-12" >
-        <dc:Bounds x="227" y="224" width="48" height="48" />
+      <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_1" bpmnElement="_jbpm-unique-12">
+        <dc:Bounds height="48.0" width="48.0" x="227.0" y="224.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-13" >
-        <dc:Bounds x="132" y="299" width="80" height="48" />
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_2" bpmnElement="_jbpm-unique-13">
+        <dc:Bounds height="48.0" width="80.0" x="132.0" y="299.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-14" >
-        <dc:Bounds x="304" y="295" width="160" height="48" />
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_3" bpmnElement="_jbpm-unique-14">
+        <dc:Bounds height="48.0" width="160.0" x="304.0" y="295.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-14-_jbpm-unique-9" >
-        <di:waypoint x="384" y="319" />
-        <di:waypoint x="388" y="465" />
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="_jbpm-unique-14-_jbpm-unique-9" sourceElement="BPMNShape_ScriptTask_3" targetElement="BPMNShape_EndEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="384.0" y="319.0"/>
+        <di:waypoint xsi:type="dc:Point" x="388.0" y="465.0"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-13-_jbpm-unique-10" >
-        <di:waypoint x="172" y="323" />
-        <di:waypoint x="169" y="468" />
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="_jbpm-unique-13-_jbpm-unique-10" sourceElement="BPMNShape_ScriptTask_2" targetElement="BPMNShape_EndEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="172.0" y="323.0"/>
+        <di:waypoint xsi:type="dc:Point" x="169.0" y="468.0"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-0-_jbpm-unique-11" >
-        <di:waypoint x="244" y="39" />
-        <di:waypoint x="247" y="142" />
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="_jbpm-unique-0-_jbpm-unique-11" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_ScriptTask_1">
+        <di:waypoint xsi:type="dc:Point" x="244.0" y="39.0"/>
+        <di:waypoint xsi:type="dc:Point" x="247.0" y="142.0"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-11-_jbpm-unique-12" >
-        <di:waypoint x="247" y="142" />
-        <di:waypoint x="251" y="248" />
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_4" bpmnElement="_jbpm-unique-11-_jbpm-unique-12" sourceElement="BPMNShape_ScriptTask_1" targetElement="BPMNShape_InclusiveGateway_1">
+        <di:waypoint xsi:type="dc:Point" x="247.0" y="142.0"/>
+        <di:waypoint xsi:type="dc:Point" x="251.0" y="248.0"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-12-_jbpm-unique-13" >
-        <di:waypoint x="251" y="248" />
-        <di:waypoint x="172" y="323" />
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_5" bpmnElement="_jbpm-unique-12-_jbpm-unique-13" sourceElement="BPMNShape_InclusiveGateway_1" targetElement="BPMNShape_ScriptTask_2">
+        <di:waypoint xsi:type="dc:Point" x="251.0" y="248.0"/>
+        <di:waypoint xsi:type="dc:Point" x="172.0" y="323.0"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-12-_jbpm-unique-14" >
-        <di:waypoint x="251" y="248" />
-        <di:waypoint x="384" y="319" />
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_6" bpmnElement="_jbpm-unique-12-_jbpm-unique-14" sourceElement="BPMNShape_InclusiveGateway_1" targetElement="BPMNShape_ScriptTask_3">
+        <di:waypoint xsi:type="dc:Point" x="251.0" y="248.0"/>
+        <di:waypoint xsi:type="dc:Point" x="384.0" y="319.0"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
-
-</definitions>
+  <bpmn2:relationship id="Relationship_1" type="Simulation">
+    <bpmn2:extensionElements>
+      <bpsim:BPSimData>
+        <bpsim:Scenario xsi:type="bpsim:Scenario" id="Scenario_1" name="Scenario 1">
+          <bpsim:ScenarioParameters xsi:type="bpsim:ScenarioParameters" baseTimeUnit="ms"/>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-0" id="ElementParameters_1">
+            <bpsim:TimeParameters xsi:type="bpsim:TimeParameters">
+              <bpsim:WaitTime xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="1.0"/>
+              </bpsim:WaitTime>
+            </bpsim:TimeParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-9" id="ElementParameters_2">
+            <bpsim:TimeParameters xsi:type="bpsim:TimeParameters">
+              <bpsim:ProcessingTime xsi:type="bpsim:Parameter">
+                <bpsim:UniformDistribution max="1.0" min="0.0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-10" id="ElementParameters_3">
+            <bpsim:TimeParameters xsi:type="bpsim:TimeParameters">
+              <bpsim:ProcessingTime xsi:type="bpsim:Parameter">
+                <bpsim:UniformDistribution max="1.0" min="0.0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-11" id="ElementParameters_4">
+            <bpsim:TimeParameters xsi:type="bpsim:TimeParameters">
+              <bpsim:ProcessingTime xsi:type="bpsim:Parameter">
+                <bpsim:UniformDistribution max="1.0" min="0.0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+            <bpsim:CostParameters xsi:type="bpsim:CostParameters">
+              <bpsim:UnitCost xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="0.0"/>
+              </bpsim:UnitCost>
+            </bpsim:CostParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-13" id="ElementParameters_5">
+            <bpsim:TimeParameters xsi:type="bpsim:TimeParameters">
+              <bpsim:ProcessingTime xsi:type="bpsim:Parameter">
+                <bpsim:UniformDistribution max="1.0" min="0.0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+            <bpsim:CostParameters xsi:type="bpsim:CostParameters">
+              <bpsim:UnitCost xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="0.0"/>
+              </bpsim:UnitCost>
+            </bpsim:CostParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-14" id="ElementParameters_6">
+            <bpsim:TimeParameters xsi:type="bpsim:TimeParameters">
+              <bpsim:ProcessingTime xsi:type="bpsim:Parameter">
+                <bpsim:UniformDistribution max="1.0" min="0.0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+            <bpsim:CostParameters xsi:type="bpsim:CostParameters">
+              <bpsim:UnitCost xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="0.0"/>
+              </bpsim:UnitCost>
+            </bpsim:CostParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-14-_jbpm-unique-9" id="ElementParameters_7">
+            <bpsim:ControlParameters xsi:type="bpsim:ControlParameters">
+              <bpsim:Probability xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="100.0"/>
+              </bpsim:Probability>
+            </bpsim:ControlParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-13-_jbpm-unique-10" id="ElementParameters_8">
+            <bpsim:ControlParameters xsi:type="bpsim:ControlParameters">
+              <bpsim:Probability xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="100.0"/>
+              </bpsim:Probability>
+            </bpsim:ControlParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-0-_jbpm-unique-11" id="ElementParameters_9">
+            <bpsim:ControlParameters xsi:type="bpsim:ControlParameters">
+              <bpsim:Probability xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="100.0"/>
+              </bpsim:Probability>
+            </bpsim:ControlParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-11-_jbpm-unique-12" id="ElementParameters_10">
+            <bpsim:ControlParameters xsi:type="bpsim:ControlParameters">
+              <bpsim:Probability xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="100.0"/>
+              </bpsim:Probability>
+            </bpsim:ControlParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-12-_jbpm-unique-13" id="ElementParameters_11">
+            <bpsim:ControlParameters xsi:type="bpsim:ControlParameters">
+              <bpsim:Probability xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="100.0"/>
+              </bpsim:Probability>
+            </bpsim:ControlParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters xsi:type="bpsim:ElementParameters" elementRef="_jbpm-unique-12-_jbpm-unique-14" id="ElementParameters_12">
+            <bpsim:ControlParameters xsi:type="bpsim:ControlParameters">
+              <bpsim:Probability xsi:type="bpsim:Parameter">
+                <bpsim:FloatingParameter value="100.0"/>
+              </bpsim:Probability>
+            </bpsim:ControlParameters>
+          </bpsim:ElementParameters>
+        </bpsim:Scenario>
+      </bpsim:BPSimData>
+    </bpmn2:extensionElements>
+    <bpmn2:source>Definition</bpmn2:source>
+    <bpmn2:target>Definition</bpmn2:target>
+  </bpmn2:relationship>
+</bpmn2:definitions>

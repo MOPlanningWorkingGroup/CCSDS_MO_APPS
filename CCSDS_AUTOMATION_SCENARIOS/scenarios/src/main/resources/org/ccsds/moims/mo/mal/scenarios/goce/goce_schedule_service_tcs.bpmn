@@ -76,10 +76,10 @@
     </bpmn2:inclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_5" tns:priority="1" name="" sourceRef="InclusiveGateway_1" targetRef="ExclusiveGateway_1"/>
     <bpmn2:sequenceFlow id="SequenceFlow_8" tns:priority="1" name="" sourceRef="ScriptTask_1" targetRef="ScriptTask_4"/>
-    <bpmn2:scriptTask id="ScriptTask_4" name="ScheduleExecutionService.submit" scriptFormat="http://www.java.com/java">
+    <bpmn2:scriptTask id="ScriptTask_4" name="ScheduleExecutionService.add" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>SequenceFlow_8</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_13</bpmn2:outgoing>
-      <bpmn2:script>scheduleExecutionServiceConsumer.getScheduleExecutionService().submitSchedule(currentScheduleDefinition, new org.ccsds.moims.mo.automation.scheduleexecution.structures.Schedule());</bpmn2:script>
+      <bpmn2:script>scheduleExecutionServiceConsumer.getScheduleExecutionService().add(currentScheduleDefinition, new org.ccsds.moims.mo.automation.scheduleexecution.structures.Schedule());</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_13" tns:priority="1" name="" sourceRef="ScriptTask_4" targetRef="InclusiveGateway_1"/>
     <bpmn2:scriptTask id="ScriptTask_3" name="ScheduleExecutionService.listDefinition" scriptFormat="http://www.java.com/java">

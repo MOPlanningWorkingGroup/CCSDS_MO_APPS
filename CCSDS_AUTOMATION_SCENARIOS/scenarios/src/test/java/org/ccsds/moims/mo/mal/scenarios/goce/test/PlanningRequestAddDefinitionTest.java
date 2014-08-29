@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath*:**/testPlanningContext.xml")
 public class PlanningRequestAddDefinitionTest extends JbpmJUnitBaseTestCase {
 	
-	private static final Logger logger = LoggerFactory.getLogger(InitMpsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(PlanningRequestAddDefinitionTest.class);
 	private static RuntimeManager runtimeManager;
     private KieSession ksession;
     private RuntimeEngine runtimeEngine;
@@ -40,7 +40,7 @@ public class PlanningRequestAddDefinitionTest extends JbpmJUnitBaseTestCase {
     
     @Before
 	public void init() throws Exception {
-        logger.info("Loading init_mps.bpmn2");
+        logger.info("Loading init_planningRequestService_addDefinition.bpmn2");
         runtimeManager = getRuntimeManager("org/ccsds/moims/mo/mal/scenarios/goce/planningRequestService_addDefinition.bpmn");
         runtimeEngine = runtimeManager.getRuntimeEngine(EmptyContext.get());
         ksession = runtimeEngine.getKieSession();

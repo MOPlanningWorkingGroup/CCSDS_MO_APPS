@@ -2,9 +2,10 @@ package org.ccsds.moims.mo.mal.automation.service;
 
 import java.util.List;
 import java.util.Map;
+
 import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorExecutionPublisher;
 import org.ccsds.moims.mo.automation.scheduleexecution.provider.ScheduleExecutionInheritanceSkeleton;
-import org.ccsds.moims.mo.automation.scheduleexecution.provider.SubscribePublisher;
+import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorSchedulesPublisher;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.Schedule;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleDefinition;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleFilter;
@@ -35,7 +36,7 @@ import org.springframework.stereotype.Controller;
 public class ScheduleExecutionServiceImpl extends
 		ScheduleExecutionInheritanceSkeleton {
 	
-	private SubscribePublisher subscribePublisher;
+	private MonitorSchedulesPublisher subscribePublisher;
 	private MonitorExecutionPublisher monitorExecutionPublisher;
 	
 	@Autowired
@@ -48,16 +49,6 @@ public class ScheduleExecutionServiceImpl extends
 	private ScheduleStatusDaoImpl scheduleStatusDaoImpl;
 
 	@Override
-	public SubscribePublisher createSubscribePublisher(IdentifierList domain,
-			Identifier networkZone, SessionType sessionType,
-			Identifier sessionName, QoSLevel qos, Map qosProps,
-			UInteger priority) throws MALException {
-		subscribePublisher = super.createSubscribePublisher(domain, networkZone, sessionType,
-				sessionName, qos, qosProps, priority);
-		return subscribePublisher;
-	}
-
-	@Override
 	public MonitorExecutionPublisher createMonitorExecutionPublisher(
 			IdentifierList domain, Identifier networkZone,
 			SessionType sessionType, Identifier sessionName, QoSLevel qos,
@@ -67,32 +58,28 @@ public class ScheduleExecutionServiceImpl extends
 		return monitorExecutionPublisher;
 	}
 
-	public Long submitSchedule(Long scheduleDefinitionId, Schedule schedule, MALInteraction interaction)
+	public Long add(Long scheduleDefinitionId, Schedule schedule, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.ScheduleDefinition def = scheduleDefinitionDaoImpl.get(scheduleDefinitionId);
 		if (def == null) {
 			throw new MALException("ScheduleDefinition not found! ScheduleDefinition id = " + scheduleDefinitionId);
 		}
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = new org.ccsds.moims.mo.mal.automation.datamodel.Schedule();
-		dbSchedule.setName(schedule.getName());
-		dbSchedule.setDescription(schedule.getDescription());
 		scheduleDaoImpl.insertUpdate(dbSchedule);
 		return dbSchedule.getId();
 	}
 
-	public void updateSchedule(Long scheduleId, Schedule schedule,
+	public void update(Long scheduleId, Schedule schedule,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule == null) {
 			throw new MALException("Schedule not found! Schedule id = " + scheduleId);
 		}
-		dbSchedule.setName(schedule.getName());
-		dbSchedule.setDescription(schedule.getDescription());
 		scheduleDaoImpl.insertUpdate(dbSchedule);
 	}
 
-	public void removeSchedule(Long scheduleId, MALInteraction interaction)
+	public void remove(Long scheduleId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule == null) {
@@ -101,20 +88,18 @@ public class ScheduleExecutionServiceImpl extends
 		scheduleDaoImpl.remove(scheduleId);
 	}
 
-	public Schedule getSchedule(Long scheduleId, MALInteraction interaction)
+	public Schedule get(Long scheduleId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		Schedule schedule = null;
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule != null) {
 			schedule = new Schedule();
-			schedule.setName(dbSchedule.getName());
-			schedule.setDescription(dbSchedule.getDescription());
 			// TODO other properties
 		}
 		return schedule;
 	}
 
-	public LongList getScheduleList(ScheduleFilter filter,
+	public LongList list(ScheduleFilter filter,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
 		LongList list = new LongList();
@@ -127,7 +112,7 @@ public class ScheduleExecutionServiceImpl extends
 		return list;
 	}
 
-	public void startSchedule(Long scheduleId, MALInteraction interaction)
+	public void start(Long scheduleId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule == null) {
@@ -140,7 +125,7 @@ public class ScheduleExecutionServiceImpl extends
 		scheduleStatusDaoImpl.start(scheduleId);
 	}
 
-	public void pauseSchedule(Long scheduleId, MALInteraction interaction)
+	public void pause(Long scheduleId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule == null) {
@@ -153,7 +138,7 @@ public class ScheduleExecutionServiceImpl extends
 		scheduleStatusDaoImpl.pause(scheduleId);
 	}
 
-	public void resumeSchedule(Long scheduleId, MALInteraction interaction)
+	public void resume(Long scheduleId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule == null) {
@@ -166,7 +151,7 @@ public class ScheduleExecutionServiceImpl extends
 		scheduleStatusDaoImpl.resume(scheduleId);
 	}
 
-	public void terminateSchedule(Long scheduleId, MALInteraction interaction)
+	public void terminate(Long scheduleId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
 		if (dbSchedule == null) {
@@ -177,26 +162,6 @@ public class ScheduleExecutionServiceImpl extends
 			throw new MALException("Schedule is not running!");
 		}
 		scheduleStatusDaoImpl.terminate(scheduleId);
-	}
-
-	public ScheduleStatus getScheduleStatus(Long scheduleId,
-			MALInteraction interaction) throws MALInteractionException,
-			MALException {
-		org.ccsds.moims.mo.mal.automation.datamodel.Schedule dbSchedule = scheduleDaoImpl.get(scheduleId);
-		if (dbSchedule == null) {
-			throw new MALException("Schedule not found! Schedule id = " + scheduleId);
-		}
-		org.ccsds.moims.mo.mal.automation.datamodel.ScheduleStatus dbStatus = scheduleStatusDaoImpl.getCurrentStatus(dbSchedule);
-		ScheduleStatus status = new ScheduleStatus();
-		status.setState(ScheduleState.fromString(dbStatus.getState().toString()));
-		if (dbStatus.getMessages() != null) {
-			StringList messages = new StringList();
-			for (org.ccsds.moims.mo.mal.automation.datamodel.ScheduleStatusMessage message : dbStatus.getMessages()) {
-				messages.add(message.getMessage());
-			}
-			status.setMessage(messages);
-		}
-		return status;
 	}
 
 	public LongList listDefinition(IdentifierList identifierList,

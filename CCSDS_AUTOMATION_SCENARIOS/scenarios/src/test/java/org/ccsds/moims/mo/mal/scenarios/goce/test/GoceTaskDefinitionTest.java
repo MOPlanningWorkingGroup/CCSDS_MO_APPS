@@ -3,11 +3,11 @@ package org.ccsds.moims.mo.mal.scenarios.goce.test;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.ccsds.moims.mo.mal.planning.consumer.TaskServiceConsumer;
+import org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer;
 import org.ccsds.moims.mo.mal.structures.UOctet;
-import org.ccsds.moims.mo.planning.task.structures.TaskArgumentDefinition;
-import org.ccsds.moims.mo.planning.task.structures.TaskArgumentDefinitionList;
-import org.ccsds.moims.mo.planning.task.structures.TaskDefinition;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskArgumentDefinition;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskArgumentDefinitionList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinition;
 import org.jbpm.process.instance.impl.demo.SystemOutWorkItemHandler;
 import org.jbpm.runtime.manager.impl.RuntimeEnvironmentBuilder;
 import org.jbpm.test.JbpmJUnitBaseTestCase;
@@ -35,13 +35,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class GoceTaskDefinitionTest extends JbpmJUnitBaseTestCase {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(InitMpsTest.class);
+			.getLogger(GoceTaskDefinitionTest.class);
 	private static RuntimeManager runtimeManager;
 	private KieSession ksession;
 	private RuntimeEngine runtimeEngine;
 
 	@Autowired
-	private TaskServiceConsumer taskServiceConsumer;
+	private PlanningRequestServiceConsumer planningRequestConsumer;
 
 	@Before
 	public void init() throws Exception {
@@ -85,7 +85,7 @@ public class GoceTaskDefinitionTest extends JbpmJUnitBaseTestCase {
 		arguments.add(arg1);
 		taskDef.setArguments(arguments);
 		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("taskServiceConsumer", taskServiceConsumer);
+		params.put("planningRequestConsumer", planningRequestConsumer);
 		params.put("taskDef", taskDef);
 		ProcessInstance processInstance = ksession.startProcess(
 				"goce_task_definition", params);

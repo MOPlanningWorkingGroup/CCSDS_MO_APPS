@@ -32,7 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class GoceScheduleSubmitInTcsTest extends JbpmJUnitBaseTestCase {
 	
 	private static final Logger logger = LoggerFactory
-			.getLogger(InitMpsTest.class);
+			.getLogger(GoceScheduleSubmitInTcsTest.class);
 	private static RuntimeManager runtimeManager;
 	private KieSession ksession;
 	private RuntimeEngine runtimeEngine;

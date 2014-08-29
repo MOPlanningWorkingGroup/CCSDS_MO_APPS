@@ -17,66 +17,52 @@ public class ScheduleExecutionServiceConsumerAdapter extends ScheduleExecutionAd
 			.getLogger(ScheduleExecutionServiceConsumerAdapter.class.getName());
 
 	@Override
-	public void submitScheduleResponseReceived(MALMessageHeader msgHeader,
+	public void addResponseReceived(MALMessageHeader msgHeader,
 			Long _Long0, Map qosProperties) {
-		LOGGER.info(" *** submitScheduleResponseReceived");
-		super.submitScheduleResponseReceived(msgHeader, _Long0, qosProperties);
+		LOGGER.info(" *** addResponseReceived");
+		super.addResponseReceived(msgHeader, _Long0, qosProperties);
 	}
 
 	@Override
-	public void updateScheduleAckReceived(MALMessageHeader msgHeader,
+	public void updateAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** updateScheduleAckReceived");
-		super.updateScheduleAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** updateAckReceived");
+		super.updateAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void removeScheduleAckReceived(MALMessageHeader msgHeader,
+	public void removeAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** removeScheduleAckReceived");
-		super.removeScheduleAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** removeAckReceived");
+		super.removeAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void startScheduleAckReceived(MALMessageHeader msgHeader,
+	public void startAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** startScheduleAckReceived");
-		super.startScheduleAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** startAckReceived");
+		super.startAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void pauseScheduleAckReceived(MALMessageHeader msgHeader,
+	public void pauseAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** pauseScheduleAckReceived");
-		super.pauseScheduleAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** pauseAckReceived");
+		super.pauseAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void resumeScheduleAckReceived(MALMessageHeader msgHeader,
+	public void resumeAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** resumeScheduleAckReceived");
-		super.resumeScheduleAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** resumeAckReceived");
+		super.resumeAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
-	public void terminateScheduleAckReceived(MALMessageHeader msgHeader,
+	public void terminateAckReceived(MALMessageHeader msgHeader,
 			Map qosProperties) {
-		LOGGER.info(" *** terminateScheduleAckReceived");
-		super.terminateScheduleAckReceived(msgHeader, qosProperties);
-	}
-
-	@Override
-	public void subscribeRegisterAckReceived(MALMessageHeader msgHeader,
-			Map qosProperties) {
-		LOGGER.info(" *** subscribeRegisterAckReceived");
-		super.subscribeRegisterAckReceived(msgHeader, qosProperties);
-	}
-
-	@Override
-	public void subscribeDeregisterAckReceived(MALMessageHeader msgHeader,
-			Map qosProperties) {
-		LOGGER.info(" *** subscribeDeregisterAckReceived");
-		super.subscribeDeregisterAckReceived(msgHeader, qosProperties);
+		LOGGER.info(" *** terminateAckReceived");
+		super.terminateAckReceived(msgHeader, qosProperties);
 	}
 
 	@Override
@@ -91,6 +77,22 @@ public class ScheduleExecutionServiceConsumerAdapter extends ScheduleExecutionAd
 			MALMessageHeader msgHeader, Map qosProperties) {
 		LOGGER.info(" *** monitorExecutionDeregisterAckReceived");
 		super.monitorExecutionDeregisterAckReceived(msgHeader, qosProperties);
+	}
+
+	@Override
+	public void monitorSchedulesRegisterAckReceived(MALMessageHeader msgHeader,
+			Map qosProperties) {
+		LOGGER.info(" *** monitorSchedulesRegisterAckReceived");
+		super.monitorSchedulesRegisterAckReceived(msgHeader, qosProperties);
+	}
+
+	@Override
+	public void monitorSchedulesDeregisterAckReceived(
+			MALMessageHeader msgHeader, Map qosProperties) {
+		LOGGER.info(" *** monitorSchedulesDeregisterAckReceived");
+		super.monitorSchedulesDeregisterAckReceived(msgHeader, qosProperties);
 	}	
+	
+	
 
 }

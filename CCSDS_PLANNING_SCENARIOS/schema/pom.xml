@@ -36,8 +36,8 @@
 		</developer>
 	</developers>
 	<properties>
-		<esa.stubgen.xmlDirectory>${basedir}/../../../CCSDS_MO_XML/MO_XML/src/main/resources/xml</esa.stubgen.xmlDirectory>
-		<esa.stubgen.xmlRefDirectory>${basedir}/../../../CCSDS_MO_XML/MO_XML/src/main/resources/xml-ref/xml</esa.stubgen.xmlRefDirectory>
+		<esa.stubgen.xmlDirectory>${basedir}/../../../CCSDS_MO_XML2/MO_XML/src/main/resources/xml</esa.stubgen.xmlDirectory>
+		<esa.stubgen.xmlRefDirectory>${basedir}/../../../CCSDS_MO_XML2/MO_XML/src/main/resources/xml-ref/xml</esa.stubgen.xmlRefDirectory>
 	</properties>
 
 	<dependencies>
