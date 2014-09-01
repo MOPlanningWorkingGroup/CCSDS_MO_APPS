@@ -226,14 +226,12 @@ public class PlanningRequestServiceTest {
 	
 	@Test
 	public void testListTaskDefinition() throws MALInteractionException, MALException {
-		TaskDefinitionList defList = new TaskDefinitionList();
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test");
 		def.setDescription("description");
 		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
 		def.setArguments(arguments);
-		defList.add(def);
-		planningRequestConsumer.getPlanningRequestService().addTaskDefinition(defList);
+		planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		IdentifierList identifierList = new IdentifierList();
 		identifierList.add(new Identifier("test"));
 		identifierList.add(new Identifier("test2"));
@@ -243,39 +241,32 @@ public class PlanningRequestServiceTest {
 	
 	@Test
 	public void testAddTaskDefinition() throws MALInteractionException, MALException {
-		TaskDefinitionList defList = new TaskDefinitionList();
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test2");
 		def.setDescription("description2");
-		defList.add(def);
-		planningRequestConsumer.getPlanningRequestService().addTaskDefinition(defList);
+		planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
 		def.setArguments(arguments);
-		defList.add(def);
-		LongList longList = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(defList);
+		Long id = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		IdentifierList identifierList = new IdentifierList();
 		identifierList.add(new Identifier("test"));
 		identifierList.add(new Identifier("test2"));
 		LongList list = planningRequestConsumer.getPlanningRequestService().listTaskDefinition(identifierList);
-		assertTrue(longList.size() == 2);
+		assertTrue(id > 0);
 	}
 	
 	@Test
 	public void testUpdateTaskDefinition() throws MALInteractionException, MALException {
-		TaskDefinitionList defList = new TaskDefinitionList();
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test");
 		def.setDescription("description");
 		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
 		def.setArguments(arguments);
-		defList.add(def);
-		LongList longList = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(defList);
-		defList = new TaskDefinitionList();
+		Long id = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		def = new TaskDefinition();
 		def.setName("test2update");
 		def.setDescription("description2update");
-		defList.add(def);
-		planningRequestConsumer.getPlanningRequestService().updateTaskDefinition(longList, defList);
+		planningRequestConsumer.getPlanningRequestService().updateTaskDefinition(id, def);
 		IdentifierList identifierList = new IdentifierList();
 		identifierList.add(new Identifier("test2update"));
 		LongList list = planningRequestConsumer.getPlanningRequestService().listTaskDefinition(identifierList);
@@ -284,23 +275,21 @@ public class PlanningRequestServiceTest {
 	
 	@Test
 	public void testRemoveTaskDefinition() throws MALInteractionException, MALException {
-		TaskDefinitionList defList = new TaskDefinitionList();
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test");
 		def.setDescription("description");
 		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
 		def.setArguments(arguments);
-		defList.add(def);
-		LongList longList = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(defList);
-		planningRequestConsumer.getPlanningRequestService().removeTaskDefinition(longList);
+		Long id = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
+		planningRequestConsumer.getPlanningRequestService().removeTaskDefinition(id);
 		IdentifierList identifierList = new IdentifierList();
 		identifierList.add(new Identifier("test2update"));
 		LongList list = planningRequestConsumer.getPlanningRequestService().listTaskDefinition(identifierList);
 		boolean exists = false;
 		Iterator<Long> it = list.iterator();
 		while (it.hasNext()) {
-			Long id = it.next();
-			if (longList.get(0).equals(id)) {
+			Long _id = it.next();
+			if (_id.equals(id)) {
 				exists = true;
 			}
 		}

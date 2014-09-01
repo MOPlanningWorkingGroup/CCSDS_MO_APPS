@@ -254,50 +254,39 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 		return list;
 	}
 
-	public LongList addTaskDefinition(TaskDefinitionList _TaskDefinitionList0,
+	public Long addTaskDefinition(TaskDefinition def,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
-		LongList list = new LongList();
-		if (_TaskDefinitionList0 != null) {
-			for (TaskDefinition def : _TaskDefinitionList0) {
-				org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition taskDef =
-						new org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition();
-				taskDef.setName(def.getName());
-				taskDef.setDescription(def.getDescription());
-				if (def.getArguments() != null) {
-					taskDef.setTaskArgumentDefinitions(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition>());
-					for (TaskArgumentDefinition argDef : def.getArguments()) {
-						org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition dbArg =
-								new org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition();
-						dbArg.setName(argDef.getName());
-						// TODO dbArg.setValueType(org.ccsds.moims.mo.mal.planning.datamodel.ValueType.valueOf(argDef.getValueType().toString()));
-						dbArg.setTaskDefinition(taskDef);
-						taskDef.getTaskArgumentDefinitions().add(dbArg);
-					}
+		if (def != null) {
+			org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition taskDef = new org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition();
+			taskDef.setName(def.getName());
+			taskDef.setDescription(def.getDescription());
+			if (def.getArguments() != null) {
+				taskDef.setTaskArgumentDefinitions(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition>());
+				for (TaskArgumentDefinition argDef : def.getArguments()) {
+					org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition dbArg = new org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition();
+					dbArg.setName(argDef.getName());
+					// TODO
+					// dbArg.setValueType(org.ccsds.moims.mo.mal.planning.datamodel.ValueType.valueOf(argDef.getValueType().toString()));
+					dbArg.setTaskDefinition(taskDef);
+					taskDef.getTaskArgumentDefinitions().add(dbArg);
 				}
-				taskDefinitionDaoImpl.insertUpdate(taskDef);
-				list.add(taskDef.getId());
 			}
+			taskDefinitionDaoImpl.insertUpdate(taskDef);
+			return taskDef.getId();
 		}
-		return list;
+		return null;
 	}
 
-	public void updateTaskDefinition(LongList _LongList0,
-			TaskDefinitionList _TaskDefinitionList1, MALInteraction interaction)
+	public void updateTaskDefinition(Long id,
+			TaskDefinition def, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		if (_LongList0 != null &&_TaskDefinitionList1 != null) {
-			if (_LongList0.size() != _TaskDefinitionList1.size()) {
-				MALStandardError error = new MALStandardError(null, "ID list size and task definition list size is different!");
-				throw new MALInteractionException(error);
-			}
-			for (int i = 0; i < _LongList0.size(); i++) {
-				Long id = _LongList0.get(i);
+		if (id != null && def != null) {
 				org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition taskDef = taskDefinitionDaoImpl.get(id);
 				if (taskDef == null) {
 					MALStandardError error = new MALStandardError(null, "One of the supplied Task Definition object instance identifiers is unknown!");
 					throw new MALInteractionException(error);
 				}
-				TaskDefinition def =_TaskDefinitionList1.get(i);
 				taskDef.setName(def.getName());
 				taskDef.setDescription(def.getDescription());
 				if (def.getArguments() != null) {
@@ -312,23 +301,20 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 					}
 				}
 				taskDefinitionDaoImpl.insertUpdate(taskDef);
-			}
 		}
-		
 	}
 
-	public void removeTaskDefinition(LongList _LongList0, MALInteraction interaction)
+	public void removeTaskDefinition(Long id, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		if (_LongList0 != null) {
-			for (int i = 0; i < _LongList0.size(); i++) {
-				Long id = _LongList0.get(i);
-				org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition taskDef = taskDefinitionDaoImpl.get(id);
-				if (taskDef == null) {
-					MALStandardError error = new MALStandardError(null, "One of the supplied Task Definition object instance identifiers is unknown!");
-					throw new MALInteractionException(error);
-				}
-				taskDefinitionDaoImpl.remove(id);
+		if (id != null) {
+			org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition taskDef = taskDefinitionDaoImpl
+					.get(id);
+			if (taskDef == null) {
+				MALStandardError error = new MALStandardError(null,
+						"One of the supplied Task Definition object instance identifiers is unknown!");
+				throw new MALInteractionException(error);
 			}
+			taskDefinitionDaoImpl.remove(id);
 		}
 	}
 
