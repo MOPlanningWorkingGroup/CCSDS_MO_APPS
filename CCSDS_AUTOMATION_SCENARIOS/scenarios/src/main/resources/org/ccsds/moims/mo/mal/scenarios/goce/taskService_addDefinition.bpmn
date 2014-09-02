@@ -22,10 +22,7 @@
     <bpmn2:scriptTask id="_jbpm-unique-11" name="PlanningRequestService.addTaskDefinition" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>_jbpm-unique-0-_jbpm-unique-11</bpmn2:incoming>
       <bpmn2:outgoing>_jbpm-unique-11-_jbpm-unique-12</bpmn2:outgoing>
-      <bpmn2:script>
-        org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList taskDefList = new org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList();
-        taskDefList.add(taskDef);
-        kcontext.setVariable(&quot;defId&quot;, planningServiceConsumer.getPlanningRequestService().addTaskDefinition(taskDefList).get(0));
+      <bpmn2:script>kcontext.setVariable(&quot;defId&quot;, planningServiceConsumer.getPlanningRequestService().addTaskDefinition(taskDef));&#xD;
       </bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:inclusiveGateway id="_jbpm-unique-12" name="Gateway" gatewayDirection="Diverging">
