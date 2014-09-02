@@ -50,7 +50,7 @@
 }</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_3" tns:priority="1" name="" sourceRef="ScriptTask_2" targetRef="InclusiveGateway_1"/>
-    <bpmn2:scriptTask id="ScriptTask_1" name="Submit schedules" scriptFormat="http://www.java.com/java">
+    <bpmn2:scriptTask id="ScriptTask_1" name="Add schedules" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>SequenceFlow_6</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
       <bpmn2:script>if (i &lt; scheduleDefinitionList.size()) {&#xD;

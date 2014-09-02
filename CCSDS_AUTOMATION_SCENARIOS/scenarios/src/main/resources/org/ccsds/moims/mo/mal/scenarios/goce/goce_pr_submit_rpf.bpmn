@@ -89,7 +89,7 @@
       <bpmn2:outgoing>SequenceFlow_14</bpmn2:outgoing>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_14" drools:priority="1" name="" sourceRef="ScriptTask_9" targetRef="UserTask_1"/>
-    <bpmn2:scriptTask id="ScriptTask_5" name="Submit PR">
+    <bpmn2:scriptTask id="ScriptTask_5" name="Add PR">
       <bpmn2:incoming>SequenceFlow_6</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_27</bpmn2:outgoing>
     </bpmn2:scriptTask>
@@ -98,7 +98,7 @@
       <bpmn2:outgoing>SequenceFlow_9</bpmn2:outgoing>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_9" drools:priority="1" name="" sourceRef="ScriptTask_6" targetRef="EndEvent_1"/>
-    <bpmn2:scriptTask id="ScriptTask_10" name="PlanningRequestService.listPlanningRequestDefinition">
+    <bpmn2:scriptTask id="ScriptTask_10" name="PlanningRequestService.listDefinition">
       <bpmn2:incoming>SequenceFlow_5</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_16</bpmn2:outgoing>
     </bpmn2:scriptTask>
@@ -106,10 +106,10 @@
       <bpmn2:incoming>SequenceFlow_17</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_20</bpmn2:outgoing>
     </bpmn2:scriptTask>
-    <bpmn2:sequenceFlow id="SequenceFlow_5" drools:priority="1" sourceRef="ScriptTask_2" targetRef="ScriptTask_10"/>
-    <bpmn2:sequenceFlow id="SequenceFlow_16" drools:priority="1" sourceRef="ScriptTask_10" targetRef="ScriptTask_3"/>
-    <bpmn2:sequenceFlow id="SequenceFlow_17" drools:priority="1" sourceRef="ScriptTask_8" targetRef="ScriptTask_11"/>
-    <bpmn2:sequenceFlow id="SequenceFlow_20" drools:priority="1" sourceRef="ScriptTask_11" targetRef="ScriptTask_9"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_5" drools:priority="1" name="" sourceRef="ScriptTask_2" targetRef="ScriptTask_10"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_16" drools:priority="1" name="" sourceRef="ScriptTask_10" targetRef="ScriptTask_3"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_17" drools:priority="1" name="" sourceRef="ScriptTask_8" targetRef="ScriptTask_11"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_20" drools:priority="1" name="" sourceRef="ScriptTask_11" targetRef="ScriptTask_9"/>
     <bpmn2:userTask id="UserTask_2" name="Choose PR definition">
       <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
@@ -162,40 +162,40 @@
     <bpmn2:endEvent id="EndEvent_1" name="">
       <bpmn2:incoming>SequenceFlow_9</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="SequenceFlow_27" drools:priority="1" sourceRef="ScriptTask_5" targetRef="ScriptTask_13"/>
-    <bpmn2:scriptTask id="ScriptTask_13" name="PlanningRequestService.submit">
+    <bpmn2:sequenceFlow id="SequenceFlow_27" drools:priority="1" name="" sourceRef="ScriptTask_5" targetRef="ScriptTask_13"/>
+    <bpmn2:scriptTask id="ScriptTask_13" name="PlanningRequestService.add">
       <bpmn2:incoming>SequenceFlow_27</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_50</bpmn2:outgoing>
     </bpmn2:scriptTask>
-    <bpmn2:sequenceFlow id="SequenceFlow_50" drools:priority="1" sourceRef="ScriptTask_13" targetRef="ExclusiveGateway_2"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_50" drools:priority="1" name="" sourceRef="ScriptTask_13" targetRef="ExclusiveGateway_2"/>
     <bpmn2:exclusiveGateway id="ExclusiveGateway_2" name="" gatewayDirection="Diverging">
       <bpmn2:incoming>SequenceFlow_50</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_44</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_45</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_44" drools:priority="1" sourceRef="ExclusiveGateway_2" targetRef="ScriptTask_4"/>
-    <bpmn2:sequenceFlow id="SequenceFlow_45" drools:priority="1" sourceRef="ExclusiveGateway_2" targetRef="ScriptTask_15"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_44" drools:priority="1" name="" sourceRef="ExclusiveGateway_2" targetRef="ScriptTask_4"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_45" drools:priority="1" name="" sourceRef="ExclusiveGateway_2" targetRef="ScriptTask_15"/>
     <bpmn2:scriptTask id="ScriptTask_14" name="Planning Request Identifier">
       <bpmn2:incoming>SequenceFlow_51</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_31</bpmn2:outgoing>
     </bpmn2:scriptTask>
-    <bpmn2:sequenceFlow id="SequenceFlow_31" drools:priority="1" sourceRef="ScriptTask_14" targetRef="ScriptTask_6"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_31" drools:priority="1" name="" sourceRef="ScriptTask_14" targetRef="ScriptTask_6"/>
     <bpmn2:inclusiveGateway id="InclusiveGateway_3" name="" gatewayDirection="Diverging">
       <bpmn2:incoming>SequenceFlow_52</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_53</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_51</bpmn2:outgoing>
     </bpmn2:inclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_51" drools:priority="1" sourceRef="InclusiveGateway_3" targetRef="ScriptTask_14"/>
-    <bpmn2:scriptTask id="ScriptTask_4" name="PlanningRequestService.submit">
+    <bpmn2:sequenceFlow id="SequenceFlow_51" drools:priority="1" name="" sourceRef="InclusiveGateway_3" targetRef="ScriptTask_14"/>
+    <bpmn2:scriptTask id="ScriptTask_4" name="PlanningRequestService.add">
       <bpmn2:incoming>SequenceFlow_44</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_53</bpmn2:outgoing>
     </bpmn2:scriptTask>
-    <bpmn2:sequenceFlow id="SequenceFlow_53" drools:priority="1" sourceRef="ScriptTask_4" targetRef="InclusiveGateway_3"/>
-    <bpmn2:scriptTask id="ScriptTask_15" name="PlanningRequestService.submit">
+    <bpmn2:sequenceFlow id="SequenceFlow_53" drools:priority="1" name="" sourceRef="ScriptTask_4" targetRef="InclusiveGateway_3"/>
+    <bpmn2:scriptTask id="ScriptTask_15" name="PlanningRequestService.add">
       <bpmn2:incoming>SequenceFlow_45</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_52</bpmn2:outgoing>
     </bpmn2:scriptTask>
-    <bpmn2:sequenceFlow id="SequenceFlow_52" drools:priority="1" sourceRef="ScriptTask_15" targetRef="InclusiveGateway_3"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_52" drools:priority="1" name="" sourceRef="ScriptTask_15" targetRef="InclusiveGateway_3"/>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">

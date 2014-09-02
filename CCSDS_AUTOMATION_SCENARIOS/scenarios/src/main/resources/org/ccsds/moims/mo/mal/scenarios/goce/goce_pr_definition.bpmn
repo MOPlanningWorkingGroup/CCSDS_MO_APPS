@@ -37,7 +37,7 @@
       <bpmn2:script>System.out.println(&quot;New PR Definition created, ID: &quot; + prDefId);</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_9" drools:priority="1" name="" sourceRef="Task_4" targetRef="EndEvent_1"/>
-    <bpmn2:scriptTask id="ScriptTask_2" name="PlanningRequestService.addPlanningRequestDefinition" scriptFormat="http://www.java.com/java">
+    <bpmn2:scriptTask id="ScriptTask_2" name="PlanningRequestService.addDefinition" scriptFormat="http://www.java.com/java">
       <bpmn2:incoming>SequenceFlow_7</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
       <bpmn2:script>kcontext.setVariable(&quot;prDefId&quot;, planningRequestConsumer.getPlanningRequestService().addDefinition(prDef));</bpmn2:script>
@@ -110,7 +110,7 @@
     <bpmn2:sequenceFlow id="SequenceFlow_19" drools:priority="1" name="" sourceRef="Task_6" targetRef="UserTask_2"/>
     <bpmn2:endEvent id="EndEvent_1" name="End Process">
       <bpmn2:incoming>SequenceFlow_9</bpmn2:incoming>
-      <bpmn2:terminateEventDefinition/>
+      <bpmn2:terminateEventDefinition id="TerminateEventDefinition_1"/>
     </bpmn2:endEvent>
     <bpmn2:startEvent id="StartEvent_3" name="PR Defining">
       <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>
