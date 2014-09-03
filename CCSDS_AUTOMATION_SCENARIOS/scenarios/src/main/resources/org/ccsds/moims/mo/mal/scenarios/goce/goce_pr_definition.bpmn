@@ -27,7 +27,7 @@
         <bpmn2:flowNodeRef>Task_6</bpmn2:flowNodeRef>
         <bpmn2:flowNodeRef>ScriptTask_1</bpmn2:flowNodeRef>
       </bpmn2:lane>
-      <bpmn2:lane id="Lane_3" name="FCT">
+      <bpmn2:lane id="Lane_3" name="POWER USER">
         <bpmn2:flowNodeRef>UserTask_2</bpmn2:flowNodeRef>
       </bpmn2:lane>
     </bpmn2:laneSet>
