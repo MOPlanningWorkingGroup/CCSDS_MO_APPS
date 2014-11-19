@@ -1,7 +1,7 @@
 package org.ccsds.moims.mo.mal.planning.service;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +21,7 @@ import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UInteger;
+import org.ccsds.moims.mo.mal.structures.ULong;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
@@ -28,20 +29,15 @@ import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestArgumentDefinition;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestArgumentValue;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinition;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilter;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilterList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestGroup;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatus;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestUpdate;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestUpdateList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskArgumentDefinition;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinition;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentDefinition;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentValueList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -90,11 +86,10 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 			throws MALInteractionException, MALException {
 		org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest dbPr = planningRequestDaoImpl.get(id);
 		if (dbPr != null) {
-			dbPr.setName(planningRequest.getName());
-			dbPr.setDescription(planningRequest.getDescription());
-			if (planningRequest.getPlanningRequestStatus() != null) {
-				dbPr.setStatus(org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestStatus.valueOf(planningRequest.getPlanningRequestStatus().getState().toString()));
-			}
+			dbPr.setId(planningRequest.getId());
+			dbPr.setComment(planningRequest.getComment());
+			dbPr.setSource(planningRequest.getSource());
+			dbPr.setDestination(planningRequest.getDestination());
 			// TODO values
 			planningRequestDaoImpl.insertUpdate(dbPr);
 			publish(id, UpdateType.UPDATE);
@@ -128,9 +123,11 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 		final EntityKey ekey = new EntityKey(new Identifier(String.valueOf(id)), null, null, null);
 	    final Time timestamp = new Time(System.currentTimeMillis());
 	    updateHeaderList.add(new UpdateHeader(timestamp, new URI("SomeURI"), updateType, ekey));
-	    PlanningRequestUpdateList list = new PlanningRequestUpdateList(); 
-	    list.add(new PlanningRequestUpdate());
-	    publisher.publish(updateHeaderList, new PlanningRequestFilterList());
+	    PlanningRequestFilterList filterList = new PlanningRequestFilterList();
+	    PlanningRequestFilter filter = new PlanningRequestFilter();
+	    filter.setStatus(StateEnum.EXECUTED);
+	    filterList.add(filter);
+	    publisher.publish(updateHeaderList, filterList);
 	}
 
 	public LongList listDefinition(IdentifierList identifierList,
@@ -164,12 +161,12 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 		dbDefinition.setDescription(definition.getDescription());
 		dbDefinition.setArguments(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentDefinition>());
 		if (definition.getArguments() != null) {
-			Iterator<PlanningRequestArgumentDefinition> it = definition.getArguments().iterator();
+			Iterator<ArgumentDefinition> it = definition.getArguments().iterator();
 			while (it.hasNext()) {
-				PlanningRequestArgumentDefinition argDef = it.next();
+				ArgumentDefinition argDef = it.next();
 				org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentDefinition dbArg = new org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentDefinition();
 				dbArg.setName(argDef.getName());
-				dbArg.setValueType(argDef.getValueType().getValue());
+				dbArg.setValueType(argDef.getType());
 				dbArg.setPlanningRequestDefinition(dbDefinition);
 				dbDefinition.getArguments().add(dbArg);
 			}
@@ -201,43 +198,23 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 		}
 		planningRequestDefinitionDaoImpl.remove(planningRequestDefinitionId);
 	}
-
-	public Long add(
-			PlanningRequestGroup planningRequestGroup,
-			Long planningRequestDefinitionId, PlanningRequest planningRequest,
-			MALInteraction interaction) throws MALInteractionException,
-			MALException {
-		org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestDefinition dbPrDef = planningRequestDefinitionDaoImpl.get(planningRequestDefinitionId);
-		if (dbPrDef == null) {
-			throw new MALException("The Planning Request Definition does not exist");
-		}
-		
-		org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest dbReq = new org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest();
-		dbReq.setCreationDate(new Date());
-		dbReq.setCreator("kopernikus");
-		dbReq.setName(dbPrDef.getName());
-		dbReq.setDescription(dbPrDef.getDescription());
-		dbReq.setStatus(org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestStatus.SUBMITTED);
-		if (planningRequest.getArguments() != null) {
-			dbReq.setValues(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestValue>());
-			Iterator<PlanningRequestArgumentValue> it = planningRequest.getArguments().iterator();
-			while (it.hasNext()) {
-				// TODO
-			}
-		}
-		planningRequestDaoImpl.insertUpdate(dbReq);
-		return dbReq.getId();
-	}
 	
 	private PlanningRequest mapFromDb(org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest dbPr) {
 		PlanningRequest pr = new PlanningRequest();
-		pr.setName(dbPr.getName());
-		pr.setDescription(dbPr.getDescription());
-		if (dbPr.getStatus() != null) {
-			PlanningRequestStatus status = new PlanningRequestStatus();
-			status.setState(StateEnum.fromString(dbPr.getStatus().toString()));
-			pr.setPlanningRequestStatus(status);
+		pr.setId(dbPr.getId());
+		pr.setComment(dbPr.getComment());
+		pr.setDestination(dbPr.getDestination());
+		pr.setSource(dbPr.getSource());
+		if (dbPr.getPlanningRequestDefinition() != null) {
+			pr.setPlanningRequestDefinitionId(dbPr.getPlanningRequestDefinition().getId());
 		}
+		ArgumentValueList list = new ArgumentValueList();
+		for (org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentValue prav : dbPr.getArgumentValues()) {
+			ArgumentValue av = new ArgumentValue();
+			av.setValue(new ULong(BigInteger.valueOf(prav.getId())));
+			list.add(av);
+		}
+		pr.setArgumentValues(list);
 		return pr;
 	}
 	
@@ -262,14 +239,14 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 			taskDef.setName(def.getName());
 			taskDef.setDescription(def.getDescription());
 			if (def.getArguments() != null) {
-				taskDef.setTaskArgumentDefinitions(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition>());
-				for (TaskArgumentDefinition argDef : def.getArguments()) {
+				taskDef.setArguments(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition>());
+				for (ArgumentDefinition argDef : def.getArguments()) {
 					org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition dbArg = new org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition();
 					dbArg.setName(argDef.getName());
 					// TODO
 					// dbArg.setValueType(org.ccsds.moims.mo.mal.planning.datamodel.ValueType.valueOf(argDef.getValueType().toString()));
 					dbArg.setTaskDefinition(taskDef);
-					taskDef.getTaskArgumentDefinitions().add(dbArg);
+					taskDef.getArguments().add(dbArg);
 				}
 			}
 			taskDefinitionDaoImpl.insertUpdate(taskDef);
@@ -290,14 +267,14 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 				taskDef.setName(def.getName());
 				taskDef.setDescription(def.getDescription());
 				if (def.getArguments() != null) {
-					for (TaskArgumentDefinition argDef : def.getArguments()) {
+					for (ArgumentDefinition argDef : def.getArguments()) {
 						// TODO
 						org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition dbArg =
 								new org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition();
 						dbArg.setName(argDef.getName());
 						// TODO dbArg.setValueType(org.ccsds.moims.mo.mal.planning.datamodel.ValueType.valueOf(argDef.getValueType().toString()));
 						dbArg.setTaskDefinition(taskDef);
-						taskDef.getTaskArgumentDefinitions().add(dbArg);
+						taskDef.getArguments().add(dbArg);
 					}
 				}
 				taskDefinitionDaoImpl.insertUpdate(taskDef);
@@ -316,6 +293,29 @@ public class PlanningRequestServiceImpl extends PlanningRequestInheritanceSkelet
 			}
 			taskDefinitionDaoImpl.remove(id);
 		}
+	}
+
+	public Long add(Long planningRequestDefinitionId,
+			PlanningRequest planningRequest, MALInteraction interaction)
+			throws MALInteractionException, MALException {
+		org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestDefinition dbPrDef = planningRequestDefinitionDaoImpl.get(planningRequestDefinitionId);
+		if (dbPrDef == null) {
+			throw new MALException("The Planning Request Definition does not exist");
+		}
+		
+		org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest dbReq = new org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest();
+		dbReq.setComment("kopernikus");
+		dbReq.setDestination("rosetta");
+		dbReq.setSource("philae");
+		if (planningRequest.getArgumentValues() != null) {
+			dbReq.setArgumentValues(new ArrayList<org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentValue>());
+			Iterator<ArgumentValue> it = planningRequest.getArgumentValues().iterator();
+			while (it.hasNext()) {
+				// TODO
+			}
+		}
+		planningRequestDaoImpl.insertUpdate(dbReq);
+		return dbReq.getId();
 	}
 
 

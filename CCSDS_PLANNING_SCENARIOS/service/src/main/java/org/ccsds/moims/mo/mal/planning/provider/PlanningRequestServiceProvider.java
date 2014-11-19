@@ -89,8 +89,8 @@ public class PlanningRequestServiceProvider {
 		domain.add(new Identifier("esa"));
 		domain.add(new Identifier("mission"));
 		publisher = planningRequestService.createMonitorPlanningRequestsPublisher(domain, new Identifier("GROUND"),
-				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
-				null, new UInteger(0));
+				SessionType.LIVE, new Identifier("LIVE"),QoSLevel.BESTEFFORT,
+		            null, new UInteger(0));
 		taskPublisher = planningRequestService.createMonitorTasksPublisher(domain, new Identifier("GROUND"),
 				SessionType.LIVE, new Identifier("LIVE"), QoSLevel.BESTEFFORT,
 				null, new UInteger(0));

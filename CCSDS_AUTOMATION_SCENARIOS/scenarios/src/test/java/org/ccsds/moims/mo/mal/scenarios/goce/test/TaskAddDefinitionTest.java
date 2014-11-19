@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer;
 import org.ccsds.moims.mo.mal.structures.UOctet;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskArgumentDefinition;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskArgumentDefinitionList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinition;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentDefinition;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentDefinitionList;
 import org.jbpm.runtime.manager.impl.RuntimeEnvironmentBuilder;
 import org.jbpm.test.JbpmJUnitBaseTestCase;
 import org.junit.After;
@@ -71,10 +71,10 @@ public class TaskAddDefinitionTest extends JbpmJUnitBaseTestCase {
 		TaskDefinition taskDef = new TaskDefinition();
 		taskDef.setName("junittest");
 		taskDef.setDescription("junit description");
-		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
-		TaskArgumentDefinition arg1 = new TaskArgumentDefinition();
+		ArgumentDefinitionList arguments = new ArgumentDefinitionList();
+		ArgumentDefinition arg1 = new ArgumentDefinition();
 		arg1.setName("task argument");
-		arg1.setValueType(new UOctet((short) 2));
+		arg1.setType(new Byte("2"));
 		arguments.add(arg1);
 		taskDef.setArguments(arguments);
 		Map<String, Object> params = new HashMap<String, Object>();

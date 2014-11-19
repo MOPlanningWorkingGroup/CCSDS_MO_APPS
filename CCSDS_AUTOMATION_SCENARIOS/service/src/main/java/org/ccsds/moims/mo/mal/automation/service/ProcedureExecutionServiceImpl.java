@@ -1,27 +1,28 @@
 package org.ccsds.moims.mo.mal.automation.service;
 
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
+
 import org.ccsds.moims.mo.automation.procedureexecution.provider.ProcedureExecutionInheritanceSkeleton;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.Procedure;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureArgumentValue;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureArgumentValueList;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureDefinition;
+import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureFilter;
 import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureInvocationDetails;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureOccurrenceFilter;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureState;
-import org.ccsds.moims.mo.automation.procedureexecution.structures.ProcedureStatus;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ProcedureDaoImpl;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ProcedureDefinitionDaoImpl;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ProcedureStatusDaoImpl;
-import org.ccsds.moims.mo.mal.automation.datamodel.ProcedureStatusMessage;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
+import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.StringList;
+import org.ccsds.moims.mo.mal.structures.ULong;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentValueList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -119,21 +120,6 @@ public class ProcedureExecutionServiceImpl extends
 		return cast(dbProcedure, dbProcedureStatus);
 	}
 
-	public LongList list(
-			ProcedureOccurrenceFilter procedureOccurrenceFilter,
-			MALInteraction interaction) throws MALInteractionException,
-			MALException {
-		LongList list = new LongList();
-		List<org.ccsds.moims.mo.mal.automation.datamodel.Procedure> dbList = procedureDaoImpl
-				.getList();
-		if (dbList != null) {
-			for (org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure : dbList) {
-				list.add(dbProcedure.getId());
-			}
-		}
-		return list;
-	}
-
 	public Long addDefinition(ProcedureDefinition procedureDefinition,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
@@ -186,40 +172,19 @@ public class ProcedureExecutionServiceImpl extends
 			procedure = new Procedure();
 			procedure.setName(dbProcedure.getName());
 			procedure.setDescription(dbProcedure.getDescription());
-			procedure.setStatus(cast(dbProcedureStatus));
 			if (dbProcedure.getArguments() != null) {
-				ProcedureArgumentValueList arguments = new ProcedureArgumentValueList();
-				for (org.ccsds.moims.mo.mal.automation.datamodel.ProcedureArgument arg : dbProcedure
+				ArgumentValueList arguments = new ArgumentValueList();
+				for (org.ccsds.moims.mo.mal.automation.datamodel.ProcedureArgumentValue arg : dbProcedure
 						.getArguments()) {
-					ProcedureArgumentValue a = new ProcedureArgumentValue();
-					a.setName(arg.getName());
-					// TODO attribute
-					arguments.add(a);
+					ArgumentValue argumentValue = new ArgumentValue();
+					ULong attr = new ULong(BigInteger.valueOf(arg.getId()));
+					argumentValue.setValue(attr);
+					arguments.add(argumentValue);
 				}
-				procedure.setArguments(arguments);
+				procedure.setArgumentValues(arguments);
 			}
-			// TODO attachemnt
 		}
 		return procedure;
-	}
-
-	private static ProcedureStatus cast(
-			org.ccsds.moims.mo.mal.automation.datamodel.ProcedureStatus dbProcedureStatus) {
-		ProcedureStatus procedureStatus = null;
-		if (dbProcedureStatus != null) {
-			procedureStatus = new ProcedureStatus();
-			procedureStatus.setState(ProcedureState
-					.fromString(dbProcedureStatus.getState().toString()));
-			if (dbProcedureStatus.getMessages() != null) {
-				StringList messages = new StringList();
-				for (ProcedureStatusMessage msg : dbProcedureStatus
-						.getMessages()) {
-					messages.add(msg.getMessage());
-				}
-				procedureStatus.setMessage(messages);
-			}
-		}
-		return procedureStatus;
 	}
 
 	private static org.ccsds.moims.mo.mal.automation.datamodel.ProcedureDefinition cast(
@@ -232,6 +197,20 @@ public class ProcedureExecutionServiceImpl extends
 			// TODO other paramas.
 		}
 		return dbDef;
+	}
+
+	public LongList list(ProcedureFilter _ProcedureFilter0,
+			MALInteraction interaction) throws MALInteractionException,
+			MALException {
+		LongList list = new LongList();
+		List<org.ccsds.moims.mo.mal.automation.datamodel.Procedure> dbList = procedureDaoImpl
+				.getList();
+		if (dbList != null) {
+			for (org.ccsds.moims.mo.mal.automation.datamodel.Procedure dbProcedure : dbList) {
+				list.add(dbProcedure.getId());
+			}
+		}
+		return list;
 	}
 
 }

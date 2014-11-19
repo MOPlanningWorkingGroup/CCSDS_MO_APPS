@@ -108,6 +108,9 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
+							<!--targetLanguages>
+                  				<targetLanguage>Docx</targetLanguage>
+                			</targetLanguages-->
 							<xmlDirectory>${esa.stubgen.xmlDirectory}</xmlDirectory>
 							<xmlRefDirectory>${esa.stubgen.xmlRefDirectory}</xmlRefDirectory>
 							<jaxbBindings>

@@ -1,4 +1,4 @@
-package org.ccsds.moims.mo.mal.automation.datamodel;
+package org.ccsds.moims.mo.mal.planning.datamodel;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -8,10 +8,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
 @Entity
-public class ProcedureArgument {
+public class PlanningRequestArgumentValue {
 
 	private Long id;
-	private Procedure procedure;
+	private PlanningRequest planningRequest;
 	private String name;
 	private byte[] value;
 
@@ -26,13 +26,13 @@ public class ProcedureArgument {
 	}
 
 	@OneToOne
-	@JoinColumn(name = "procedure_id")
-	public Procedure getProcedure() {
-		return procedure;
+	@JoinColumn(name = "planningrequest_id")
+	public PlanningRequest getPlanningRequest() {
+		return planningRequest;
 	}
 
-	public void setProcedure(Procedure procedure) {
-		this.procedure = procedure;
+	public void setPlanningRequest(PlanningRequest planningRequest) {
+		this.planningRequest = planningRequest;
 	}
 
 	public String getName() {

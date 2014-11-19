@@ -9,10 +9,9 @@ import java.util.List;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ProcedureDaoImpl;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ProcedureDefinitionDaoImpl;
 import org.ccsds.moims.mo.mal.automation.datamodel.Procedure;
-import org.ccsds.moims.mo.mal.automation.datamodel.ProcedureArgument;
+import org.ccsds.moims.mo.mal.automation.datamodel.ProcedureArgumentValue;
 import org.ccsds.moims.mo.mal.automation.datamodel.ProcedureDefinition;
 import org.ccsds.moims.mo.mal.automation.datamodel.ProcedureDefinitionArgument;
-import org.ccsds.moims.mo.mal.automation.datamodel.ProcedureKeyValue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/jpaContext.xml")
+@ContextConfiguration("classpath*:**/jpaAutomationContext.xml")
 public class ProcedureDaoTest {
 	
 	@Autowired
@@ -47,18 +46,7 @@ public class ProcedureDaoTest {
 		procedureDefinitionDaoImpl.insertUpdate(procedureDefinition);
 		Procedure procedure = new Procedure();
 		procedure.setProcedureDefinition(procedureDefinition);
-		procedure.setArguments(new ArrayList<ProcedureArgument>());
-		procedure.setKeyValues(new ArrayList<ProcedureKeyValue>());
-		ProcedureArgument pArg1 = new ProcedureArgument();
-		pArg1.setName("pArg1");
-		pArg1.setProcedure(procedure);
-		pArg1.setValue("this is a test".getBytes());
-		procedure.getArguments().add(pArg1);
-		ProcedureKeyValue value1 = new ProcedureKeyValue();
-		value1.setKey("key");
-		value1.setProcedure(procedure);
-		value1.setValue("this is a value".getBytes());
-		procedure.getKeyValues().add(value1);
+		procedure.setArguments(new ArrayList<ProcedureArgumentValue>());
 		procedureDaoImpl.insertUpdate(procedure);
 		procedure = procedureDaoImpl.get(procedure.getId());
 		procedureDaoImpl.remove(procedure.getId());

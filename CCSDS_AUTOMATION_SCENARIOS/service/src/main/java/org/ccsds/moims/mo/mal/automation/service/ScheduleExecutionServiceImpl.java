@@ -9,8 +9,6 @@ import org.ccsds.moims.mo.automation.scheduleexecution.provider.MonitorSchedules
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.Schedule;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleDefinition;
 import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleFilter;
-import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleState;
-import org.ccsds.moims.mo.automation.scheduleexecution.structures.ScheduleStatus;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ScheduleDaoImpl;
@@ -22,7 +20,6 @@ import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
-import org.ccsds.moims.mo.mal.structures.StringList;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -167,20 +164,6 @@ public class ScheduleExecutionServiceImpl extends
 	public LongList listDefinition(IdentifierList identifierList,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
-		/*
-		LongList longList = null;
-		if (identifierList != null) {
-			longList = new LongList();
-			Iterator<Identifier> it = identifierList.iterator();
-			while (it.hasNext()) {
-				Identifier identifier = it.next();
-				org.ccsds.moims.mo.mal.automation.datamodel.ScheduleDefinition def = scheduleDefinitionDaoImpl.get(Long.parseLong(identifier.getValue()));
-				if (def != null) {
-					longList.add(def.getId());
-				}
-			}
-		}
-		*/
 		List<org.ccsds.moims.mo.mal.automation.datamodel.ScheduleDefinition> list = scheduleDefinitionDaoImpl.getList();
 		LongList longList = new LongList();
 		if (list != null) {

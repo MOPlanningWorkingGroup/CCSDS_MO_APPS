@@ -8,12 +8,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
 @Entity
-public class ProcedureKeyValue {
+public class ProcedureArgumentValue {
 
 	private Long id;
 	private Procedure procedure;
-	private String key;
-	private byte[] value;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -33,22 +31,6 @@ public class ProcedureKeyValue {
 
 	public void setProcedure(Procedure procedure) {
 		this.procedure = procedure;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	public byte[] getValue() {
-		return value;
-	}
-
-	public void setValue(byte[] value) {
-		this.value = value;
 	}
 
 }

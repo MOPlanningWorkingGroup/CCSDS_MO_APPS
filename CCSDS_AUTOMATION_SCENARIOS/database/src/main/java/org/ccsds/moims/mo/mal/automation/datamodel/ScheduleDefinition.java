@@ -19,6 +19,9 @@ public class ScheduleDefinition {
 	private String name;
 	private String description;
 	private List<ScheduleArgumentDefinition> arguments;
+	private String typeOfSchedule;
+	private Boolean standaloneOrIncrement;
+	private List<ScheduleEventDefinition> eventDefinitions;
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -54,5 +57,32 @@ public class ScheduleDefinition {
 	public void setArguments(List<ScheduleArgumentDefinition> arguments) {
 		this.arguments = arguments;
 	}
+
+	public String getTypeOfSchedule() {
+		return typeOfSchedule;
+	}
+
+	public void setTypeOfSchedule(String typeOfSchedule) {
+		this.typeOfSchedule = typeOfSchedule;
+	}
+
+	public Boolean getStandaloneOrIncrement() {
+		return standaloneOrIncrement;
+	}
+
+	public void setStandaloneOrIncrement(Boolean standaloneOrIncrement) {
+		this.standaloneOrIncrement = standaloneOrIncrement;
+	}
+
+	@OneToMany(targetEntity = ScheduleEventDefinition.class, mappedBy = "scheduleDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
+	public List<ScheduleEventDefinition> getEventDefinitions() {
+		return eventDefinitions;
+	}
+
+	public void setEventDefinitions(List<ScheduleEventDefinition> eventDefinitions) {
+		this.eventDefinitions = eventDefinitions;
+	}
+	
+	
 
 }

@@ -1,33 +1,30 @@
 package org.ccsds.moims.mo.mal.planning.datamodel;
 
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.OneToOne;
 
 @Entity
 @NamedQueries({ @NamedQuery(name = "PlanningRequest.findAll", query = "SELECT c FROM PlanningRequest c") })
 public class PlanningRequest {
 
 	private Long id;
-	private String name;
-	private String description;
-	private int version;
-	private Date creationDate;
-	private String creator;
-	private PlanningRequestStatus status;
-	private List<PlanningRequestValue> values;
+	private PlanningRequestDefinition planningRequestDefinition;
+	private String comment;
+	private String source;
+	private String destination;
+	private List<PlanningRequestDomain> domains;
+	private List<PlanningRequestArgumentValue> argumentValues;
+	
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -39,63 +36,58 @@ public class PlanningRequest {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	@OneToOne
+	@JoinColumn(name = "planningrequestdefinition_id")
+	public PlanningRequestDefinition getPlanningRequestDefinition() {
+		return planningRequestDefinition;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setPlanningRequestDefinition(
+			PlanningRequestDefinition planningRequestDefinition) {
+		this.planningRequestDefinition = planningRequestDefinition;
 	}
 
-	public String getDescription() {
-		return description;
+	public String getComment() {
+		return comment;
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 
-	public int getVersion() {
-		return version;
+	public String getSource() {
+		return source;
 	}
 
-	public void setVersion(int version) {
-		this.version = version;
+	public void setSource(String source) {
+		this.source = source;
 	}
 
-	@Temporal(TemporalType.DATE)
-	public Date getCreationDate() {
-		return creationDate;
+	public String getDestination() {
+		return destination;
 	}
 
-	public void setCreationDate(Date creationDate) {
-		this.creationDate = creationDate;
+	public void setDestination(String destination) {
+		this.destination = destination;
 	}
 
-	public String getCreator() {
-		return creator;
+	@OneToMany(targetEntity = PlanningRequestDomain.class, mappedBy = "planningRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+	public List<PlanningRequestDomain> getDomains() {
+		return domains;
 	}
 
-	public void setCreator(String creator) {
-		this.creator = creator;
+	public void setDomains(List<PlanningRequestDomain> domains) {
+		this.domains = domains;
 	}
 
-	@Enumerated(EnumType.STRING)
-	public PlanningRequestStatus getStatus() {
-		return status;
+	@OneToMany(targetEntity = PlanningRequestArgumentValue.class, mappedBy = "planningRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+	public List<PlanningRequestArgumentValue> getArgumentValues() {
+		return argumentValues;
 	}
 
-	public void setStatus(PlanningRequestStatus status) {
-		this.status = status;
+	public void setArgumentValues(List<PlanningRequestArgumentValue> argumentValues) {
+		this.argumentValues = argumentValues;
 	}
 
-	@OneToMany(targetEntity = PlanningRequestValue.class, mappedBy = "planningRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<PlanningRequestValue> getValues() {
-		return values;
-	}
-
-	public void setValues(List<PlanningRequestValue> values) {
-		this.values = values;
-	}
 
 }

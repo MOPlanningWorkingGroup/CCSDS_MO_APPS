@@ -8,15 +8,25 @@ http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
 		transaction-type="RESOURCE_LOCAL">
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
 		<non-jta-data-source>jdbc/planningDs</non-jta-data-source>
+		
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.ExecutionRunningConstraints</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.ExecutionTimingConstraints</class>
+		
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestDefinition</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestDomain</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentDefinition</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentValue</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestStatus</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestTaskDefinition</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestValue</class>
+		
 		<class>org.ccsds.moims.mo.mal.planning.datamodel.Task</class>
 		<class>org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentValue</class>
 		<class>org.ccsds.moims.mo.mal.planning.datamodel.TaskDefinition</class>
 		<class>org.ccsds.moims.mo.mal.planning.datamodel.TaskArgumentDefinition</class>
-		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest</class>
-		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestValue</class>
-		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestDefinition</class>
-		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestArgumentDefinition</class>
-		<class>org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequestTaskDefinition</class>
+		<class>org.ccsds.moims.mo.mal.planning.datamodel.TaskStatus</class>
+		
 		<properties>
 			<property name="eclipselink.logging.level" value="ALL" />
 			<property name="eclipselink.logging.timestamp" value="true" />

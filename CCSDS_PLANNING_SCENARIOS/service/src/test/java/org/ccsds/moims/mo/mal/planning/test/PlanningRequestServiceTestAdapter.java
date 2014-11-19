@@ -8,9 +8,7 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskFilterList;
 
 /**
@@ -34,8 +32,6 @@ public class PlanningRequestServiceTestAdapter extends PlanningRequestAdapter {
 	public PlanningRequestServiceTestAdapter(String name) {
 		this.name = name;
 	}
-	
-	
 
 	@Override
 	public void addResponseReceived(MALMessageHeader msgHeader,

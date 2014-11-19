@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 import org.ccsds.moims.mo.mal.automation.dao.impl.ScheduleDaoImpl;
 import org.ccsds.moims.mo.mal.automation.datamodel.Schedule;
 import org.ccsds.moims.mo.mal.automation.datamodel.ScheduleArgumentValue;
-import org.ccsds.moims.mo.mal.automation.datamodel.ScheduleAttachment;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath*:**/jpaContext.xml")
+@ContextConfiguration("classpath*:**/jpaAutomationContext.xml")
 public class ScheduleDaoTest {
 	
 	@SuppressWarnings("unused")
@@ -31,16 +30,11 @@ public class ScheduleDaoTest {
 		Schedule schedule = new Schedule();
 		schedule.setName("schedule");
 		schedule.setDescription("schedule description");
-		schedule.setAttachments(new ArrayList<ScheduleAttachment>());
-		ScheduleAttachment a1 = new ScheduleAttachment();
-		a1.setSchedule(schedule);
-		a1.setAttachment("attachment".getBytes());
-		schedule.getAttachments().add(a1);
-		schedule.setArguments(new ArrayList<ScheduleArgumentValue>());
+		schedule.setArgumentValues(new ArrayList<ScheduleArgumentValue>());
 		ScheduleArgumentValue arg1 = new ScheduleArgumentValue();
 		arg1.setSchedule(schedule);
 		arg1.setValue("schedule value");
-		schedule.getArguments().add(arg1);
+		schedule.getArgumentValues().add(arg1);
 		scheduleDaoImpl.insertUpdate(schedule);
 		schedule = scheduleDaoImpl.get(schedule.getId());
 		assertTrue(schedule != null);

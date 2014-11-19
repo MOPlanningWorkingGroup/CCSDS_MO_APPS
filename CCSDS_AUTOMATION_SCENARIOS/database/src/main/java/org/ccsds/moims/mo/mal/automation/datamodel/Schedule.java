@@ -3,10 +3,11 @@ package org.ccsds.moims.mo.mal.automation.datamodel;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -14,40 +15,32 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 @Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@DiscriminatorColumn(name = "Schedule", discriminatorType = DiscriminatorType.STRING)
 @NamedQueries({ @NamedQuery(name = "Schedule.findAll", query = "SELECT c FROM Schedule c") })
-public class Schedule {
+public class Schedule extends Activity {
 	
-	private Long id;
-	private String name;
-	private String description;
+	private String source;
+	private String destination;
 	private ScheduleDefinition scheduleDefinition;
-	private List<ScheduleArgumentValue> arguments;
-	private List<ScheduleAttachment> attachments;
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	public Long getId() {
-		return id;
+	private List<ScheduleArgumentValue> argumentValues;
+	private ExecutionTimingConstraints executionTiming;
+	private ExecutionRunningConstraints executionDetails;
+
+	public String getSource() {
+		return source;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-	
-	public String getName() {
-		return name;
+	public void setSource(String source) {
+		this.source = source;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public String getDestination() {
+		return destination;
 	}
 
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
+	public void setDestination(String destination) {
+		this.destination = destination;
 	}
 
 	@OneToOne
@@ -61,21 +54,28 @@ public class Schedule {
 	}
 
 	@OneToMany(targetEntity = ScheduleArgumentValue.class, mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<ScheduleArgumentValue> getArguments() {
-		return arguments;
+	public List<ScheduleArgumentValue> getArgumentValues() {
+		return argumentValues;
 	}
 
-	public void setArguments(List<ScheduleArgumentValue> arguments) {
-		this.arguments = arguments;
+	public void setArgumentValues(List<ScheduleArgumentValue> arguments) {
+		this.argumentValues = arguments;
 	}
 
-	@OneToMany(targetEntity = ScheduleAttachment.class, mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<ScheduleAttachment> getAttachments() {
-		return attachments;
+	public ExecutionTimingConstraints getExecutionTiming() {
+		return executionTiming;
 	}
 
-	public void setAttachments(List<ScheduleAttachment> attachments) {
-		this.attachments = attachments;
+	public void setExecutionTiming(ExecutionTimingConstraints executionTiming) {
+		this.executionTiming = executionTiming;
+	}
+
+	public ExecutionRunningConstraints getExecutionDetails() {
+		return executionDetails;
+	}
+
+	public void setExecutionDetails(ExecutionRunningConstraints executionDetails) {
+		this.executionDetails = executionDetails;
 	}
 
 }

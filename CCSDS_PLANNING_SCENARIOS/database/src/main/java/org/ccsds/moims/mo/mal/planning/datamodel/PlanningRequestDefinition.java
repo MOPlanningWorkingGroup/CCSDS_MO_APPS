@@ -18,7 +18,7 @@ public class PlanningRequestDefinition {
 	private Long id;
 	private String name;
 	private String description;
-	private List<PlanningRequestTaskDefinition> allowedTaskTypes;
+	private Boolean validateOnSubmit;
 	private List<PlanningRequestArgumentDefinition> arguments;
 
 	@Id
@@ -47,13 +47,12 @@ public class PlanningRequestDefinition {
 		this.description = description;
 	}
 
-	@OneToMany(targetEntity = PlanningRequestTaskDefinition.class, mappedBy = "planningRequestDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<PlanningRequestTaskDefinition> getAllowedTaskTypes() {
-		return allowedTaskTypes;
+	public Boolean getValidateOnSubmit() {
+		return validateOnSubmit;
 	}
 
-	public void setAllowedTaskTypes(List<PlanningRequestTaskDefinition> allowedTaskTypes) {
-		this.allowedTaskTypes = allowedTaskTypes;
+	public void setValidateOnSubmit(Boolean validateOnSubmit) {
+		this.validateOnSubmit = validateOnSubmit;
 	}
 
 	@OneToMany(targetEntity = PlanningRequestArgumentDefinition.class, mappedBy = "planningRequestDefinition", cascade = CascadeType.ALL, orphanRemoval = true)

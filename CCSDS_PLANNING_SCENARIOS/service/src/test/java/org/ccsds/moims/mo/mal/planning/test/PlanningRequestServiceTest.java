@@ -3,28 +3,29 @@ package org.ccsds.moims.mo.mal.planning.test;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequest;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestArgumentDefinitionList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinition;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestFilter;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestGroup;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatus;
 import org.ccsds.moims.mo.planning.planningrequest.structures.StateEnum;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskArgumentDefinitionList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.StatusTag;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinition;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionList;
+import org.ccsds.moims.mo.planningcom.structures.ArgumentDefinitionList;
 import org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumer;
 import org.ccsds.moims.mo.mal.planning.consumer.PlanningRequestServiceConsumerAdapter;
 import org.ccsds.moims.mo.mal.planning.provider.PlanningRequestServiceProvider;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.Time;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,8 +78,7 @@ public class PlanningRequestServiceTest {
 		prDef.setDescription("description");
 		Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 		PlanningRequest pr = new PlanningRequest();
-		PlanningRequestGroup group = new PlanningRequestGroup();
-		planningRequestConsumer.getPlanningRequestService().add(group, defId, pr);
+		planningRequestConsumer.getPlanningRequestService().add(defId, pr);
 		assertTrue(true);
 	}
 
@@ -90,12 +90,11 @@ public class PlanningRequestServiceTest {
 		prDef.setDescription("description");
 		Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 		PlanningRequest pr = new PlanningRequest();
-		PlanningRequestGroup group = new PlanningRequestGroup();
 		Long planningRequestId = planningRequestConsumer.getPlanningRequestService()
-				.add(group, defId, pr);
+				.add(defId, pr);
 		pr = planningRequestConsumer.getPlanningRequestService().get(
 				planningRequestId);
-		assertTrue(pr != null && pr.getPlanningRequestStatus().getState() == StateEnum.SUBMITTED);
+		assertTrue(pr != null);
 	}
 
 	@Test
@@ -106,17 +105,13 @@ public class PlanningRequestServiceTest {
 		prDef.setDescription("description");
 		Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 		PlanningRequest pr = new PlanningRequest();
-		PlanningRequestGroup group = new PlanningRequestGroup();
-		Long planningRequestId = planningRequestConsumer.getPlanningRequestService().add(group, defId, pr);
+		Long planningRequestId = planningRequestConsumer.getPlanningRequestService().add(defId, pr);
 		pr = new PlanningRequest();
-		PlanningRequestStatus status = new PlanningRequestStatus();
-		status.setState(StateEnum.SCHEDULED);
-		pr.setPlanningRequestStatus(status);
 		planningRequestConsumer.getPlanningRequestService().update(
 				planningRequestId, pr);
 		pr = planningRequestConsumer.getPlanningRequestService().get(
 				planningRequestId);
-		assertTrue(pr != null && pr.getPlanningRequestStatus().getState() == StateEnum.SCHEDULED);
+		assertTrue(pr != null);
 	}
 
 	@Test
@@ -127,8 +122,7 @@ public class PlanningRequestServiceTest {
 		prDef.setDescription("description");
 		Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 		PlanningRequest pr = new PlanningRequest();
-		PlanningRequestGroup group = new PlanningRequestGroup();
-		Long id = planningRequestConsumer.getPlanningRequestService().add(group, defId, pr);
+		Long id = planningRequestConsumer.getPlanningRequestService().add(defId, pr);
 		planningRequestConsumer.getPlanningRequestService().remove(
 				id);
 		pr = planningRequestConsumer.getPlanningRequestService()
@@ -144,8 +138,7 @@ public class PlanningRequestServiceTest {
 		prDef.setDescription("description");
 		Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 		PlanningRequest pr = new PlanningRequest();
-		PlanningRequestGroup group = new PlanningRequestGroup();
-		planningRequestConsumer.getPlanningRequestService().add(group, defId, pr);
+		planningRequestConsumer.getPlanningRequestService().add(defId, pr);
 		PlanningRequestList list = planningRequestConsumer.getPlanningRequestService()
 				.list(new PlanningRequestFilter());
 		assertTrue(list.size() > 0);
@@ -157,18 +150,15 @@ public class PlanningRequestServiceTest {
 		PlanningRequestDefinition prDef = new PlanningRequestDefinition();
 		prDef.setName("test2");
 		prDef.setDescription("description");
-		prDef.setAllowedTaskTypes(new TaskDefinitionList());
-		prDef.setArguments(new PlanningRequestArgumentDefinitionList());
+		prDef.setValidateOnSubmit(false);
+		prDef.setArguments(new ArgumentDefinitionList());
 		Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 		PlanningRequest pr = new PlanningRequest();
-		PlanningRequestGroup group = new PlanningRequestGroup();
 		PlanningRequestServiceTestAdapter testAdapter = new PlanningRequestServiceTestAdapter("SUBASYNC");
-		planningRequestConsumer.getPlanningRequestService().asyncAdd(group, defId,
+		planningRequestConsumer.getPlanningRequestService().asyncAdd(defId,
 				pr, testAdapter);
 		Thread.sleep(300);
-		PlanningRequestStatus status = new PlanningRequestStatus();
-		status.setState(StateEnum.ACCEPTED);
-		pr.setPlanningRequestStatus(status);
+		
 		planningRequestConsumer.getPlanningRequestService().asyncUpdate(
 				testAdapter.getPlanningRequestId(), pr, testAdapter);
 		Thread.sleep(300);
@@ -190,8 +180,7 @@ public class PlanningRequestServiceTest {
 			prDef.setDescription("description");
 			Long defId = planningRequestConsumer.getPlanningRequestService().addDefinition(prDef);
 			PlanningRequest pr = new PlanningRequest();
-			PlanningRequestGroup group = new PlanningRequestGroup();
-			Long id = planningRequestConsumer.getPlanningRequestService().add(group, defId, pr);
+			Long id = planningRequestConsumer.getPlanningRequestService().add(defId, pr);
 			// set up consumer
 			consumer2 = new PlanningRequestServiceConsumer("SUBTest1");
 			consumer2.setPropertyFile("/demoConsumer.properties");
@@ -207,9 +196,6 @@ public class PlanningRequestServiceTest {
 			consumer3.setUri(planningRequestServiceProvider.getUri());
 			consumer3.start();
 			listener2 = PlanningRequestServiceUtil.subscribeConsumer(consumer3, "SUBTest2", 12L);
-			PlanningRequestStatus status = new PlanningRequestStatus();
-			status.setState(StateEnum.ACCEPTED);
-			pr.setPlanningRequestStatus(status);
 			planningRequestConsumer.getPlanningRequestService().update(
 					id, pr);
 			Thread.sleep(400);
@@ -229,7 +215,7 @@ public class PlanningRequestServiceTest {
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test");
 		def.setDescription("description");
-		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
+		ArgumentDefinitionList arguments = new ArgumentDefinitionList();
 		def.setArguments(arguments);
 		planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		IdentifierList identifierList = new IdentifierList();
@@ -245,7 +231,7 @@ public class PlanningRequestServiceTest {
 		def.setName("test2");
 		def.setDescription("description2");
 		planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
-		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
+		ArgumentDefinitionList arguments = new ArgumentDefinitionList();
 		def.setArguments(arguments);
 		Long id = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		IdentifierList identifierList = new IdentifierList();
@@ -260,7 +246,7 @@ public class PlanningRequestServiceTest {
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test");
 		def.setDescription("description");
-		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
+		ArgumentDefinitionList arguments = new ArgumentDefinitionList();
 		def.setArguments(arguments);
 		Long id = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		def = new TaskDefinition();
@@ -278,7 +264,7 @@ public class PlanningRequestServiceTest {
 		TaskDefinition def = new TaskDefinition();
 		def.setName("test");
 		def.setDescription("description");
-		TaskArgumentDefinitionList arguments = new TaskArgumentDefinitionList();
+		ArgumentDefinitionList arguments = new ArgumentDefinitionList();
 		def.setArguments(arguments);
 		Long id = planningRequestConsumer.getPlanningRequestService().addTaskDefinition(def);
 		planningRequestConsumer.getPlanningRequestService().removeTaskDefinition(id);

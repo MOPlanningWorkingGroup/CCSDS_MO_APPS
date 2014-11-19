@@ -6,7 +6,7 @@ import org.ccsds.moims.mo.mal.planning.datamodel.PlanningRequest;
 
 public interface PlanningRequestDao {
 	
-void insertUpdate(PlanningRequest request);
+	void insertUpdate(PlanningRequest request);
 	
 	void remove(long id);
 	
