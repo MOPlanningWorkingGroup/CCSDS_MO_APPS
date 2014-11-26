@@ -4,14 +4,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 
 @Entity
-public class ExecutionRunningConstraints {
+public class EventTrigger {
 
 	private Long id;
-	private Task task;
+	private String name;
+	private String description;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,14 +22,20 @@ public class ExecutionRunningConstraints {
 		this.id = id;
 	}
 
-	@OneToOne
-	@JoinColumn(name = "task_id")
-	public Task getTask() {
-		return task;
+	public String getName() {
+		return name;
 	}
 
-	public void setTask(Task task) {
-		this.task = task;
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 }

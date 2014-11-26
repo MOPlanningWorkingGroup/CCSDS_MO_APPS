@@ -20,6 +20,7 @@ public class PlanningRequestDefinition {
 	private String description;
 	private Boolean validateOnSubmit;
 	private List<PlanningRequestArgumentDefinition> arguments;
+	private List<TaskDefinition> taskDefinitions;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -62,6 +63,15 @@ public class PlanningRequestDefinition {
 
 	public void setArguments(List<PlanningRequestArgumentDefinition> arguments) {
 		this.arguments = arguments;
+	}
+
+	@OneToMany(targetEntity = TaskDefinition.class, mappedBy = "planningRequestDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
+	public List<TaskDefinition> getTaskDefinitions() {
+		return taskDefinitions;
+	}
+
+	public void setTaskDefinitions(List<TaskDefinition> taskDefinitions) {
+		this.taskDefinitions = taskDefinitions;
 	}
 
 }

@@ -19,10 +19,10 @@ public class PlanningRequest {
 
 	private Long id;
 	private PlanningRequestDefinition planningRequestDefinition;
-	private String comment;
+	private String name;
+	private String description;
 	private String source;
 	private String destination;
-	private List<PlanningRequestDomain> domains;
 	private List<PlanningRequestArgumentValue> argumentValues;
 	
 
@@ -47,12 +47,20 @@ public class PlanningRequest {
 		this.planningRequestDefinition = planningRequestDefinition;
 	}
 
-	public String getComment() {
-		return comment;
+	public String getName() {
+		return name;
 	}
 
-	public void setComment(String comment) {
-		this.comment = comment;
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public String getSource() {
@@ -69,15 +77,6 @@ public class PlanningRequest {
 
 	public void setDestination(String destination) {
 		this.destination = destination;
-	}
-
-	@OneToMany(targetEntity = PlanningRequestDomain.class, mappedBy = "planningRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<PlanningRequestDomain> getDomains() {
-		return domains;
-	}
-
-	public void setDomains(List<PlanningRequestDomain> domains) {
-		this.domains = domains;
 	}
 
 	@OneToMany(targetEntity = PlanningRequestArgumentValue.class, mappedBy = "planningRequest", cascade = CascadeType.ALL, orphanRemoval = true)

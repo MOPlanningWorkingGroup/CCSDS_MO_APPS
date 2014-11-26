@@ -8,6 +8,6 @@
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
         http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<import resource="classpath*:/applicationAutomationContext.xml" />
+	<import resource="classpath*:/applicationPlanningContext.xml" />
 
 </beans>

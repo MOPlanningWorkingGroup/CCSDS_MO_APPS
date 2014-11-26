@@ -1,10 +1,14 @@
 package org.ccsds.moims.mo.mal.planning.datamodel;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 @Entity
@@ -14,6 +18,8 @@ public class PlanningRequestArgumentDefinition {
 	private PlanningRequestDefinition planningRequestDefinition;
 	private String name;
 	private short valueType;
+	private PlanningRequestArgumentDefinition parent;
+	private List<PlanningRequestArgumentDefinition> arguments;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -35,6 +41,16 @@ public class PlanningRequestArgumentDefinition {
 			PlanningRequestDefinition planningRequestDefinition) {
 		this.planningRequestDefinition = planningRequestDefinition;
 	}
+	
+	@OneToOne
+	@JoinColumn(name = "parent_id")
+	public PlanningRequestArgumentDefinition getParent() {
+		return parent;
+	}
+
+	public void setParent(PlanningRequestArgumentDefinition parent) {
+		this.parent = parent;
+	}
 
 	public String getName() {
 		return name;
@@ -51,7 +67,14 @@ public class PlanningRequestArgumentDefinition {
 	public void setValueType(short valueType) {
 		this.valueType = valueType;
 	}
-	
-	
+
+	@OneToMany(targetEntity = PlanningRequestArgumentDefinition.class, mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+	public List<PlanningRequestArgumentDefinition> getArguments() {
+		return arguments;
+	}
+
+	public void setArguments(List<PlanningRequestArgumentDefinition> arguments) {
+		this.arguments = arguments;
+	}
 
 }

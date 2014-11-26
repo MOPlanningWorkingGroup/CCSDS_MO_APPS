@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Licensed under the European Space Agency Public License, Version 2.0 
+	You may not use this file except in compliance with the License. Except as 
+	expressly set forth in this License, the Software is provided to You on an 
+	"as is" basis and without warranties of any kind, including without limitation 
+	merchantability, fitness for a particular purpose, absence of defects or 
+	errors, accuracy or non-infringement of intellectual property rights. See 
+	the License for the specific language governing permissions and limitations 
+	under the License. -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>int.esa</groupId>
+		<artifactId>CCSDS_PLANNING_SCENARIOS</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>CCSDS_PLANNING_SCENARIOS_TEST</artifactId>
+	<packaging>jar</packaging>
+	<name>CCSDS_PLANNING_SCENARIOS_TEST</name>
+	<description>Project tests automation scenarios</description>
+	<developers>
+		<developer>
+			<id>krixerx</id>
+			<name>Erki Kriks</name>
+			<email>erki.kriks@cgi.com</email>
+			<url>https://github.com/krixerx</url>
+		</developer>
+	</developers>
+	<repositories>
+		<repository>
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Repository Group</name>
+			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
+	<properties>
+		<jbpm.version>6.0.0.Final</jbpm.version>
+		<spring.version>3.1.1.RELEASE</spring.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_API</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_IMPL</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_TRANSPORT_RMI</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_MAL_ENCODING_STRING</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_PLANNING_SERVICE</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_PLANNING_DATABASE</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>int.esa</groupId>
+			<artifactId>CCSDS_PLANNING_SCHEMA</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-orm</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.3.172</version>
+			<!--scope>test</scope -->
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>org.eclipse.persistence.jpa</artifactId>
+			<version>2.4.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<forkMode>pertest</forkMode>
+					<argLine combine.self="override"></argLine>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

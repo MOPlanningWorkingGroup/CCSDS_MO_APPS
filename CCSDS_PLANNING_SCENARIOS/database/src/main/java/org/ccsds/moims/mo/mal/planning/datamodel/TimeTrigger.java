@@ -6,11 +6,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class PlanningRequestDomain {
+public class TimeTrigger {
 
 	private Long id;
-	private PlanningRequest planningRequest;
-	private String domain;
+	private String name;
+	private String description;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -22,20 +22,20 @@ public class PlanningRequestDomain {
 		this.id = id;
 	}
 
-	public PlanningRequest getPlanningRequest() {
-		return planningRequest;
+	public String getName() {
+		return name;
 	}
 
-	public void setPlanningRequest(PlanningRequest planningRequest) {
-		this.planningRequest = planningRequest;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String getDomain() {
-		return domain;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setDomain(String domain) {
-		this.domain = domain;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 }

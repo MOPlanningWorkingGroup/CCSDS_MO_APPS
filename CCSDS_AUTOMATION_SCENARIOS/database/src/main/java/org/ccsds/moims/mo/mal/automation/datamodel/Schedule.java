@@ -8,11 +8,9 @@ import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -24,8 +22,6 @@ public class Schedule extends Activity {
 	private String destination;
 	private ScheduleDefinition scheduleDefinition;
 	private List<ScheduleArgumentValue> argumentValues;
-	private ExecutionTimingConstraints executionTiming;
-	private ExecutionRunningConstraints executionDetails;
 
 	public String getSource() {
 		return source;
@@ -43,16 +39,6 @@ public class Schedule extends Activity {
 		this.destination = destination;
 	}
 
-	@OneToOne
-	@JoinColumn(name = "scheduleDefinition_id")
-	public ScheduleDefinition getScheduleDefinition() {
-		return scheduleDefinition;
-	}
-
-	public void setScheduleDefinition(ScheduleDefinition scheduleDefinition) {
-		this.scheduleDefinition = scheduleDefinition;
-	}
-
 	@OneToMany(targetEntity = ScheduleArgumentValue.class, mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
 	public List<ScheduleArgumentValue> getArgumentValues() {
 		return argumentValues;
@@ -62,20 +48,12 @@ public class Schedule extends Activity {
 		this.argumentValues = arguments;
 	}
 
-	public ExecutionTimingConstraints getExecutionTiming() {
-		return executionTiming;
+	public ScheduleDefinition getScheduleDefinition() {
+		return scheduleDefinition;
 	}
 
-	public void setExecutionTiming(ExecutionTimingConstraints executionTiming) {
-		this.executionTiming = executionTiming;
-	}
-
-	public ExecutionRunningConstraints getExecutionDetails() {
-		return executionDetails;
-	}
-
-	public void setExecutionDetails(ExecutionRunningConstraints executionDetails) {
-		this.executionDetails = executionDetails;
+	public void setScheduleDefinition(ScheduleDefinition scheduleDefinition) {
+		this.scheduleDefinition = scheduleDefinition;
 	}
 
 }
