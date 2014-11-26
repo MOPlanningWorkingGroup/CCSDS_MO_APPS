@@ -26,7 +26,7 @@ public class PlanningRequestDaoTest {
 	@Test
 	public void testPlanningRequestDao() {
 		PlanningRequest request = new PlanningRequest();
-		request.setComment("test");
+		request.setName("test");
 		request.setDestination("destination");
 		request.setSource("source");
 		planningRequestDaoImpl.insertUpdate(request);

@@ -18,6 +18,7 @@ import javax.persistence.OneToOne;
 public class TaskDefinition {
 
 	private Long id;
+	private PlanningRequestDefinition planningRequestDefinition;
 	private TaskDefinition parent;
 	private String name;
 	private String description;
@@ -34,6 +35,17 @@ public class TaskDefinition {
 		this.id = id;
 	}
 	
+	@OneToOne
+	@JoinColumn(name = "planningRequestDefinition")
+	public PlanningRequestDefinition getPlanningRequestDefinition() {
+		return planningRequestDefinition;
+	}
+
+	public void setPlanningRequestDefinition(
+			PlanningRequestDefinition planningRequestDefinition) {
+		this.planningRequestDefinition = planningRequestDefinition;
+	}
+
 	@OneToOne
 	@JoinColumn(name = "parent")
 	public TaskDefinition getParent() {

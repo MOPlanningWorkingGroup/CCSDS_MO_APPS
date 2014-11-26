@@ -16,11 +16,12 @@ public class Task {
 
 	private Long id;
 	private Task parent;
-	private String comment;
+	private String name;
+	private String description;
 	private List<Task> subTasks;
 	private List<TaskArgumentValue> argumentValues;
-	private List<ExecutionTimingConstraints> executionTiming;
-	private List<ExecutionRunningConstraints> executionDetails;
+	private List<TimeTrigger> timeTriggers;
+	private List<EventTrigger> eventTriggers;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -42,6 +43,14 @@ public class Task {
 		this.parent = parent;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	@OneToMany
 	@JoinColumn(name="task_id")
 	public List<TaskArgumentValue> getArgumentValues() {
@@ -52,12 +61,12 @@ public class Task {
 		this.argumentValues = argumentValues;
 	}
 
-	public String getComment() {
-		return comment;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setComment(String comment) {
-		this.comment = comment;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	@OneToMany(targetEntity = Task.class, mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -69,23 +78,20 @@ public class Task {
 		this.subTasks = subTasks;
 	}
 
-	@OneToMany(targetEntity = ExecutionTimingConstraints.class, mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<ExecutionTimingConstraints> getExecutionTiming() {
-		return executionTiming;
+	public List<TimeTrigger> getTimeTriggers() {
+		return timeTriggers;
 	}
 
-	public void setExecutionTiming(List<ExecutionTimingConstraints> executionTiming) {
-		this.executionTiming = executionTiming;
+	public void setTimeTriggers(List<TimeTrigger> timeTriggers) {
+		this.timeTriggers = timeTriggers;
 	}
 
-	@OneToMany(targetEntity = ExecutionRunningConstraints.class, mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-	public List<ExecutionRunningConstraints> getExecutionDetails() {
-		return executionDetails;
+	public List<EventTrigger> getEventTriggers() {
+		return eventTriggers;
 	}
 
-	public void setExecutionDetails(
-			List<ExecutionRunningConstraints> executionDetails) {
-		this.executionDetails = executionDetails;
+	public void setEventTriggers(List<EventTrigger> eventTriggers) {
+		this.eventTriggers = eventTriggers;
 	}
 
 }
