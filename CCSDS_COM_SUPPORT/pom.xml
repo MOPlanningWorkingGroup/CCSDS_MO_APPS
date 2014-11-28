@@ -23,12 +23,12 @@
     <relativePath/>
   </parent>
   
-  <artifactId>TRANSPORT_BRIDGE</artifactId>
+  <artifactId>SUPPORT_LIB_COM</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>ESA MAL transport bridge</name>
-  <description>A small application that allows bridging between transports</description>
+  <name>ESA COM Java support library</name>
+  <description>A small support library for the CCSDS COM in Java</description>
   <url>http://www.esa.int</url>
   
   <organization>
@@ -63,11 +63,7 @@
       <url>https://github.com/SamCooper</url>
     </developer>
   </developers>
-
-  <properties>
-    <assembly.mainClass>esa.mo.mal.transport.bridge.Main</assembly.mainClass>
-  </properties>
-
+  
   <dependencies>
     <dependency>
       <groupId>int.esa.ccsds.mo</groupId>
@@ -75,22 +71,19 @@
     </dependency>
     <dependency>
       <groupId>int.esa.ccsds.mo</groupId>
-      <artifactId>MAL_IMPL</artifactId>
+      <artifactId>API_COM</artifactId>
     </dependency>
     <dependency>
       <groupId>int.esa.ccsds.mo</groupId>
-      <artifactId>TRANSPORT_RMI</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>int.esa.ccsds.mo</groupId>
-      <artifactId>ENCODING_STRING</artifactId>
+      <artifactId>SUPPORT_LIB_MAL</artifactId>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
-  
+
   <build>
     <resources>
       <resource>
-        <directory>${basedir}/..</directory>
+        <directory>${basedir}</directory>
         <includes>
           <include>LICENCE.md</include>
         </includes>
@@ -105,10 +98,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
