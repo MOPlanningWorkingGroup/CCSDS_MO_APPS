@@ -23,8 +23,8 @@
   <context:component-scan base-package="esa.mo.plan" />
   
   <bean
-   id="PlanningRequestService"
-   class="esa.mo.plan.provider.PlanningRequestServiceImpl">
+   id="PlanningRequestProvider"
+   class="esa.mo.plan.provider.PlanningRequestProvider">
    
 <!--     <property name="name" value="Program Creek Readers" /> -->
   </bean>

@@ -1,15 +1,11 @@
 package esa.mo.plan.consumer;
 
-import static org.junit.Assert.*;
-
 import java.text.ParseException;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import esa.mo.plan.provider.PlanningRequestProviderFactory;
@@ -43,10 +39,14 @@ public class GocePlannerTest {
 	public void tearDown() throws Exception {
 		goce = null;
 		
-		consFct.stop();
+		if (consFct != null) {
+			consFct.stop();
+		}
 		consFct = null;
 		
-		provFct.stop();
+		if (provFct != null) {
+			provFct.stop();
+		}
 		provFct = null;
 	}
 

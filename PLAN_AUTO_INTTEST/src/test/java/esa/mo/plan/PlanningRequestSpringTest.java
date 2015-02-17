@@ -39,7 +39,7 @@ public class PlanningRequestSpringTest {
 	@Test
 	public void test() throws MALException, MALInteractionException {
 		ApplicationContext ctx = new ClassPathXmlApplicationContext("testProvContext.xml");
-		Object bean = ctx.getBean("PlanningRequestService");
+		Object bean = ctx.getBean("PlanningRequestProvider");
 		assertTrue(bean instanceof PlanningRequestProvider);
 		PlanningRequestProvider svc = (PlanningRequestProvider)bean;
 		

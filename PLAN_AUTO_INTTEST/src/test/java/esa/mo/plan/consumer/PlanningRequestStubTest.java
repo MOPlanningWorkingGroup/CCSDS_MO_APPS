@@ -112,9 +112,13 @@ public class PlanningRequestStubTest {
 	@After
 	public void tearDown() throws Exception {
 		System.out.println("teardown start");
-		consFct.stop();
+		if (consFct != null) {
+			consFct.stop();
+		}
 		consFct = null;
-		provFct.stop();
+		if (provFct != null) {
+			provFct.stop();
+		}
 		provFct = null;
 		System.out.println("teardown end");
 	}
