@@ -31,11 +31,11 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
-public class GocePlanner {
+public class GoceConsumer {
 
 	private PlanningRequestStub stub;
 
-	public GocePlanner(PlanningRequestStub stub) {
+	public GoceConsumer(PlanningRequestStub stub) {
 		this.stub = stub;
 	}
 
@@ -83,7 +83,7 @@ public class GocePlanner {
 		return (taskIdsList != null && !taskIdsList.isEmpty()) ? taskIdsList.get(0) : null;
 	}
 	
-	private ArgumentDefinitionDetailsList createPlanDefFields() {
+	private ArgumentDefinitionDetailsList createPayloadPlanDefFields() {
 		ArgumentDefinitionDetailsList fields = new ArgumentDefinitionDetailsList();
 		fields.add(createArgDef("EVRQ_Time", "plan time", Attribute.TIME_TYPE_SHORT_FORM));
 		fields.add(createArgDef("EVRQ_Type", "plan type", Attribute.STRING_TYPE_SHORT_FORM));
@@ -91,11 +91,12 @@ public class GocePlanner {
 		return fields;
 	}
 	
-	private PlanningRequestDefinitionDetails createPlanDef(String desc, Identifier planDefName) {
+	private PlanningRequestDefinitionDetails createPlanDef(String desc, Identifier planDefName,
+			ArgumentDefinitionDetailsList args) {
 		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
 		prDef.setName(planDefName);
 		prDef.setDescription(desc);
-		prDef.setFields(createPlanDefFields());
+		prDef.setFields(args);
 		return prDef;
 	}
 	
@@ -113,7 +114,7 @@ public class GocePlanner {
 		return (defIdsList != null && !defIdsList.isEmpty()) ? defIdsList.get(0) : null;
 	}
 	
-	private AttributeValueList createTaskFieldsValues(String src, String dest, String type) {
+	private AttributeValueList createPayloadTaskFieldsValues(String src, String dest, String type) {
 		AttributeValueList fields = new AttributeValueList();
 		fields.add(new AttributeValue(new Union(src)));
 		fields.add(new AttributeValue(new Union(dest)));
@@ -150,7 +151,7 @@ public class GocePlanner {
 		return trig;
 	}
 	
-	private TriggerDetailsList createTaskTriggers(Time uplink, Time exec) {
+	private TriggerDetailsList createPayloadTaskTriggers(Time uplink, Time exec) {
 		TriggerDetailsList list = new TriggerDetailsList();
 		list.add(createTaskTrigger(TriggerName.UPLINK, uplink));
 		list.add(createTaskTrigger(TriggerName.START, exec));
@@ -177,7 +178,7 @@ public class GocePlanner {
 		return t;
 	}
 	
-	private AttributeValueList createPlanFieldsValues(Time time, String type, String desc) {
+	private AttributeValueList createPayloadPlanFieldsValues(Time time, String type, String desc) {
 		AttributeValueList fields = new AttributeValueList();
 		fields.add(new AttributeValue(time));
 		fields.add(new AttributeValue(new Union(type)));
@@ -199,44 +200,46 @@ public class GocePlanner {
 		return list;
 	}
 	
+	// PPF - playload plan file part 1
 	public Long payloadPlan1() throws MALException, MALInteractionException, ParseException {
-		Identifier planDefName = new Identifier("goce_plan_1");
-		TaskDefinitionDetails taskDef = createTaskDef("task1", "payload task", planDefName,
+		Identifier prDefName = new Identifier("goce_plan_1");
+		TaskDefinitionDetails taskDef = createTaskDef("task1", "payload task", prDefName,
 				createPayloadTaskDefFields(), createTaskDefArgs());
 		Long taskDefId = submitTaskDef(taskDef);
 		
-		PlanningRequestDefinitionDetails planDef = createPlanDef("plan", planDefName);
+		PlanningRequestDefinitionDetails planDef = createPlanDef("plan1", prDefName, createPayloadPlanDefFields());
 		planDef.setTaskDefNames(getTaskNameList(taskDef));
 		
-		Long planDefId = submitPlanDef(planDef);
+		Long prDefId = submitPlanDef(planDef);
 		
-		Identifier planName = new Identifier("GOCE plan 1");
-		TaskInstanceDetails taskInst = createTaskInst("MSDDIA_B", "Disable_SSTI-B_Diag v01", planName,
-				createTaskFieldsValues("RPF", "MPS", "Time-tagged sequence"),
+		Identifier prName = new Identifier("GOCE plan 1");
+		TaskInstanceDetails taskInst = createTaskInst("MSDDIA_B", "Disable_SSTI-B_Diag v01", prName,
+				createPayloadTaskFieldsValues("RPF", "MPS", "Time-tagged sequence"),
 				createTaskArgsValues((short)1, "SID", "session id", "Raw", "Decimal", "", "32"),
-				createTaskTriggers(null, parseTime("UTC=2007-08-31T19:53:23")));
+				createPayloadTaskTriggers(null, parseTime("UTC=2007-08-31T19:53:23")));
 		// TODO submit task inst to COM archive?
-		PlanningRequestInstanceDetails planInst = createPlanInst(planName, "goce plan 1",
-				createPlanFieldsValues(parseTime("UTC=2007-08-31T19:53:23"), "Request", ""));
-		planInst.setTasks(getTaskInstList(taskInst));
+		PlanningRequestInstanceDetails prInst = createPlanInst(prName, "goce plan 1",
+				createPayloadPlanFieldsValues(parseTime("UTC=2007-08-31T19:53:23"), "Request", ""));
+		prInst.setTasks(getTaskInstList(taskInst));
 		// TODO submit plan inst to COM archive?
-		stub.submitPlanningRequest(planDefId, null, planInst);
-		return planDefId;
+		stub.submitPlanningRequest(prDefId, null, prInst);
+		return prDefId;
 	}
 	
+	// PPF - payload plan file part 2
 	public void payloadPlan2() throws MALException, MALInteractionException, ParseException {
-		Long planDefId = payloadPlan1();
+		Long prDefId = payloadPlan1();
 		// plan2 instances use same definitions as plan1
-		Identifier plan2Name = new Identifier("GOCE plan 2");
-		TaskInstanceDetails task2Inst = createTaskInst("MSEDIA_A", "Enable_SSTI-A_Diag v01", plan2Name,
-				createTaskFieldsValues("RPF", "MPS", "Time-tagged sequence"),
+		Identifier pr2Name = new Identifier("GOCE plan 2");
+		TaskInstanceDetails task2Inst = createTaskInst("MSEDIA_A", "Enable_SSTI-A_Diag v01", pr2Name,
+				createPayloadTaskFieldsValues("RPF", "MPS", "Time-tagged sequence"),
 				createTaskArgsValues((short)1, "SID", "SID", "Raw", "Decimal", "", "32"),
-				createTaskTriggers(null, parseTime("UTC=2007-08-31T20:03:23")));
+				createPayloadTaskTriggers(null, parseTime("UTC=2007-08-31T20:03:23")));
 		//TODO submit task instance to COM archive?
-		PlanningRequestInstanceDetails plan2Inst = createPlanInst(plan2Name, "goce plan 2",
-				createPlanFieldsValues(parseTime("UTC=2007-08-31T20:02:23"), "Request", ""));
+		PlanningRequestInstanceDetails pr2Inst = createPlanInst(pr2Name, "goce plan 2",
+				createPayloadPlanFieldsValues(parseTime("UTC=2007-08-31T20:02:23"), "Request", ""));
 		// TODO submit plan instance to COM archive?
-		stub.submitPlanningRequest(planDefId, null, plan2Inst);
+		stub.submitPlanningRequest(prDefId, null, pr2Inst);
 	}
 	
 	private ArgumentDefinitionDetailsList createIncrementTaskDefFields() {
@@ -247,7 +250,6 @@ public class GocePlanner {
 //		fields.add(createArgDef("RQ_Type", "task type", Attribute.STRING_TYPE_SHORT_FORM));
 		fields.add(createArgDef("RQ_Status", "task status", Attribute.STRING_TYPE_SHORT_FORM));
 		fields.add(createArgDef("RQ_Subsystem", "task sub-system", Attribute.STRING_TYPE_SHORT_FORM));
-//		fields.add(createArgDef("RQ_Parent_Event", "task parent event", Attribute.STRING_TYPE_SHORT_FORM));
 		fields.add(createArgDef("EV_Name", "task parent event name", Attribute.STRING_TYPE_SHORT_FORM));
 		fields.add(createArgDef("EV_Source", "task parent event source", Attribute.STRING_TYPE_SHORT_FORM));
 		fields.add(createArgDef("EV_Time", "task parent event time", Attribute.TIME_TYPE_SHORT_FORM));
@@ -255,10 +257,83 @@ public class GocePlanner {
 		return fields;
 	}
 	
-	public void incrementalPlan() throws MALException, MALInteractionException {
-		Identifier planDefName = new Identifier("goce_plan_2");
-		TaskDefinitionDetails taskDef = createTaskDef("task2", "incremental task", planDefName, 
+	private ArgumentDefinitionDetailsList createIncrementPlanDefFields() {
+		ArgumentDefinitionDetailsList fields = new ArgumentDefinitionDetailsList();
+		fields.add(createArgDef("PIF_File_Type", "plan file type", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_Start", "plan start time", Attribute.TIME_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_File_Version", "plan file version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_Status", "plan status", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_Replan_Time", "plan replan time", Attribute.TIME_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_SPF_Version", "plan spf version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_PPF_Version", "plan ppf version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_OPF_Version", "plan opf version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_MTF_Version", "plan mtf version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_WODB_Version", "plan wodb version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_RC_Version", "plan rc version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_KUP_Version", "plan kup version", Attribute.STRING_TYPE_SHORT_FORM));
+		fields.add(createArgDef("PIF_SI_Version", "plan si version", Attribute.STRING_TYPE_SHORT_FORM));
+		return fields;
+	}
+	
+	private AttributeValueList createIncrementTaskFieldsValues(String src, String dest, String type, String stat,
+			String subSys, String evName, String evSrc, Time evTime, String evId) {
+		AttributeValueList fields = createPayloadTaskFieldsValues(src, dest, type);
+		fields.add(new AttributeValue(new Union(stat)));
+		fields.add(new AttributeValue(new Union(subSys)));
+		fields.add(new AttributeValue(new Union(evName)));
+		fields.add(new AttributeValue(new Union(evSrc)));
+		fields.add(new AttributeValue(evTime));
+		fields.add(new AttributeValue(new Union(evId)));
+		return fields;
+	}
+
+	private TriggerDetailsList createIncrementTaskTrigger(Time exec) {
+		TriggerDetailsList list = new TriggerDetailsList();
+		list.add(createTaskTrigger(TriggerName.START, exec));
+		return list;
+	}
+
+	private AttributeValueList createIncrementPlanFieldsValues(String fType, Time start, String fVer, String stat,
+			Time replan, String spf, String ppf, String opf, String mtf, String wodb, String rc, String kup, String si) {
+		AttributeValueList fields = new AttributeValueList();
+		fields.add(new AttributeValue(new Union(fType)));
+		fields.add(new AttributeValue(start));
+		fields.add(new AttributeValue(new Union(fVer)));
+		fields.add(new AttributeValue(new Union(stat)));
+		fields.add((replan != null) ? new AttributeValue(replan) : null);
+		fields.add(new AttributeValue(new Union(spf)));
+		fields.add(new AttributeValue(new Union(ppf)));
+		fields.add(new AttributeValue(new Union(opf)));
+		fields.add(new AttributeValue(new Union(mtf)));
+		fields.add(new AttributeValue(new Union(wodb)));
+		fields.add(new AttributeValue(new Union(rc)));
+		fields.add(new AttributeValue(new Union(kup)));
+		fields.add(new AttributeValue(new Union(si)));
+		return fields;
+	}
+
+	// PIF - plan increment file
+	public void incrementPlan() throws MALException, MALInteractionException, ParseException {
+		Identifier prDefName = new Identifier("goce_plan_2");
+		TaskDefinitionDetails taskDef = createTaskDef("task2", "incremental task", prDefName,
 				createIncrementTaskDefFields(), createTaskDefArgs());
 		Long taskDefId = submitTaskDef(taskDef);
+		
+		PlanningRequestDefinitionDetails prDef = createPlanDef("plan2", prDefName, createIncrementPlanDefFields());
+		prDef.setTaskDefNames(getTaskNameList(taskDef));
+		Long prDefId = submitPlanDef(prDef);
+		
+		Identifier prName = new Identifier("GOCE plan 3");
+		TaskInstanceDetails taskInst = createTaskInst("MCEMON", "ENA_MON_ID_PASW v01", prName,
+				createIncrementTaskFieldsValues("FDS", "MPS", "Time-tagged sequence", "Enabled", "CDMU_CTR", "MCEMON",
+						"SPF", parseTime("UTC=2008-04-09T15:00:00.000"), ""),
+				createTaskArgsValues((short)1, "MON_ID", "Monitoring id", "Raw", "Decimal", "", "60000"),
+				createIncrementTaskTrigger(parseTime("UTC=2007-08-31T20:03:23")));
+		// TODO store task instance in COM archive?
+		PlanningRequestInstanceDetails prInst = createPlanInst(prName, "goce plan 3",
+				createIncrementPlanFieldsValues("FOS plan increment file", parseTime("UTC=2008-04-07T00:00:00"), "2",
+						"Generated", null, "1", "1", "1", "0", "GODB_013", "3", "1", "1"));
+		// TODO store pr instance in COM archive?
+		stub.submitPlanningRequest(prDefId, null, prInst);
 	}
 }

@@ -3,12 +3,29 @@ package esa.mo.plan.provider;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.ccsds.moims.mo.com.structures.ObjectId;
+import org.ccsds.moims.mo.com.structures.ObjectIdList;
+import org.ccsds.moims.mo.com.structures.ObjectKey;
+import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
+import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
+import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.Time;
+import org.ccsds.moims.mo.mal.structures.URI;
+import org.ccsds.moims.mo.mal.structures.UShort;
+import org.ccsds.moims.mo.mal.structures.UpdateHeader;
+import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
+import org.ccsds.moims.mo.mal.structures.UpdateType;
+import org.ccsds.moims.mo.mal.transport.MALErrorBody;
+import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
+import org.ccsds.moims.mo.planning.PlanningHelper;
+import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
@@ -20,7 +37,67 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 
-public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton {
+public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton implements MALPublishInteractionListener {
+
+	private MonitorTasksPublisher taskPub;
+//	private boolean taskPubReg = false;
+	
+	@Override
+	public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
+		System.out.println("PRP: pub reg ack");
+//		taskPubReg = true;
+	}
+
+	@Override
+	public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
+			throws MALException {
+		System.out.println("PRP: pub reg err");
+	}
+
+	@Override
+	public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
+		System.out.println("PRP: pub err");
+	}
+
+	@Override
+	public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
+		System.out.println("PRP: pub dereg ack");
+//		taskPubReg = false;
+	}
+
+//	@Override
+//	public MonitorTasksPublisher createMonitorTasksPublisher(IdentifierList domain, Identifier networkZone,
+//			SessionType sessionType, Identifier sessionName, QoSLevel qos, Map qosProps, UInteger priority)
+//					throws MALException
+//	{
+//		taskPub = super.createMonitorTasksPublisher(domain, networkZone, sessionType, sessionName, qos, qosProps, priority);
+//		System.out.println("task publisher created: " + taskPub);
+//		return taskPub;
+//	}
+
+	public void setTaskPub(MonitorTasksPublisher taskPub) {
+		this.taskPub = taskPub;
+	}
+	
+	private void publishTask(UpdateHeaderList updHdrList, ObjectIdList objIdList, TaskStatusDetailsList taskStatsList) {
+		if (taskPub != null) {
+//			if (taskPubReg) {
+				try {
+					taskPub.publish(updHdrList, objIdList, taskStatsList);
+				} catch (IllegalArgumentException e) {
+					System.out.println("PRP: pubTask: " + e);
+				} catch (MALInteractionException e) {
+					System.out.println("PRP: pubTask: " + e);
+				} catch (MALException e) {
+					System.out.println("PRP: pubTask: " + e);
+				}
+//			} else {
+//				System.out.println("task publisher not registered yet");
+//			}
+		} else {
+			System.out.println("no task publisher created");
+		}
+	}
 
 	public void submitPlanningRequest(Long defInstId, Long prInstId, PlanningRequestInstanceDetails prDetails,
 			MALInteraction interaction) throws MALInteractionException,
@@ -301,19 +378,35 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			throws MALInteractionException, MALException {
 		LongList list = null;
 		if (taskDefDetails != null) {
-			list = new LongList();
 			if (taskDefDetails.isEmpty()) {
 				throw new MALException("no task definitions in list");
 			}
-			int i = 0;
-			for (TaskDefinitionDetails def : taskDefDetails) {
+			list = new LongList();
+			UpdateHeaderList updHdrList = new UpdateHeaderList();
+			ObjectIdList objIdList = new ObjectIdList();
+//			TaskStatusDetailsList taskStatList = new TaskStatusDetailsList();
+			for (int i = 0; i < taskDefDetails.size(); ++i) {
+				TaskDefinitionDetails def = taskDefDetails.get(i);
 				if (def == null) {
 					throw new MALException("task definition["+i+"] is null");
 				}
 				Long id = addTaskDef(def);
 				list.add(id);
+				Time ts = new Time(System.currentTimeMillis());
+				URI uri = new URI("PRP");
+				EntityKey key = new EntityKey(new Identifier("*"), 0L, 0L, 0L);
+				updHdrList.add(new UpdateHeader(ts, uri, UpdateType.CREATION, key));
+				ObjectType objType = new ObjectType(PlanningHelper.PLANNING_AREA_NUMBER,
+						PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NUMBER, PlanningHelper.PLANNING_AREA_VERSION,
+						new UShort(1));
+				IdentifierList domain = new IdentifierList();
+				ObjectId objId = new ObjectId(objType, new ObjectKey(domain, id));
+//				taskStatList.add(null);
+				objIdList.add(objId);
 				i++;
 			}
+			System.out.println("publishing task def creation");
+			publishTask(updHdrList, objIdList, null);
 		} else {
 			throw new MALException("no task definition list given");
 		}

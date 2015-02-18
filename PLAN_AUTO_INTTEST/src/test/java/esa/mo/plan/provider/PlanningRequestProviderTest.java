@@ -2,11 +2,22 @@ package esa.mo.plan.provider;
 
 import static org.junit.Assert.*;
 
+import java.util.Map;
+
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
+import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
+import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.QoSLevel;
+import org.ccsds.moims.mo.mal.structures.SessionType;
+import org.ccsds.moims.mo.mal.structures.UInteger;
+import org.ccsds.moims.mo.mal.transport.MALErrorBody;
+import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
@@ -149,6 +160,54 @@ public class PlanningRequestProviderTest {
 
 	@Test
 	public void testAddTaskDefinition() throws MALException, MALInteractionException {
+		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
+		TaskDefinitionDetailsList taskDefsList = new TaskDefinitionDetailsList();
+		taskDefsList.add(taskDef);
+		LongList taskDefIdsList = prov.addTaskDefinition(taskDefsList, null);
+		assertNotNull(taskDefIdsList);
+		assertEquals(1, taskDefIdsList.size());
+		assertNotNull(taskDefIdsList.get(0));
+	}
+
+	private MonitorTasksPublisher createTaskPublisher() throws MALException {
+		IdentifierList domain = new IdentifierList();
+		Identifier network = new Identifier();
+		SessionType sessionType = SessionType.LIVE;
+		Identifier sessionName = new Identifier();
+		QoSLevel qos = QoSLevel.ASSURED;
+		UInteger priority = new UInteger(0L);
+		return prov.createMonitorTasksPublisher(domain, network, sessionType, sessionName, qos, System.getProperties(), priority);
+	}
+	
+	// MAL needs to be initialized and set up properly for monitoring to work
+	@Test
+	public void testAddTaskDefinitionWithMonitor() throws MALException, MALInteractionException {
+		MonitorTasksPublisher pub = createTaskPublisher();
+		EntityKeyList keyList = new EntityKeyList();
+		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		pub.register(keyList, prov/*new MALPublishInteractionListener() {
+			
+			@Override
+			public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
+					throws MALException {
+				System.out.println("pub reg err");
+			}
+			
+			@Override
+			public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
+				System.out.println("pub reg ack");
+			}
+			
+			@Override
+			public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
+				System.out.println("pub err");
+			}
+			
+			@Override
+			public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
+				System.out.println("pub de-reg ack");
+			}
+		}*/);
 		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
 		TaskDefinitionDetailsList taskDefsList = new TaskDefinitionDetailsList();
 		taskDefsList.add(taskDef);

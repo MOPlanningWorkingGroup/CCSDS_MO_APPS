@@ -10,13 +10,13 @@ import org.junit.Test;
 
 import esa.mo.plan.provider.PlanningRequestProviderFactory;
 
-public class GocePlannerTest {
+public class GoceConsumerTest {
 
 	private PlanningRequestProviderFactory provFct;
 	
 	private PlanningRequestConsumerFactory consFct;
 
-	private GocePlanner goce;
+	private GoceConsumer goce;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -32,7 +32,7 @@ public class GocePlannerTest {
 		consFct.setBrokerUri(provFct.getBrokerUri());
 		consFct.start();
 		
-		goce = new GocePlanner(consFct.getConsumer());
+		goce = new GoceConsumer(consFct.getConsumer());
 	}
 
 	@After
@@ -58,6 +58,11 @@ public class GocePlannerTest {
 	@Test
 	public void testPayloadPlan2() throws MALException, MALInteractionException, ParseException {
 		goce.payloadPlan2();
+	}
+
+	@Test
+	public void testIncrementPlan() throws MALException, MALInteractionException, ParseException {
+		goce.incrementPlan();
 	}
 
 }

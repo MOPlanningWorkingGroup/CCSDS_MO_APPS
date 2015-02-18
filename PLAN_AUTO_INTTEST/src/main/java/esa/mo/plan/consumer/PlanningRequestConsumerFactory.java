@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.ccsds.moims.mo.com.COMHelper;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -54,6 +55,7 @@ public class PlanningRequestConsumerFactory {
 	
 	private void initHelpers() throws MALException {
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
+		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
@@ -101,12 +103,18 @@ public class PlanningRequestConsumerFactory {
 	}
 	
 	public void stop() throws MALException {
-		malCons.close();
+		if (malCons != null) {
+			malCons.close();
+		}
 		malCons = null;
 		cons = null;
-		malConsMgr.close();
+		if (malConsMgr != null) {
+			malConsMgr.close();
+		}
 		malConsMgr = null;
-		malCtx.close();
+		if (malCtx != null) {
+			malCtx.close();
+		}
 		malCtx = null;
 	}
 }
