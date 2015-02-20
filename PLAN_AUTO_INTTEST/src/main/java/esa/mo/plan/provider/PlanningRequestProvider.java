@@ -79,37 +79,38 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		this.taskPub = taskPub;
 	}
 	
-	private void publishTask(UpdateHeaderList updHdrList, ObjectIdList objIdList, TaskStatusDetailsList taskStatsList) {
+	private void publishTask(UpdateHeaderList updHdrList, ObjectIdList objIdList, TaskStatusDetailsList taskStatsList)
+			throws MALException, MALInteractionException {
 		if (taskPub != null) {
 //			if (taskPubReg) {
-				try {
-					taskPub.publish(updHdrList, objIdList, taskStatsList);
-				} catch (IllegalArgumentException e) {
-					System.out.println("PRP: pubTask: " + e);
-				} catch (MALInteractionException e) {
-					System.out.println("PRP: pubTask: " + e);
-				} catch (MALException e) {
-					System.out.println("PRP: pubTask: " + e);
-				}
+//				try {
+			taskPub.publish(updHdrList, objIdList, taskStatsList);
+//				} catch (IllegalArgumentException e) {
+//					System.out.println("PRP: pubTask: " + e);
+//				} catch (MALInteractionException e) {
+//					System.out.println("PRP: pubTask: " + e);
+//				} catch (MALException e) {
+//					System.out.println("PRP: pubTask: " + e);
+//				}
 //			} else {
 //				System.out.println("task publisher not registered yet");
 //			}
 		} else {
-			System.out.println("no task publisher created");
+			System.out.println("no task publisher set");
 		}
 	}
 
-	public void submitPlanningRequest(Long defInstId, Long prInstId, PlanningRequestInstanceDetails prDetails,
+	public void submitPlanningRequest(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
 			MALInteraction interaction) throws MALInteractionException,
 			MALException {
-		if (defInstId != null) {
-			if (prDetails != null) {
+		if (prDefId != null) {
+			if (prInst != null) {
 				// TODO
 			} else {
 				throw new MALException("pr instance not given");
 			}
 		} else {
-			throw new MALException("definition instance id not given");
+			throw new MALException("pr definition id not given");
 		}
 	}
 

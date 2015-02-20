@@ -1,15 +1,16 @@
-package esa.mo.plan.consumer;
+package esa.mo.plan.comarc.consumer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-//import org.ccsds.moims.mo.com.COMHelper;
+import org.ccsds.moims.mo.com.COMHelper;
+import org.ccsds.moims.mo.com.archive.ArchiveHelper;
+import org.ccsds.moims.mo.com.archive.consumer.ArchiveStub;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALHelper;
-import org.ccsds.moims.mo.mal.MALService;
 import org.ccsds.moims.mo.mal.consumer.MALConsumer;
 import org.ccsds.moims.mo.mal.consumer.MALConsumerManager;
 import org.ccsds.moims.mo.mal.structures.Blob;
@@ -19,12 +20,9 @@ import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
-import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
-import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
-import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
 
-public class PlanningRequestConsumerFactory {
+public class ComArchiveConsumerFactory {
 
 	private String propertyFile = null;
 	private MALContext malCtx = null;
@@ -32,7 +30,7 @@ public class PlanningRequestConsumerFactory {
 	private URI provUri = null;
 	private URI brokerUri = null;
 	private MALConsumer malCons = null;
-	private PlanningRequestStub cons = null;
+	private ArchiveStub cons = null;
 
 	public void setPropertyFile(String fn) {
 		propertyFile = fn;
@@ -55,13 +53,14 @@ public class PlanningRequestConsumerFactory {
 	
 	private void initHelpers() throws MALException {
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
-//		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
-		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
-		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
-		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
-		if (tmp == null) {
-			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-		}
+		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
+		ArchiveHelper.init(MALContextFactory.getElementFactoryRegistry());
+//		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
+//		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
+//		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
+//		if (tmp == null) {
+//			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
+//		}
 	}
 
 	public void setProviderUri(URI uri) {
@@ -75,7 +74,7 @@ public class PlanningRequestConsumerFactory {
 	private void initConsumer() throws MALException {
 		malConsMgr = malCtx.createConsumerManager();
 		
-		String consName = "testPrCons";
+		String consName = "testCaCons";
 		Blob authId = new Blob("".getBytes());
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("desd"));
@@ -88,7 +87,7 @@ public class PlanningRequestConsumerFactory {
 		malCons = malConsMgr.createConsumer(consName, provUri, brokerUri, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				authId, domain, network, sessionType, sessionName, qos, System.getProperties(), priority);
 		
-		cons = new PlanningRequestStub(malCons);
+		cons = new ArchiveStub(malCons);
 	}
 	
 	public void start() throws IOException, MALException {
@@ -98,7 +97,7 @@ public class PlanningRequestConsumerFactory {
 		initConsumer();
 	}
 	
-	public PlanningRequestStub getConsumer() {
+	public ArchiveStub getConsumer() {
 		return cons;
 	}
 	
