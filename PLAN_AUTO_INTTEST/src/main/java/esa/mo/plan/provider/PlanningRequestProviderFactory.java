@@ -24,6 +24,7 @@ import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
+import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
 
@@ -33,7 +34,7 @@ public class PlanningRequestProviderFactory {
 	private MALContext malCtx = null;
 	private PlanningRequestProvider prov = null;
 	private MonitorTasksPublisher taskPub = null;
-//	private MonitorPlanningRequestsPublisher pub = null;
+	private MonitorPlanningRequestsPublisher prPub = null;
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
 
@@ -58,7 +59,7 @@ public class PlanningRequestProviderFactory {
 
 	private void initHelpers() throws MALException {
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
-//		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
+		COMHelper.init(MALContextFactory.getElementFactoryRegistry()); // required for publishing
 		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
@@ -66,39 +67,6 @@ public class PlanningRequestProviderFactory {
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
 	}
-	
-//	private void initPublisher() throws MALException, MALInteractionException {
-//		IdentifierList domain = new IdentifierList();
-//		domain.add(new Identifier("desd"));
-//		Identifier network = new Identifier("junit");
-//		SessionType sessionType = SessionType.LIVE;
-//		Identifier sessionName = new Identifier("test");
-//		QoSLevel qos = QoSLevel.BESTEFFORT;
-//		UInteger priority = new UInteger(0L);
-//		pub = prov.createMonitorPlanningRequestsPublisher(domain, network, sessionType, sessionName, qos,
-//				System.getProperties(), priority);
-//		EntityKeyList keyList = new EntityKeyList();
-//		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-//		pub.register(keyList, new MALPublishInteractionListener() {
-//			
-//			public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
-//					throws MALException {
-//				System.out.println("pr.pub.reg.err");
-//			}
-//			
-//			public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-//				System.out.println("pr.pub.reg.ack");
-//			}
-//			
-//			public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-//				System.out.println("pr.pub.err");
-//			}
-//			
-//			public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-//				System.out.println("pr.pub.dereg");
-//			}
-//		});
-//	}
 	
 	private void initProvider() throws MALException {
 		malProvMgr = malCtx.createProviderManager();
@@ -130,7 +98,27 @@ public class PlanningRequestProviderFactory {
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		taskPub.register(keyList, prov);
+		
 		prov.setTaskPub(taskPub);
+	}
+
+	private void initPrPublisher() throws MALException, MALInteractionException {
+		IdentifierList domain = new IdentifierList();
+		domain.add(new Identifier("desd"));
+		Identifier network = new Identifier("junit");
+		SessionType sessionType = SessionType.LIVE;
+		Identifier sessionName = new Identifier("test");
+		QoSLevel qos = QoSLevel.BESTEFFORT;
+		UInteger priority = new UInteger(0L);
+		
+		prPub = prov.createMonitorPlanningRequestsPublisher(domain, network, sessionType, sessionName, qos,
+				System.getProperties(), priority);
+		
+		EntityKeyList keyList = new EntityKeyList();
+		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		prPub.register(keyList, prov);
+		
+		prov.setPrPub(prPub);
 	}
 
 	public void start() throws IOException, MALException, MALInteractionException {
@@ -139,7 +127,7 @@ public class PlanningRequestProviderFactory {
 		initHelpers();
 		initProvider();
 		initTaskPublisher();
-//		initPublisher();
+		initPrPublisher();
 	}
 	
 	public URI getProviderUri() {

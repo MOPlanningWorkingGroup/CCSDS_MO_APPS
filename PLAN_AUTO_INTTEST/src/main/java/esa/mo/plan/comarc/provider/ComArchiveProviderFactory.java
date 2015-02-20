@@ -23,7 +23,6 @@ public class ComArchiveProviderFactory {
 	private String propertyFile = null;
 	private MALContext malCtx = null;
 	private ComArchiveProvider prov = null;
-//	private MonitorTasksPublisher taskPub = null;
 //	private MonitorPlanningRequestsPublisher pub = null;
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
@@ -52,12 +51,6 @@ public class ComArchiveProviderFactory {
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
 		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
 		ArchiveHelper.init(MALContextFactory.getElementFactoryRegistry());
-//		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
-//		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
-//		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
-//		if (tmp == null) { // re-init error workaround
-//			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-//		}
 	}
 	
 //	private void initPublisher() throws MALException, MALInteractionException {
@@ -73,23 +66,6 @@ public class ComArchiveProviderFactory {
 //		EntityKeyList keyList = new EntityKeyList();
 //		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 //		pub.register(keyList, new MALPublishInteractionListener() {
-//			
-//			public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
-//					throws MALException {
-//				System.out.println("pr.pub.reg.err");
-//			}
-//			
-//			public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-//				System.out.println("pr.pub.reg.ack");
-//			}
-//			
-//			public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-//				System.out.println("pr.pub.err");
-//			}
-//			
-//			public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-//				System.out.println("pr.pub.dereg");
-//			}
 //		});
 //	}
 	
@@ -112,30 +88,11 @@ public class ComArchiveProviderFactory {
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, sharedBrokerUri);
 	}
 
-//	private void initTaskPublisher() throws MALException, MALInteractionException {
-//		IdentifierList domain = new IdentifierList();
-//		domain.add(new Identifier("desd"));
-//		Identifier network = new Identifier("junit");
-//		SessionType sessionType = SessionType.LIVE;
-//		Identifier sessionName = new Identifier("test");
-//		QoSLevel qos = QoSLevel.BESTEFFORT;
-//		UInteger priority = new UInteger(0L);
-//		
-//		taskPub = prov.createMonitorTasksPublisher(domain, network, sessionType, sessionName, qos,
-//				System.getProperties(), priority);
-//		
-//		EntityKeyList keyList = new EntityKeyList();
-//		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-//		taskPub.register(keyList, prov);
-//		prov.setTaskPub(taskPub);
-//	}
-
 	public void start() throws IOException, MALException, MALInteractionException {
 		initProperties();
 		initContext();
 		initHelpers();
 		initProvider();
-//		initTaskPublisher();
 //		initPublisher();
 	}
 	
@@ -148,15 +105,6 @@ public class ComArchiveProviderFactory {
 	}
 	
 	public void stop() throws MALException, MALInteractionException {
-//		if (taskPub != null) {
-//			try {
-//				taskPub.deregister();
-//			} catch (MALInteractionException e) { // ignore
-//				System.out.println("PRPF: stop: task pub de-reg: " + e);
-//			}
-//			taskPub.close();
-//		}
-//		taskPub = null;
 		if (malProv != null) {
 			malProv.close();
 		}

@@ -6,6 +6,7 @@ import org.ccsds.moims.mo.com.archive.provider.ArchiveInheritanceSkeleton;
 import org.ccsds.moims.mo.com.archive.provider.CountInteraction;
 import org.ccsds.moims.mo.com.archive.provider.QueryInteraction;
 import org.ccsds.moims.mo.com.archive.provider.RetrieveInteraction;
+import org.ccsds.moims.mo.com.archive.structures.ArchiveDetails;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveQueryList;
 import org.ccsds.moims.mo.com.archive.structures.QueryFilterList;
@@ -63,15 +64,17 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton implements MA
 
 	}
 
-	private long lastId = 0L;
-	
 	@Override
 	public LongList store(Boolean returnObjInstIds, ObjectType objType, IdentifierList domain,
 			ArchiveDetailsList objDetails, ElementList objBodies, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LongList ids = new LongList();
-		for (int i = 0; i < objDetails.size(); ++i) {
-			ids.add(new Long(++lastId));
+		LongList ids = null;
+		if (returnObjInstIds != null && true == returnObjInstIds.booleanValue()) {
+			ids = new LongList();
+			for (int i = 0; i < objDetails.size(); ++i) {
+				ArchiveDetails arcDetail = objDetails.get(i);
+				ids.add(arcDetail.getInstId()); // TODO store elements for retrieval
+			}
 		}
 		return ids;
 	}
