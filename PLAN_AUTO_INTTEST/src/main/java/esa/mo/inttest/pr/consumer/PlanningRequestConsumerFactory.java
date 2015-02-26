@@ -1,9 +1,12 @@
-package esa.mo.plan.consumer;
+package esa.mo.inttest.pr.consumer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.com.COMHelper;
 //import org.ccsds.moims.mo.com.COMHelper;
@@ -26,36 +29,39 @@ import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
 
+/**
+ * Planning request consumer for testing.
+ */
 public class PlanningRequestConsumerFactory {
 
+	private static final Logger LOG = Logger.getLogger(PlanningRequestConsumerFactory.class.getName());
+	
 	private String propertyFile = null;
 	private MALContext malCtx = null;
 	private MALConsumerManager malConsMgr = null;
 	private URI provUri = null;
 	private URI brokerUri = null;
-	private MALConsumer malCons = null;
-	private PlanningRequestStub cons = null;
 
 	public void setPropertyFile(String fn) {
 		propertyFile = fn;
+		LOG.log(Level.CONFIG, "propert file set to {0}", propertyFile);
 	}
 	
 	private void initProperties() throws IOException {
+		LOG.entering(getClass().getName(), "initProperties");
 		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(propertyFile);
 		Properties props = new Properties(System.getProperties());
 		props.load(is);
 		is.close();
 		System.setProperties(props);
-//		System.out.println("PRCF:initProperties: rmi transport: " + System.getProperty("org.ccsds.moims.mo.mal.transport.protocol.rmi", ""));
-//		System.out.println("PRCF:initProperties: string encoder: " + System.getProperty("org.ccsds.moims.mo.mal.encoding.protocol.rmi", ""));
-//		System.out.println("PRCF:initProperties: gen wrap: " + System.getProperty("org.ccsds.moims.mo.mal.transport.gen.wrap", ""));
-	}
-	
-	private void initContext() throws MALException {
-		malCtx = MALContextFactory.newFactory().createMALContext(System.getProperties());
+		LOG.log(Level.CONFIG, "property rmi transport: {0}", System.getProperty("org.ccsds.moims.mo.mal.transport.protocol.rmi", ""));
+		LOG.log(Level.CONFIG, "property string encoder: {0}", System.getProperty("org.ccsds.moims.mo.mal.encoding.protocol.rmi", ""));
+		LOG.log(Level.CONFIG, "property gen wrap: {0}", System.getProperty("org.ccsds.moims.mo.mal.transport.gen.wrap", ""));
+		LOG.exiting(getClass().getName(), "initProperties");
 	}
 	
 	private void initHelpers() throws MALException {
+		LOG.entering(getClass().getName(), "initHelpers");
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
 		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
 		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
@@ -64,19 +70,21 @@ public class PlanningRequestConsumerFactory {
 		if (tmp == null) {
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
+		LOG.exiting(getClass().getName(), "initHelpers");
 	}
 
 	public void setProviderUri(URI uri) {
-		provUri = uri; 
+		provUri = uri;
+		LOG.log(Level.CONFIG, "provider uri set to {0}", provUri.getValue());
 	}
 	
 	public void setBrokerUri(URI uri) {
 		brokerUri = uri;
+		LOG.log(Level.CONFIG, "broker uri set to {0}", brokerUri.getValue());
 	}
 	
-	private void initConsumer() throws MALException {
-		malConsMgr = malCtx.createConsumerManager();
-		
+	private PlanningRequestStub initConsumer() throws MALException {
+		LOG.entering(getClass().getName(), "initConsumer");
 		String consName = "testPrCons";
 		Blob authId = new Blob("".getBytes());
 		IdentifierList domain = new IdentifierList();
@@ -87,28 +95,36 @@ public class PlanningRequestConsumerFactory {
 		QoSLevel qos = QoSLevel.ASSURED;
 		UInteger priority = new UInteger(0L);
 		
-		malCons = malConsMgr.createConsumer(consName, provUri, brokerUri, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
+		MALConsumer malCons = malConsMgr.createConsumer(consName, provUri, brokerUri, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				authId, domain, network, sessionType, sessionName, qos, System.getProperties(), priority);
 		
-		cons = new PlanningRequestStub(malCons);
-	}
-	
-	public void start() throws IOException, MALException {
-		initProperties();
-		initContext();
-		initHelpers();
-		initConsumer();
-	}
-	
-	public PlanningRequestStub getConsumer() {
+		PlanningRequestStub cons = new PlanningRequestStub(malCons);
+		LOG.exiting(getClass().getName(), "initConsumer");
 		return cons;
 	}
 	
-	public void stop() throws MALException {
-		if (malCons != null) {
-			malCons.close();
+	public PlanningRequestStub start() throws IOException, MALException {
+		LOG.entering(getClass().getName(), "start");
+		initProperties();
+		if (malCtx == null) {
+			malCtx = MALContextFactory.newFactory().createMALContext(System.getProperties());
 		}
-		malCons = null;
+		initHelpers();
+		if (malConsMgr == null) {
+			malConsMgr = malCtx.createConsumerManager();
+		}
+		PlanningRequestStub stub = initConsumer();
+		LOG.exiting(getClass().getName(), "start");
+		return stub;
+	}
+	
+	public void stop(PlanningRequestStub cons) throws MALException {
+		LOG.entering(getClass().getName(), "stop");
+		if (cons != null) {
+			if (cons.getConsumer() != null) {
+				cons.getConsumer().close();
+			}
+		}
 		cons = null;
 		if (malConsMgr != null) {
 			malConsMgr.close();
@@ -118,5 +134,6 @@ public class PlanningRequestConsumerFactory {
 			malCtx.close();
 		}
 		malCtx = null;
+		LOG.exiting(getClass().getName(), "stop");
 	}
 }

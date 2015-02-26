@@ -1,12 +1,10 @@
-package esa.mo.plan.provider;
+package esa.mo.inttest.pr.provider;
 
 import static org.junit.Assert.*;
 
-import java.util.Map;
-
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
+//import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -15,8 +13,8 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
-import org.ccsds.moims.mo.mal.transport.MALErrorBody;
-import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
+//import org.ccsds.moims.mo.mal.transport.MALErrorBody;
+//import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
@@ -30,8 +28,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import esa.mo.plan.provider.PlanningRequestProvider;
+import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 
+/**
+ * Planning request provider test.
+ */
 public class PlanningRequestProviderTest {
 
 	private PlanningRequestProvider prov = null;
@@ -185,29 +186,7 @@ public class PlanningRequestProviderTest {
 		MonitorTasksPublisher pub = createTaskPublisher();
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		pub.register(keyList, prov/*new MALPublishInteractionListener() {
-			
-			@Override
-			public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
-					throws MALException {
-				System.out.println("pub reg err");
-			}
-			
-			@Override
-			public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-				System.out.println("pub reg ack");
-			}
-			
-			@Override
-			public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-				System.out.println("pub err");
-			}
-			
-			@Override
-			public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-				System.out.println("pub de-reg ack");
-			}
-		}*/);
+		pub.register(keyList, prov);
 		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
 		TaskDefinitionDetailsList taskDefsList = new TaskDefinitionDetailsList();
 		taskDefsList.add(taskDef);

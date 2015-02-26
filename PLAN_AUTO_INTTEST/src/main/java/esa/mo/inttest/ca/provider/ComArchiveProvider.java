@@ -1,6 +1,6 @@
-package esa.mo.plan.comarc.provider;
+package esa.mo.inttest.ca.provider;
 
-import java.util.Map;
+//import java.util.Map;
 
 import org.ccsds.moims.mo.com.archive.provider.ArchiveInheritanceSkeleton;
 import org.ccsds.moims.mo.com.archive.provider.CountInteraction;
@@ -14,34 +14,37 @@ import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
-import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
+//import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
 import org.ccsds.moims.mo.mal.structures.ElementList;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.mal.transport.MALErrorBody;
-import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
+//import org.ccsds.moims.mo.mal.transport.MALErrorBody;
+//import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 
-public class ComArchiveProvider extends ArchiveInheritanceSkeleton implements MALPublishInteractionListener {
+/**
+ * COM Archive provider for testing. Implemented as little as necessary.
+ */
+public class ComArchiveProvider extends ArchiveInheritanceSkeleton /*implements MALPublishInteractionListener*/ {
 
-	public ComArchiveProvider() {
-	}
+//	public ComArchiveProvider() {
+//	}
 
-	@SuppressWarnings("rawtypes")
-	public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-	}
-
-	@SuppressWarnings("rawtypes")
-	public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
-			throws MALException {
-	}
-
-	@SuppressWarnings("rawtypes")
-	public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-	}
-
-	@SuppressWarnings("rawtypes")
-	public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-	}
+//	@SuppressWarnings("rawtypes")
+//	public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
+//	}
+//
+//	@SuppressWarnings("rawtypes")
+//	public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
+//			throws MALException {
+//	}
+//
+//	@SuppressWarnings("rawtypes")
+//	public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
+//	}
+//
+//	@SuppressWarnings("rawtypes")
+//	public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
+//	}
 
 	@Override
 	public void retrieve(ObjectType objType, IdentifierList domain, LongList objInstIds, RetrieveInteraction interaction)

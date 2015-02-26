@@ -1,4 +1,4 @@
-package esa.mo.plan;
+package esa.mo.inttest.pr;
 
 import static org.junit.Assert.*;
 
@@ -15,9 +15,12 @@ import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import esa.mo.plan.provider.PlanningRequestProvider;
+import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 
-// http://www.programcreek.com/2014/01/spring-helloworld-example-using-eclipse-and-maven/
+/**
+ * Testing if it works with spring.
+ * Guide from http://www.programcreek.com/2014/01/spring-helloworld-example-using-eclipse-and-maven/
+ */
 public class PlanningRequestSpringTest {
 
 	@BeforeClass

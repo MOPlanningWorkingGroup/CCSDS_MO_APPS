@@ -1,4 +1,4 @@
-package esa.mo.plan.consumer;
+package esa.mo.inttest.pr.consumer;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -11,6 +11,9 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestIns
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 
+/**
+ * Planning request consumer for testing.
+ */
 public class PlanningRequestConsumer {
 
 	private PlanningRequestStub stub;

@@ -1,4 +1,4 @@
-package esa.mo.plan.consumer;
+package esa.mo.inttest.goce;
 
 import java.text.ParseException;
 
@@ -8,8 +8,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import esa.mo.plan.provider.PlanningRequestProviderFactory;
+import esa.mo.inttest.goce.GoceConsumer;
+import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
+import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
+/**
+ * GOCE consumer test.
+ */
 public class GoceConsumerTest {
 
 	private PlanningRequestProviderFactory provFct;
@@ -30,18 +35,17 @@ public class GoceConsumerTest {
 		consFct.setPropertyFile(props);
 		consFct.setProviderUri(provFct.getProviderUri());
 		consFct.setBrokerUri(provFct.getBrokerUri());
-		consFct.start();
+		goce = new GoceConsumer(consFct.start());
 		
-		goce = new GoceConsumer(consFct.getConsumer());
+//		goce = new GoceConsumer(consFct.getConsumer());
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		goce = null;
-		
 		if (consFct != null) {
-			consFct.stop();
+			consFct.stop(goce.getStub());
 		}
+		goce = null;
 		consFct = null;
 		
 		if (provFct != null) {
@@ -51,18 +55,23 @@ public class GoceConsumerTest {
 	}
 
 	@Test
-	public void testPayloadPlan1() throws MALException, MALInteractionException, ParseException {
-		goce.payloadPlan1();
+	public void testPpf() throws MALException, MALInteractionException, ParseException {
+		goce.ppf();
 	}
 
 	@Test
-	public void testPayloadPlan2() throws MALException, MALInteractionException, ParseException {
-		goce.payloadPlan2();
+	public void testPif() throws MALException, MALInteractionException, ParseException {
+		goce.pif();
 	}
 
 	@Test
-	public void testIncrementPlan() throws MALException, MALInteractionException, ParseException {
-		goce.incrementPlan();
+	public void testSpf() throws MALException, MALInteractionException, ParseException {
+		goce.spf();
+	}
+
+	@Test
+	public void testOpf() throws MALException, MALInteractionException, ParseException {
+		goce.opf();
 	}
 
 }

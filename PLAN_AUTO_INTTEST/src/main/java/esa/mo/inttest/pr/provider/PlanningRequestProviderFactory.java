@@ -1,8 +1,10 @@
-package esa.mo.plan.provider;
+package esa.mo.inttest.pr.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.com.COMHelper;
 import org.ccsds.moims.mo.mal.MALContext;
@@ -28,8 +30,13 @@ import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningReque
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
 
+/**
+ * Planning request provider factory.
+ */
 public class PlanningRequestProviderFactory {
 
+	private static final Logger LOG = Logger.getLogger(PlanningRequestProviderFactory.class.getName());
+	
 	private String propertyFile = null;
 	private MALContext malCtx = null;
 	private PlanningRequestProvider prov = null;
@@ -40,24 +47,30 @@ public class PlanningRequestProviderFactory {
 
 	public void setPropertyFile(String fn) {
 		propertyFile = fn;
+		LOG.log(Level.CONFIG, "property file name set to {0}", propertyFile);
 	}
 	
 	private void initProperties() throws IOException {
+		LOG.entering(getClass().getName(), "initProperties");
 		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(propertyFile);
 		Properties props = new Properties();
 		props.load(is);
 		is.close();
 		System.getProperties().putAll(props);
-//		System.out.println("PRPF:initProperties: rmi transport: " + System.getProperty("org.ccsds.moims.mo.mal.transport.protocol.rmi"));
-//		System.out.println("PRPF:initProperties: string encoder: " + System.getProperty("org.ccsds.moims.mo.mal.encoding.protocol.rmi"));
-//		System.out.println("PRPF:initProperties: gen wrap: " + System.getProperty("org.ccsds.moims.mo.mal.transport.gen.wrap"));
+		LOG.log(Level.CONFIG, "property rmi transport: {0}", System.getProperty("org.ccsds.moims.mo.mal.transport.protocol.rmi"));
+		LOG.log(Level.CONFIG, "property string encoder: {0}", System.getProperty("org.ccsds.moims.mo.mal.encoding.protocol.rmi"));
+		LOG.log(Level.CONFIG, "property gen wrap: {0}", System.getProperty("org.ccsds.moims.mo.mal.transport.gen.wrap"));
+		LOG.exiting(getClass().getName(), "initProperties");
 	}
 	
 	private void initContext() throws MALException {
+		LOG.entering(getClass().getName(), "initContext");
 		malCtx = MALContextFactory.newFactory().createMALContext(System.getProperties());
+		LOG.exiting(getClass().getName(), "initContext");
 	}
 
 	private void initHelpers() throws MALException {
+		LOG.entering(getClass().getName(), "initHelpers");
 		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
 		COMHelper.init(MALContextFactory.getElementFactoryRegistry()); // required for publishing
 		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
@@ -66,9 +79,11 @@ public class PlanningRequestProviderFactory {
 		if (tmp == null) { // re-init error workaround
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
 		}
+		LOG.exiting(getClass().getName(), "initHelpers");
 	}
 	
 	private void initProvider() throws MALException {
+		LOG.entering(getClass().getName(), "initProvider");
 		malProvMgr = malCtx.createProviderManager();
 		prov = new PlanningRequestProvider();
 		String provName = "testPrProv";
@@ -81,9 +96,11 @@ public class PlanningRequestProviderFactory {
 		
 		malProv = malProvMgr.createProvider(provName, proto, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
+		LOG.exiting(getClass().getName(), "initProvider");
 	}
 
 	private void initTaskPublisher() throws MALException, MALInteractionException {
+		LOG.entering(getClass().getName(), "initTaskPublicher");
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("desd"));
 		Identifier network = new Identifier("junit");
@@ -100,9 +117,11 @@ public class PlanningRequestProviderFactory {
 		taskPub.register(keyList, prov);
 		
 		prov.setTaskPub(taskPub);
+		LOG.exiting(getClass().getName(), "initTaskPublisher");
 	}
 
 	private void initPrPublisher() throws MALException, MALInteractionException {
+		LOG.entering(getClass().getName(), "initPrPublisher");
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("desd"));
 		Identifier network = new Identifier("junit");
@@ -119,35 +138,52 @@ public class PlanningRequestProviderFactory {
 		prPub.register(keyList, prov);
 		
 		prov.setPrPub(prPub);
+		LOG.exiting(getClass().getName(), "initPrPublisher");
 	}
 
 	public void start() throws IOException, MALException, MALInteractionException {
+		LOG.entering(getClass().getName(), "start");
 		initProperties();
 		initContext();
 		initHelpers();
 		initProvider();
 		initTaskPublisher();
 		initPrPublisher();
+		LOG.exiting(getClass().getName(), "start");
 	}
 	
 	public URI getProviderUri() {
-		return malProv.getURI();
+		URI uri = malProv.getURI();
+		LOG.log(Level.CONFIG, "provider uri: {0}", uri.getValue());
+		return uri;
 	}
 	
 	public URI getBrokerUri() {
-		return malProv.getBrokerURI();
+		URI uri = malProv.getBrokerURI();
+		LOG.log(Level.CONFIG, "broker uri: {0}", uri.getValue());
+		return uri;
 	}
 	
 	public void stop() throws MALException, MALInteractionException {
+		LOG.entering(getClass().getName(), "stop");
 		if (taskPub != null) {
 			try {
 				taskPub.deregister();
 			} catch (MALInteractionException e) { // ignore
-				System.out.println("PRPF: stop: task pub de-reg: " + e);
+				LOG.log(Level.WARNING, "task pub de-reg: {0}", e.getStandardError());
 			}
 			taskPub.close();
 		}
 		taskPub = null;
+		if (prPub != null) {
+			try {
+				prPub.deregister();
+			} catch (MALInteractionException e) { // ignore
+				LOG.log(Level.WARNING, "pr pub de-reg: {0}", e.getStandardError());
+			}
+			prPub.close();
+		}
+		prPub = null;
 		if (malProv != null) {
 			malProv.close();
 		}
@@ -156,13 +192,11 @@ public class PlanningRequestProviderFactory {
 			malProvMgr.close();
 		}
 		malProvMgr = null;
-//		pub.deregister();
-//		pub.close();
-//		pub = null;
 		prov = null;
 		if (malCtx != null) {
 			malCtx.close();
 		}
 		malCtx = null;
+		LOG.exiting(getClass().getName(), "stop");
 	}
 }

@@ -1,4 +1,4 @@
-package esa.mo.plan.consumer;
+package esa.mo.inttest.pr.consumer;
 
 import static org.junit.Assert.*;
 
@@ -26,11 +26,11 @@ import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
 import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
+import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -39,22 +39,28 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetail
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import esa.mo.plan.comarc.consumer.ComArchiveConsumerFactory;
-import esa.mo.plan.comarc.provider.ComArchiveProviderFactory;
-import esa.mo.plan.provider.PlanningRequestProviderFactory;
+import esa.mo.inttest.ca.consumer.ComArchiveConsumerFactory;
+import esa.mo.inttest.ca.provider.ComArchiveProviderFactory;
+import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
+import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
+/**
+ * Planning request stub test.
+ */
 //@RunWith(SpringJUnit4ClassRunner.class)
 //@ContextConfiguration("classpath*:**/testIntContext.xml")
 public class PlanningRequestStubTest {
+	
+	private static final Logger LOG = Logger.getLogger(PlanningRequestStubTest.class.getName());
 	
 	private ComArchiveProviderFactory caProvFct;
 	
@@ -63,20 +69,21 @@ public class PlanningRequestStubTest {
 	
 //	@Autowired
 	private PlanningRequestConsumerFactory prConsFct;
+	private PlanningRequestStub prCons;
 	
 	private ComArchiveConsumerFactory caConsFct;
 	
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
+	private void enter(String msg) {
+		LOG.entering(getClass().getName(), msg);
 	}
-
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
+	
+	private void leave(String msg) {
+		LOG.exiting(getClass().getName(), msg);
 	}
-
+	
 	@Before
 	public void setUp() throws Exception {
-		System.out.println("setup start");
+		enter("setUp");
 		
 		String props = "testInt.properties";
 		
@@ -101,17 +108,18 @@ public class PlanningRequestStubTest {
 		prConsFct.setPropertyFile(props);
 		prConsFct.setProviderUri(prProvFct.getProviderUri());
 		prConsFct.setBrokerUri(sharedBrokerUri);
-		prConsFct.start();
+		prCons = prConsFct.start();
 		
-		System.out.println("setup end");
+		leave("setUp");
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		System.out.println("teardown start");
+		enter("tearDown");
 		if (prConsFct != null) {
-			prConsFct.stop();
+			prConsFct.stop(prCons);
 		}
+		prCons = null;
 		prConsFct = null;
 		
 		if (caConsFct != null) {
@@ -128,12 +136,7 @@ public class PlanningRequestStubTest {
 			prProvFct.stop();
 		}
 		prProvFct = null;
-		System.out.println("teardown end");
-	}
-
-	@Test
-	public void testGetConsumer() {
-		assertNotNull(prConsFct.getConsumer());
+		leave("tearDown");
 	}
 
 	private PlanningRequestDefinitionDetails createPrDef(String id) {
@@ -145,7 +148,7 @@ public class PlanningRequestStubTest {
 	private Long submitPrDef(PlanningRequestDefinitionDetails prDef) throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
 		prDefs.add(prDef);
-		LongList prDefIdList = prConsFct.getConsumer().addDefinition(prDefs);
+		LongList prDefIdList = prCons.addDefinition(prDefs);
 		Long prDefId = prDefIdList.get(0);
 		return prDefId;
 	}
@@ -191,7 +194,7 @@ public class PlanningRequestStubTest {
 	
 	@Test
 	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
-		System.out.println("testSubmitPR start");
+		enter("testSubmitPR");
 		
 		PlanningRequestDefinitionDetails prDef = createPrDef("id1");
 		
@@ -202,46 +205,47 @@ public class PlanningRequestStubTest {
 		
 		storePrInst(prDefId, prInstId, prInst);
 		
-		prConsFct.getConsumer().submitPlanningRequest(prDefId, prInstId, prInst);
+		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
 		
-		System.out.println("testSubmitPR end");
+		leave("testSubmitPR");
 	}
 
 	@Test
 	public void testSubmitPlanningRequestWithMonitoring() throws MALException, MALInteractionException {
-		System.out.println("testSubmitPrWithMonitor start");
+		enter("testSubmitPrWithMonitor");
 		
 		final PlanningRequestStatusDetailsList[] prStatDets = { null };
 		
 		String subId = "subId1";
 		EntityRequestList entityReqs = new EntityRequestList();
-//		IdentifierList subDomain = new IdentifierList();
-//		subDomain.add(new Identifier("desd")); // makes a difference
 		EntityKeyList entityKeys = new EntityKeyList();
 		entityKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		entityReqs.add(new EntityRequest(null/*subDomain*/, true, true, true, false, entityKeys));
+		entityReqs.add(new EntityRequest(null, true, true, true, false, entityKeys));
 		Subscription sub = new Subscription(new Identifier(subId), entityReqs);
-		prConsFct.getConsumer().monitorPlanningRequestsRegister(sub, new PlanningRequestAdapter() {
+		prCons.monitorPlanningRequestsRegister(sub, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier id,
 					UpdateHeaderList updHdrs, ObjectIdList objIds,
 					PlanningRequestStatusDetailsList prStats, Map qosProps) {
-				System.out.println("pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
+				LOG.log(Level.INFO, "pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
 					+ prStats + " ; " + qosProps);
 				prStatDets[0] = prStats;
 			}
 
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProps) {
-				System.out.println("pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+				LOG.log(Level.INFO, "pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
 			}
 
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
 					throws MALException {
-				System.out.println("pr other notify: " + msgHeader + " ; " + body);
+				LOG.log(Level.INFO, "pr other notify: " + msgHeader + " ; " + body);
 			}
 		});
 		
@@ -254,7 +258,7 @@ public class PlanningRequestStubTest {
 		
 		storePrInst(prDefId, prInstId, prInst);
 		
-		prConsFct.getConsumer().submitPlanningRequest(prDefId, prInstId, prInst);
+		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
 		
 		sleep(1000); // give broker a sec to respond
 		
@@ -262,13 +266,11 @@ public class PlanningRequestStubTest {
 		assertEquals(1, prStatDets[0].size());
 		assertNotNull(prStatDets[0].get(0));
 		
-		System.out.println(prStatDets[0].get(0));
-		
 		IdentifierList subIds = new IdentifierList();
 		subIds.add(new Identifier(subId));
-		prConsFct.getConsumer().monitorPlanningRequestsDeregister(subIds);
+		prCons.monitorPlanningRequestsDeregister(subIds);
 		
-		System.out.println("testSubmitPrWithMonitor end");
+		leave("testSubmitPrWithMonitor");
 	}
 
 	private TaskDefinitionDetails createTaskDef(String id, String prDefName) {
@@ -281,7 +283,7 @@ public class PlanningRequestStubTest {
 	private Long submitTaskDef(TaskDefinitionDetails taskDef) throws MALException, MALInteractionException {
 		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
 		taskDefs.add(taskDef);
-		LongList taskDefIds = prConsFct.getConsumer().addTaskDefinition(taskDefs);
+		LongList taskDefIds = prCons.addTaskDefinition(taskDefs);
 		Long taskDefId = taskDefIds.get(0);
 		return taskDefId;
 	}
@@ -320,7 +322,7 @@ public class PlanningRequestStubTest {
 	
 	@Test
 	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
-		System.out.println("testSubmitPrWithTask start");
+		enter("testSubmitPrWithTask");
 		
 		String prDefName = "id1";
 		TaskDefinitionDetails taskDef = createTaskDef("id2", prDefName);
@@ -344,14 +346,14 @@ public class PlanningRequestStubTest {
 		
 		storePrInst(prDefId, prInstId, prInst);
 		
-		prConsFct.getConsumer().submitPlanningRequest(prDefId, prInstId, prInst);
+		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
 		
-		System.out.println("testSubmitPrWithTask end");
+		leave("testSubmitPrWithTask");
 	}
 
 	@Test
 	public void testSubmitPlanningRequestWithTaskAndMonitoring() throws MALException, MALInteractionException {
-		System.out.println("testSubmitPrWithTaskAndMonitoring start");
+		enter("testSubmitPrWithTaskAndMonitoring");
 		
 		final PlanningRequestStatusDetailsList[] prStatDets = { null };
 		final TaskStatusDetailsList[] taskStatDets = { null };
@@ -364,27 +366,30 @@ public class PlanningRequestStubTest {
 		entityKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityReqs.add(new EntityRequest(null, true, true, true, false, entityKeys));
 		prSub.setEntities(entityReqs);
-		prConsFct.getConsumer().monitorPlanningRequestsRegister(prSub, new PlanningRequestAdapter() {
+		prCons.monitorPlanningRequestsRegister(prSub, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier id,
 					UpdateHeaderList updHdrs, ObjectIdList objIds,
 					PlanningRequestStatusDetailsList prStats, Map qosProps) {
-				System.out.println("pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
+				LOG.log(Level.INFO, "pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
 					+ prStats + " ; " + qosProps);
 				prStatDets[0] = prStats;
 			}
 
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProps) {
-				System.out.println("pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+				LOG.log(Level.INFO, "pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
 			}
 
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
 					throws MALException {
-				System.out.println("pr other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
+				LOG.log(Level.INFO, "pr other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
 			}
 		});
 		
@@ -392,26 +397,29 @@ public class PlanningRequestStubTest {
 		Subscription taskSub = new Subscription();
 		taskSub.setSubscriptionId(new Identifier(taskSubId));
 		taskSub.setEntities(entityReqs);
-		prConsFct.getConsumer().monitorTasksRegister(taskSub, new PlanningRequestAdapter() {
+		prCons.monitorTasksRegister(taskSub, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier id, UpdateHeaderList updHdrs,
 					ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-				System.out.println("task notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
+				LOG.log(Level.INFO, "task notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
 					+ taskStats + " ; " + qosProps);
 				taskStatDets[0] = taskStats;
 			}
 
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProps) {
-				System.out.println("task notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+				LOG.log(Level.INFO, "task notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
 			}
 
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
 					throws MALException {
-				System.out.println("task other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
+				LOG.log(Level.INFO, "task other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
 			}
 		});
 		
@@ -437,7 +445,7 @@ public class PlanningRequestStubTest {
 		
 		storePrInst(prDefId, prInstId, prInst);
 		
-		prConsFct.getConsumer().submitPlanningRequest(prDefId, prInstId, prInst);
+		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
 		
 		sleep(2000); // give broker a sec to respond
 		
@@ -449,17 +457,15 @@ public class PlanningRequestStubTest {
 		assertEquals(1, taskStatDets[0].size());
 		assertNotNull(taskStatDets[0].get(0));
 		
-		System.out.println(prStatDets[0].get(0) + " ; " + taskStatDets[0].get(0));
-		
 		IdentifierList subIds = new IdentifierList();
 		subIds.add(new Identifier(taskSubId));
-		prConsFct.getConsumer().monitorTasksDeregister(subIds);
+		prCons.monitorTasksDeregister(subIds);
 		
 		IdentifierList subIds2 = new IdentifierList();
 		subIds2.add(new Identifier(prSubId));
-		prConsFct.getConsumer().monitorPlanningRequestsDeregister(subIds2);
+		prCons.monitorPlanningRequestsDeregister(subIds2);
 		
-		System.out.println("testSubmitPrWithTaskAndMonitoring end");
+		leave("testSubmitPrWithTaskAndMonitoring");
 	}
 
 //	@Test
@@ -474,12 +480,12 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException {
-		System.out.println("testGetPrStatus start");
+		enter("testGetPrStatus");
 		LongList prInstIds = new LongList();
 		prInstIds.add(1L);
-		PlanningRequestStatusDetailsList prStats = prConsFct.getConsumer().getPlanningRequestStatus(prInstIds);
+		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prInstIds);
 		assertNotNull(prStats);
-		System.out.println("testGetPrStatus end");
+		leave("testGetPrStatus end");
 	}
 
 //	@Test
@@ -499,12 +505,12 @@ public class PlanningRequestStubTest {
 		keys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityList.add(new EntityRequest(null, true, true, true, false, keys));
 		Subscription sub = new Subscription(id, entityList);
-		prConsFct.getConsumer().monitorPlanningRequestsRegister(sub, new PlanningRequestAdapter() {
+		prCons.monitorPlanningRequestsRegister(sub, new PlanningRequestAdapter() {
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
 			{
-				System.out.println("mon pr reg ack");
+				LOG.log(Level.INFO, "pr monitor registration ack");
 				regs[0] = true;
 			}
 			@SuppressWarnings("rawtypes")
@@ -512,33 +518,36 @@ public class PlanningRequestStubTest {
 			public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties)
 			{
-				System.out.println("mon pr reg err");
+				LOG.log(Level.INFO, "pr monitor registration err");
 			}
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
 			{
-				System.out.println("mon pr de-reg ack");
+				LOG.log(Level.INFO, "pr monitor de-registration ack");
 				regs[1] = true;
 			}
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier _Identifier0,
 					UpdateHeaderList _UpdateHeaderList1, ObjectIdList _ObjectIdList2,
 					TaskStatusDetailsList _TaskStatusDetailsList3, Map qosProperties)
 			{
-				System.out.println("mon pr notify");
+				LOG.log(Level.INFO, "pr monitor notify");
 			}
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties)
 			{
-				System.out.println("mon pr notify err");
+				LOG.log(Level.INFO, "pr monitor notify err");
 			}
 			@SuppressWarnings("rawtypes")
+			@Override
 			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body,
 					Map qosProperties) throws org.ccsds.moims.mo.mal.MALException
 			{
-				System.out.println("mon pr notify other");
+				LOG.log(Level.INFO, "pr monitor other notify");
 			}
 		});
 	}
@@ -546,33 +555,34 @@ public class PlanningRequestStubTest {
 	@Ignore("register ack response never arrives")
 	@Test
 	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
-		System.out.println("testMonitorPrReg start");
+		enter("testMonitorPrReg");
 		String subId = "subId";
 		final Boolean[] regs = { false, false };
 		registerPrMonitor(subId, regs);
 		sleep(1000); // give broker a second to fire callback
 		assertTrue(regs[0]);
-		System.out.println("testMonitorPrReg end");
+		leave("testMonitorPrReg");
 	}
 
 //	@Test
 //	public void testAsyncMonitorPlanningRequestsRegister() {
 //		fail("Not yet implemented");
+//	}
 
 	@Ignore("de-register ack response never arrives")
 	@Test
 	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
-		System.out.println("testMonitorPRDereg start");
+		enter("testMonitorPrDeReg");
 		String subId = "subId2";
 		final Boolean[] regs = { false, false };
 		registerPrMonitor(subId, regs);
 		sleep(1000); // wait a sec before de-registering
 		IdentifierList subIdList = new IdentifierList();
 		subIdList.add(new Identifier(subId));
-		prConsFct.getConsumer().monitorPlanningRequestsDeregister(subIdList);
+		prCons.monitorPlanningRequestsDeregister(subIdList);
 		sleep(1000); // give broker a sec to fire callback
 		assertTrue(regs[1]);
-		System.out.println("testMonitorPrDereg end");
+		leave("testMonitorPrDeReg");
 	}
 
 //	@Test
@@ -583,16 +593,16 @@ public class PlanningRequestStubTest {
 	private LongList listPrDefs(String id) throws MALException, MALInteractionException {
 		IdentifierList ids = new IdentifierList();
 		ids.add(new Identifier(id));
-		return prConsFct.getConsumer().listDefinition(ids);
+		return prCons.listDefinition(ids);
 	}
 	
 	@Test
 	public void testListDefinition() throws MALException, MALInteractionException {
-		System.out.println("testListPrDefs start");
+		enter("testListPrDefs");
 		LongList ids = listPrDefs("*");
 		assertNotNull(ids);
 		assertEquals(0, ids.size());
-		System.out.println("testListPrDefs end");
+		leave("testListPrDefs");
 	}
 
 //	@Test
@@ -610,13 +620,13 @@ public class PlanningRequestStubTest {
 		prDef.setName(new Identifier("new pr def"));
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
 		prDefs.add(prDef);
-		LongList prDefIds = prConsFct.getConsumer().addDefinition(prDefs);
+		LongList prDefIds = prCons.addDefinition(prDefs);
 		return new AbstractMap.SimpleEntry<LongList, PlanningRequestDefinitionDetailsList>(prDefIds, prDefs);
 	}
 	
 	@Test
 	public void testAddDefinition() throws MALException, MALInteractionException {
-		System.out.println("testAddPrDef start");
+		enter("testAddPrDef");
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
 		assertNotNull(e.getKey());
 		assertEquals(1, e.getKey().size());
@@ -624,7 +634,7 @@ public class PlanningRequestStubTest {
 		// added pr id is listed
 		LongList ids = listPrDefs("*");
 		assertTrue(ids.contains(e.getKey().get(0)));
-		System.out.println("testAddPrDef end");
+		leave("testAddPrDef");
 	}
 
 //	@Test
@@ -639,14 +649,14 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testUpdateDefinition() throws MALException, MALInteractionException {
-		System.out.println("testUpdatePrDef start");
+		enter("testUpdatePrDef");
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
 		e.getValue().get(0).setDescription("updated desc");
-		prConsFct.getConsumer().updateDefinition(e.getKey(), e.getValue());
+		prCons.updateDefinition(e.getKey(), e.getValue());
 		// updated pr id is still listed, but verify description
 		LongList ids = listPrDefs("*");
 		assertTrue(ids.contains(e.getKey().get(0)));
-		System.out.println("testUpdatePrDef end");
+		leave("testUpdatePrDef");
 	}
 
 //	@Test
@@ -660,13 +670,13 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testRemoveDefinition() throws MALException, MALInteractionException {
-		System.out.println("testRemovePrDef start");
+		enter("testRemovePrDef");
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-		prConsFct.getConsumer().removeDefinition(e.getKey());
+		prCons.removeDefinition(e.getKey());
 		// removed pr id is not listed anymore
 		LongList ids = listPrDefs("*");
 		assertFalse(ids.contains(e.getKey().get(0)));
-		System.out.println("testRemovePrDef start");
+		leave("testRemovePrDef");
 	}
 
 //	@Test
@@ -680,12 +690,12 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testGetTaskStatus() throws MALException, MALInteractionException {
-		System.out.println("testGetTaskStatus start");
+		enter("testGetTaskStatus");
 		LongList taskInstIds = new LongList();
 		taskInstIds.add(new Long(1L));
-		TaskStatusDetailsList taskStats = prConsFct.getConsumer().getTaskStatus(taskInstIds);
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
 		assertNotNull(taskStats);
-		System.out.println("testGetTaskStatus end");
+		leave("testGetTaskStatus");
 	}
 
 //	@Test
@@ -699,15 +709,15 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testSetTaskStatus() throws MALException, MALInteractionException {
-		System.out.println("testSetTaskStatus start");
+		enter("testSetTaskStatus");
 		LongList taskInstIds = new LongList();
 		taskInstIds.add(new Long(1L));
 		TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
 		TaskStatusDetails taskStat = new TaskStatusDetails();
 		taskStat.setTaskInstName(new Identifier("id")); // mandatory
 		taskStats.add(taskStat);
-		prConsFct.getConsumer().setTaskStatus(taskInstIds, taskStats);
-		System.out.println("testSetTaskStatus end");
+		prCons.setTaskStatus(taskInstIds, taskStats);
+		leave("testSetTaskStatus");
 	}
 
 //	@Test
@@ -727,12 +737,12 @@ public class PlanningRequestStubTest {
 		keys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityList.add(new EntityRequest(null, true, true, true, false, keys));
 		Subscription sub = new Subscription(id, entityList);
-		prConsFct.getConsumer().monitorTasksRegister(sub, new PlanningRequestAdapter() {
+		prCons.monitorTasksRegister(sub, new PlanningRequestAdapter() {
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
 			{
-				System.out.println("mon task reg ack");
+				LOG.log(Level.INFO, "register task monitor ack");
 				regs[0] = true;
 			}
 			@SuppressWarnings("rawtypes")
@@ -740,13 +750,13 @@ public class PlanningRequestStubTest {
 			public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties)
 			{
-				System.out.println("mon task reg err");
+				LOG.log(Level.INFO, "register task monitor err");
 			}
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
 			{
-				System.out.println("mon task de-reg ack");
+				LOG.log(Level.INFO, "de-register task monitor ack");
 				regs[1] = true;
 			}
 			@SuppressWarnings("rawtypes")
@@ -754,19 +764,19 @@ public class PlanningRequestStubTest {
 					UpdateHeaderList _UpdateHeaderList1, ObjectIdList _ObjectIdList2,
 					TaskStatusDetailsList _TaskStatusDetailsList3, Map qosProperties)
 			{
-				System.out.println("mon task notify");
+				LOG.log(Level.INFO, "task monitor notify");
 			}
 			@SuppressWarnings("rawtypes")
 			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties)
 			{
-				System.out.println("mon task notify err");
+				LOG.log(Level.INFO, "task monitor notify err");
 			}
 			@SuppressWarnings("rawtypes")
 			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body,
 					Map qosProperties) throws org.ccsds.moims.mo.mal.MALException
 			{
-				System.out.println("mon pr notify other");
+				LOG.log(Level.INFO, "taks other notify");
 			}
 		});
 	}
@@ -782,13 +792,13 @@ public class PlanningRequestStubTest {
 	@Ignore("register ack response never arrives")
 	@Test
 	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
-		System.out.println("testMonitorTasksRegister start");
+		enter("testMonitorTasksRegister");
 		String subId = "subId";
 		final Boolean[] regs = { false, false };
 		registerTaskMonitor(subId, regs);
 		sleep(1000); // give broker a second to fire callback
 		assertTrue(regs[0]);
-		System.out.println("testMonitorTasksRegister end");
+		leave("testMonitorTasksRegister");
 	}
 
 //	@Test
@@ -799,17 +809,17 @@ public class PlanningRequestStubTest {
 	@Ignore("de-register ack response never arrives")
 	@Test
 	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
-		System.out.println("testMonitorTasksDeregister start");
+		enter("testMonitorTasksDeregister");
 		String subId = "subId2";
 		final Boolean[] regs = { false, false };
 		registerTaskMonitor(subId, regs);
 		sleep(1000); // wait a sec before de-registering
 		IdentifierList subIdList = new IdentifierList();
 		subIdList.add(new Identifier(subId));
-		prConsFct.getConsumer().monitorTasksDeregister(subIdList);
+		prCons.monitorTasksDeregister(subIdList);
 		sleep(1000); // give broker a sec to fire callback
 		assertTrue(regs[1]);
-		System.out.println("testMonitorTasksDeregister end");
+		leave("testMonitorTasksDeregister");
 	}
 
 //	@Test
@@ -820,16 +830,16 @@ public class PlanningRequestStubTest {
 	private LongList listTaskDefs(String f) throws MALException, MALInteractionException {
 		IdentifierList idList = new IdentifierList();
 		idList.add(new Identifier(f));
-		return prConsFct.getConsumer().listTaskDefinition(idList);
+		return prCons.listTaskDefinition(idList);
 	}
 	
 	@Test
 	public void testListTaskDefinition() throws MALException, MALInteractionException {
-		System.out.println("testListTaskDefs start");
+		enter("testListTaskDefs");
 		LongList taskDefIdList = listTaskDefs("*");
 		assertNotNull(taskDefIdList);
 		assertEquals(0, taskDefIdList.size());
-		System.out.println("testListTaskDefs end");
+		leave("testListTaskDefs");
 	}
 
 //	@Test
@@ -848,13 +858,13 @@ public class PlanningRequestStubTest {
 		taskDef.setName(new Identifier("new task def")); // mandatory
 		taskDef.setPrDefName(new Identifier("new pr def")); // mandatory
 		taskDefList.add(taskDef);
-		LongList taskDefIdList = prConsFct.getConsumer().addTaskDefinition(taskDefList);
+		LongList taskDefIdList = prCons.addTaskDefinition(taskDefList);
 		return new AbstractMap.SimpleEntry<LongList, TaskDefinitionDetailsList>(taskDefIdList, taskDefList);
 	}
 	
 	@Test
 	public void testAddTaskDefinition() throws MALException, MALInteractionException {
-		System.out.println("testAddTaskDef start");
+		enter("testAddTaskDef");
 		Map.Entry<LongList, TaskDefinitionDetailsList> e = addTaskDef();
 		assertNotNull(e.getKey());
 		assertEquals(1, e.getKey().size());
@@ -866,7 +876,7 @@ public class PlanningRequestStubTest {
 		assertNotNull(taskDefIdList.get(0));
 		// id from add() matches id from list()
 		assertEquals(e.getKey().get(0), taskDefIdList.get(0));
-		System.out.println("testAddTaskDef end");
+		leave("testAddTaskDef");
 	}
 	
 //	@Test
@@ -881,15 +891,15 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testUpdateTaskDefinition() throws MALException, MALInteractionException {
-		System.out.println("testUpdateTaskDef start");
+		enter("testUpdateTaskDef");
 		Map.Entry<LongList, TaskDefinitionDetailsList> e = addTaskDef();
 		e.getValue().get(0).setDescription("whoa");
-		prConsFct.getConsumer().updateTaskDefinition(e.getKey(), e.getValue());
+		prCons.updateTaskDefinition(e.getKey(), e.getValue());
 		// list() returns id - unable to verify description
 		LongList taskDefIdList = listTaskDefs("*");
 		// added id is still listed
 		assertTrue(taskDefIdList.contains(e.getKey().get(0)));
-		System.out.println("testUpdateTaskDef end");
+		leave("testUpdateTaskDef");
 	}
 
 //	@Test
@@ -904,13 +914,13 @@ public class PlanningRequestStubTest {
 
 	@Test
 	public void testRemoveTaskDefinition() throws MALException, MALInteractionException {
-		System.out.println("testRemoveTaskDef start");
+		enter("testRemoveTaskDef");
 		Map.Entry<LongList, TaskDefinitionDetailsList> e = addTaskDef();
-		prConsFct.getConsumer().removeTaskDefinition(e.getKey());
+		prCons.removeTaskDefinition(e.getKey());
 		LongList taskDefIdList = listTaskDefs("*");
 		// added id is not listed anymore
 		assertFalse(taskDefIdList.contains(e.getKey().get(0)));
-		System.out.println("testRemoveTaskDef end");
+		leave("testRemoveTaskDef");
 	}
 
 //	@Test
