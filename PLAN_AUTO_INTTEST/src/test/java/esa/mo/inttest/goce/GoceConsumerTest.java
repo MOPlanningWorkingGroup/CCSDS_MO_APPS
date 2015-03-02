@@ -13,7 +13,7 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
- * GOCE consumer test.
+ * GOCE consumer test. Tests four GOCE example files using provider stub.
  */
 public class GoceConsumerTest {
 
@@ -35,9 +35,8 @@ public class GoceConsumerTest {
 		consFct.setPropertyFile(props);
 		consFct.setProviderUri(provFct.getProviderUri());
 		consFct.setBrokerUri(provFct.getBrokerUri());
-		goce = new GoceConsumer(consFct.start());
 		
-//		goce = new GoceConsumer(consFct.getConsumer());
+		goce = new GoceConsumer(consFct.start());
 	}
 
 	@After

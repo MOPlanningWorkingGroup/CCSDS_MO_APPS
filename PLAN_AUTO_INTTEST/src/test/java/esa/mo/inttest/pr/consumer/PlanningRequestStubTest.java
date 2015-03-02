@@ -54,12 +54,121 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
- * Planning request stub test.
+ * Planning request stub test. Invokes provider methods using generated 'stub' class which includes MAL layer.
  */
 //@RunWith(SpringJUnit4ClassRunner.class)
 //@ContextConfiguration("classpath*:**/testIntContext.xml")
 public class PlanningRequestStubTest {
 	
+	private final class TaskMonitor extends PlanningRequestAdapter {
+		
+		public boolean registered = false;
+		public TaskStatusDetailsList taskStats = null;
+		public boolean deRegistered = false;
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
+		{
+			LOG.log(Level.INFO, "register task monitor ack");
+			registered = true;
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProperties)
+		{
+			LOG.log(Level.INFO, "register task monitor err");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier id, UpdateHeaderList updHdrs,
+				ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
+			LOG.log(Level.INFO, "task notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
+				+ taskStats + " ; " + qosProps);
+			this.taskStats = taskStats;
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProps) {
+			LOG.log(Level.INFO, "task notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
+				throws MALException {
+			LOG.log(Level.INFO, "task other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
+		}
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
+		{
+			LOG.log(Level.INFO, "de-register task monitor ack");
+			deRegistered = true;
+		}
+	}
+
+	private final class PrMonitor extends PlanningRequestAdapter {
+		
+		public boolean registered = false;
+		public PlanningRequestStatusDetailsList prStats = null;
+		public boolean deRegistered = false;
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
+		{
+			LOG.log(Level.INFO, "pr monitor registration ack");
+			registered = true;
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProperties)
+		{
+			LOG.log(Level.INFO, "pr monitor registration err");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier id,
+				UpdateHeaderList updHdrs, ObjectIdList objIds,
+				PlanningRequestStatusDetailsList prStats, Map qosProps) {
+			LOG.log(Level.INFO, "pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
+				+ prStats + " ; " + qosProps);
+			this.prStats = prStats;
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProps) {
+			LOG.log(Level.INFO, "pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
+				throws MALException {
+			LOG.log(Level.INFO, "pr other notify: " + msgHeader + " ; " + body);
+		}
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
+		{
+			LOG.log(Level.INFO, "pr monitor de-registration ack");
+			deRegistered = true;
+		}
+	}
+
 	private static final Logger LOG = Logger.getLogger(PlanningRequestStubTest.class.getName());
 	
 	private ComArchiveProviderFactory caProvFct;
@@ -214,40 +323,14 @@ public class PlanningRequestStubTest {
 	public void testSubmitPlanningRequestWithMonitoring() throws MALException, MALInteractionException {
 		enter("testSubmitPrWithMonitor");
 		
-		final PlanningRequestStatusDetailsList[] prStatDets = { null };
-		
 		String subId = "subId1";
 		EntityRequestList entityReqs = new EntityRequestList();
 		EntityKeyList entityKeys = new EntityKeyList();
 		entityKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityReqs.add(new EntityRequest(null, true, true, true, false, entityKeys));
 		Subscription sub = new Subscription(new Identifier(subId), entityReqs);
-		prCons.monitorPlanningRequestsRegister(sub, new PlanningRequestAdapter() {
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier id,
-					UpdateHeaderList updHdrs, ObjectIdList objIds,
-					PlanningRequestStatusDetailsList prStats, Map qosProps) {
-				LOG.log(Level.INFO, "pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
-					+ prStats + " ; " + qosProps);
-				prStatDets[0] = prStats;
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProps) {
-				LOG.log(Level.INFO, "pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
-					throws MALException {
-				LOG.log(Level.INFO, "pr other notify: " + msgHeader + " ; " + body);
-			}
-		});
+		PrMonitor prMon = new PrMonitor();
+		prCons.monitorPlanningRequestsRegister(sub, prMon);
 		
 		PlanningRequestDefinitionDetails prDef = createPrDef("id2");
 		
@@ -260,11 +343,11 @@ public class PlanningRequestStubTest {
 		
 		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
 		
-		sleep(1000); // give broker a sec to respond
+		sleep(3000); // give broker a sec to respond
 		
-		assertNotNull(prStatDets[0]);
-		assertEquals(1, prStatDets[0].size());
-		assertNotNull(prStatDets[0].get(0));
+		assertNotNull(prMon.prStats);
+		assertEquals(1, prMon.prStats.size());
+		assertNotNull(prMon.prStats.get(0));
 		
 		IdentifierList subIds = new IdentifierList();
 		subIds.add(new Identifier(subId));
@@ -355,9 +438,6 @@ public class PlanningRequestStubTest {
 	public void testSubmitPlanningRequestWithTaskAndMonitoring() throws MALException, MALInteractionException {
 		enter("testSubmitPrWithTaskAndMonitoring");
 		
-		final PlanningRequestStatusDetailsList[] prStatDets = { null };
-		final TaskStatusDetailsList[] taskStatDets = { null };
-		
 		String prSubId = "prSubId";
 		Subscription prSub = new Subscription();
 		prSub.setSubscriptionId(new Identifier(prSubId));
@@ -366,62 +446,15 @@ public class PlanningRequestStubTest {
 		entityKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityReqs.add(new EntityRequest(null, true, true, true, false, entityKeys));
 		prSub.setEntities(entityReqs);
-		prCons.monitorPlanningRequestsRegister(prSub, new PlanningRequestAdapter() {
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier id,
-					UpdateHeaderList updHdrs, ObjectIdList objIds,
-					PlanningRequestStatusDetailsList prStats, Map qosProps) {
-				LOG.log(Level.INFO, "pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
-					+ prStats + " ; " + qosProps);
-				prStatDets[0] = prStats;
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProps) {
-				LOG.log(Level.INFO, "pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
-					throws MALException {
-				LOG.log(Level.INFO, "pr other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
-			}
-		});
+		PrMonitor prMon = new PrMonitor();
+		prCons.monitorPlanningRequestsRegister(prSub, prMon);
 		
 		String taskSubId = "taskSubId";
 		Subscription taskSub = new Subscription();
 		taskSub.setSubscriptionId(new Identifier(taskSubId));
 		taskSub.setEntities(entityReqs);
-		prCons.monitorTasksRegister(taskSub, new PlanningRequestAdapter() {
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier id, UpdateHeaderList updHdrs,
-					ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-				LOG.log(Level.INFO, "task notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
-					+ taskStats + " ; " + qosProps);
-				taskStatDets[0] = taskStats;
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProps) {
-				LOG.log(Level.INFO, "task notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
-					throws MALException {
-				LOG.log(Level.INFO, "task other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
-			}
-		});
+		TaskMonitor taskMon = new TaskMonitor();
+		prCons.monitorTasksRegister(taskSub, taskMon);
 		
 		String prDefName = "id1";
 		TaskDefinitionDetails taskDef = createTaskDef("id2", prDefName);
@@ -447,15 +480,15 @@ public class PlanningRequestStubTest {
 		
 		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
 		
-		sleep(2000); // give broker a sec to respond
+		sleep(3000); // give broker a sec to respond
 		
-		assertNotNull(prStatDets[0]);
-		assertEquals(1, prStatDets[0].size());
-		assertNotNull(prStatDets[0].get(0));
+		assertNotNull(prMon.prStats);
+		assertEquals(1, prMon.prStats.size());
+		assertNotNull(prMon.prStats.get(0));
 		
-		assertNotNull(taskStatDets[0]);
-		assertEquals(1, taskStatDets[0].size());
-		assertNotNull(taskStatDets[0].get(0));
+		assertNotNull(taskMon.taskStats);
+		assertEquals(1, taskMon.taskStats.size());
+		assertNotNull(taskMon.taskStats.get(0));
 		
 		IdentifierList subIds = new IdentifierList();
 		subIds.add(new Identifier(taskSubId));
@@ -468,16 +501,6 @@ public class PlanningRequestStubTest {
 		leave("testSubmitPrWithTaskAndMonitoring");
 	}
 
-//	@Test
-//	public void testAsyncSubmitPlanningRequest() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueSubmitPlanningRequest() {
-//		fail("Not yet implemented");
-//	}
-
 	@Test
 	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException {
 		enter("testGetPrStatus");
@@ -488,68 +511,16 @@ public class PlanningRequestStubTest {
 		leave("testGetPrStatus end");
 	}
 
-//	@Test
-//	public void testAsyncGetPlanningRequestStatus() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueGetPlanningRequestStatus() {
-//		fail("Not yet implemented");
-//	}
-
-	private void registerPrMonitor(String subId, final Boolean[] regs) throws MALException, MALInteractionException {
+	private PrMonitor registerPrMonitor(String subId) throws MALException, MALInteractionException {
 		Identifier id = new Identifier(subId);
 		EntityRequestList entityList = new EntityRequestList();
 		EntityKeyList keys = new EntityKeyList();
 		keys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityList.add(new EntityRequest(null, true, true, true, false, keys));
 		Subscription sub = new Subscription(id, entityList);
-		prCons.monitorPlanningRequestsRegister(sub, new PlanningRequestAdapter() {
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
-			{
-				LOG.log(Level.INFO, "pr monitor registration ack");
-				regs[0] = true;
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties)
-			{
-				LOG.log(Level.INFO, "pr monitor registration err");
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
-			{
-				LOG.log(Level.INFO, "pr monitor de-registration ack");
-				regs[1] = true;
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier _Identifier0,
-					UpdateHeaderList _UpdateHeaderList1, ObjectIdList _ObjectIdList2,
-					TaskStatusDetailsList _TaskStatusDetailsList3, Map qosProperties)
-			{
-				LOG.log(Level.INFO, "pr monitor notify");
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties)
-			{
-				LOG.log(Level.INFO, "pr monitor notify err");
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body,
-					Map qosProperties) throws org.ccsds.moims.mo.mal.MALException
-			{
-				LOG.log(Level.INFO, "pr monitor other notify");
-			}
-		});
+		PrMonitor prReg = new PrMonitor();
+		prCons.monitorPlanningRequestsRegister(sub, prReg);
+		return prReg;
 	}
 
 	@Ignore("register ack response never arrives")
@@ -557,38 +528,26 @@ public class PlanningRequestStubTest {
 	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
 		enter("testMonitorPrReg");
 		String subId = "subId";
-		final Boolean[] regs = { false, false };
-		registerPrMonitor(subId, regs);
+		PrMonitor prReg = registerPrMonitor(subId);
 		sleep(1000); // give broker a second to fire callback
-		assertTrue(regs[0]);
+		assertTrue(prReg.registered);
 		leave("testMonitorPrReg");
 	}
-
-//	@Test
-//	public void testAsyncMonitorPlanningRequestsRegister() {
-//		fail("Not yet implemented");
-//	}
 
 	@Ignore("de-register ack response never arrives")
 	@Test
 	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorPrDeReg");
 		String subId = "subId2";
-		final Boolean[] regs = { false, false };
-		registerPrMonitor(subId, regs);
+		PrMonitor prMon = registerPrMonitor(subId);
 		sleep(1000); // wait a sec before de-registering
 		IdentifierList subIdList = new IdentifierList();
 		subIdList.add(new Identifier(subId));
 		prCons.monitorPlanningRequestsDeregister(subIdList);
 		sleep(1000); // give broker a sec to fire callback
-		assertTrue(regs[1]);
+		assertTrue(prMon.deRegistered);
 		leave("testMonitorPrDeReg");
 	}
-
-//	@Test
-//	public void testAsyncMonitorPlanningRequestsDeregister() {
-//		fail("Not yet implemented");
-//	}
 
 	private LongList listPrDefs(String id) throws MALException, MALInteractionException {
 		IdentifierList ids = new IdentifierList();
@@ -604,16 +563,6 @@ public class PlanningRequestStubTest {
 		assertEquals(0, ids.size());
 		leave("testListPrDefs");
 	}
-
-//	@Test
-//	public void testAsyncListDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueListDefinition() {
-//		fail("Not yet implemented");
-//	}
 
 	private Map.Entry<LongList, PlanningRequestDefinitionDetailsList> addPrDef() throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
@@ -637,16 +586,6 @@ public class PlanningRequestStubTest {
 		leave("testAddPrDef");
 	}
 
-//	@Test
-//	public void testAsyncAddDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueAddDefinition() {
-//		fail("Not yet implemented");
-//	}
-
 	@Test
 	public void testUpdateDefinition() throws MALException, MALInteractionException {
 		enter("testUpdatePrDef");
@@ -659,15 +598,6 @@ public class PlanningRequestStubTest {
 		leave("testUpdatePrDef");
 	}
 
-//	@Test
-//	public void testAsyncUpdateDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueUpdateDefinition() {
-//		fail("Not yet implemented");
-
 	@Test
 	public void testRemoveDefinition() throws MALException, MALInteractionException {
 		enter("testRemovePrDef");
@@ -679,15 +609,6 @@ public class PlanningRequestStubTest {
 		leave("testRemovePrDef");
 	}
 
-//	@Test
-//	public void testAsyncRemoveDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueRemoveDefinition() {
-//		fail("Not yet implemented");
-
 	@Test
 	public void testGetTaskStatus() throws MALException, MALInteractionException {
 		enter("testGetTaskStatus");
@@ -697,15 +618,6 @@ public class PlanningRequestStubTest {
 		assertNotNull(taskStats);
 		leave("testGetTaskStatus");
 	}
-
-//	@Test
-//	public void testAsyncGetTaskStatus() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueGetTaskStatus() {
-//		fail("Not yet implemented");
 
 	@Test
 	public void testSetTaskStatus() throws MALException, MALInteractionException {
@@ -720,65 +632,16 @@ public class PlanningRequestStubTest {
 		leave("testSetTaskStatus");
 	}
 
-//	@Test
-//	public void testAsyncSetTaskStatus() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueSetTaskStatus() {
-//		fail("Not yet implemented");
-//	}
-
-	private void registerTaskMonitor(String subId, final Boolean[] regs) throws MALException, MALInteractionException {
+	private TaskMonitor registerTaskMonitor(String subId) throws MALException, MALInteractionException {
 		Identifier id = new Identifier(subId);
 		EntityRequestList entityList = new EntityRequestList();
 		EntityKeyList keys = new EntityKeyList();
 		keys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		entityList.add(new EntityRequest(null, true, true, true, false, keys));
 		Subscription sub = new Subscription(id, entityList);
-		prCons.monitorTasksRegister(sub, new PlanningRequestAdapter() {
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
-			{
-				LOG.log(Level.INFO, "register task monitor ack");
-				regs[0] = true;
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties)
-			{
-				LOG.log(Level.INFO, "register task monitor err");
-			}
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
-			{
-				LOG.log(Level.INFO, "de-register task monitor ack");
-				regs[1] = true;
-			}
-			@SuppressWarnings("rawtypes")
-			public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier _Identifier0,
-					UpdateHeaderList _UpdateHeaderList1, ObjectIdList _ObjectIdList2,
-					TaskStatusDetailsList _TaskStatusDetailsList3, Map qosProperties)
-			{
-				LOG.log(Level.INFO, "task monitor notify");
-			}
-			@SuppressWarnings("rawtypes")
-			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties)
-			{
-				LOG.log(Level.INFO, "task monitor notify err");
-			}
-			@SuppressWarnings("rawtypes")
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body,
-					Map qosProperties) throws org.ccsds.moims.mo.mal.MALException
-			{
-				LOG.log(Level.INFO, "taks other notify");
-			}
-		});
+		TaskMonitor taskMon = new TaskMonitor();
+		prCons.monitorTasksRegister(sub, taskMon);
+		return taskMon;
 	}
 	
 	private void sleep(long ms) {
@@ -794,38 +657,26 @@ public class PlanningRequestStubTest {
 	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksRegister");
 		String subId = "subId";
-		final Boolean[] regs = { false, false };
-		registerTaskMonitor(subId, regs);
+		TaskMonitor taskMon = registerTaskMonitor(subId);
 		sleep(1000); // give broker a second to fire callback
-		assertTrue(regs[0]);
+		assertTrue(taskMon.registered);
 		leave("testMonitorTasksRegister");
 	}
 
-//	@Test
-//	public void testAsyncMonitorTasksRegister() {
-//		fail("Not yet implemented");
-//	}
-	
 	@Ignore("de-register ack response never arrives")
 	@Test
 	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksDeregister");
 		String subId = "subId2";
-		final Boolean[] regs = { false, false };
-		registerTaskMonitor(subId, regs);
+		TaskMonitor taskMon = registerTaskMonitor(subId);
 		sleep(1000); // wait a sec before de-registering
 		IdentifierList subIdList = new IdentifierList();
 		subIdList.add(new Identifier(subId));
 		prCons.monitorTasksDeregister(subIdList);
 		sleep(1000); // give broker a sec to fire callback
-		assertTrue(regs[1]);
+		assertTrue(taskMon.deRegistered);
 		leave("testMonitorTasksDeregister");
 	}
-
-//	@Test
-//	public void testAsyncMonitorTasksDeregister() {
-//		fail("Not yet implemented");
-//	}
 
 	private LongList listTaskDefs(String f) throws MALException, MALInteractionException {
 		IdentifierList idList = new IdentifierList();
@@ -841,16 +692,6 @@ public class PlanningRequestStubTest {
 		assertEquals(0, taskDefIdList.size());
 		leave("testListTaskDefs");
 	}
-
-//	@Test
-//	public void testAsyncListTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueListTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
 
 	private Map.Entry<LongList, TaskDefinitionDetailsList> addTaskDef() throws MALException, MALInteractionException {
 		TaskDefinitionDetailsList taskDefList = new TaskDefinitionDetailsList();
@@ -879,16 +720,6 @@ public class PlanningRequestStubTest {
 		leave("testAddTaskDef");
 	}
 	
-//	@Test
-//	public void testAsyncAddTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueAddTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
-
 	@Test
 	public void testUpdateTaskDefinition() throws MALException, MALInteractionException {
 		enter("testUpdateTaskDef");
@@ -902,16 +733,6 @@ public class PlanningRequestStubTest {
 		leave("testUpdateTaskDef");
 	}
 
-//	@Test
-//	public void testAsyncUpdateTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueUpdateTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
-
 	@Test
 	public void testRemoveTaskDefinition() throws MALException, MALInteractionException {
 		enter("testRemoveTaskDef");
@@ -922,15 +743,5 @@ public class PlanningRequestStubTest {
 		assertFalse(taskDefIdList.contains(e.getKey().get(0)));
 		leave("testRemoveTaskDef");
 	}
-
-//	@Test
-//	public void testAsyncRemoveTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testContinueRemoveTaskDefinition() {
-//		fail("Not yet implemented");
-//	}
 
 }

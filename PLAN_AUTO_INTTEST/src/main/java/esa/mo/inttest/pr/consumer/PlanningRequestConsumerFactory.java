@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.com.COMHelper;
-//import org.ccsds.moims.mo.com.COMHelper;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -120,12 +119,10 @@ public class PlanningRequestConsumerFactory {
 	
 	public void stop(PlanningRequestStub cons) throws MALException {
 		LOG.entering(getClass().getName(), "stop");
-		if (cons != null) {
-			if (cons.getConsumer() != null) {
-				cons.getConsumer().close();
-			}
+		if (cons != null && cons.getConsumer() != null) {
+			cons.getConsumer().close();
 		}
-		cons = null;
+//		cons = null; //pointless
 		if (malConsMgr != null) {
 			malConsMgr.close();
 		}

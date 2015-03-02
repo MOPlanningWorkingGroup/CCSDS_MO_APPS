@@ -17,6 +17,7 @@ import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.EntityRequest;
 import org.ccsds.moims.mo.mal.structures.EntityRequestList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
+import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
@@ -36,6 +37,154 @@ import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
  * Simultaneous GOCE consumers test. One consumer managing defs, second managing instances, third only monitoring.
  */
 public class ThreeGoceConsumersTest {
+
+	/// class receiving PR notifications
+	private final class PrMonitor extends PlanningRequestAdapter {
+		
+		public PlanningRequestStatusDetailsList prStats = null;
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsRegisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			LOG.log(Level.INFO, "pr monitor registration ack");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsRegisterErrorReceived(MALMessageHeader msgHeader,
+				MALStandardError error, Map qosProps) {
+			LOG.log(Level.INFO, "pr monitor registration error");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
+				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats,
+				Map qosProps) {
+			LOG.log(Level.INFO, "pr monitor notify");
+			this.prStats = prStats;
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProps) {
+			LOG.log(Level.INFO, "pr monitor notify error");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorPlanningRequestsDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			LOG.log(Level.INFO, "pr monitor de-registration ack");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
+				throws MALException {
+			LOG.log(Level.INFO, "pr other notify");
+		}
+	}
+
+	/// class receiving Task notifications
+	private final class TaskMonitor extends PlanningRequestAdapter {
+		
+		private TaskStatusDetailsList taskStats = null;
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			LOG.log(Level.INFO, "task monitor registration ack");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProps) {
+			LOG.log(Level.INFO, "task monitor registration error");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
+				UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
+			LOG.log(Level.INFO, "task monitor notify");
+			this.taskStats = taskStats;
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			LOG.log(Level.INFO, "task monitor notify error");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			LOG.log(Level.INFO, "task monitor de-registration ack");
+		}
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
+				throws MALException {
+			LOG.log(Level.INFO, "task other notify");
+		}
+	}
+
+	/// first worker thread creating definitions
+	private final class Worker1Thread extends Thread {
+		
+		private GoceConsumer cons;
+		
+		private Worker1Thread(String name, GoceConsumer cons) {
+			super(name);
+			this.cons = cons;
+		}
+
+		@Override
+		public void run() {
+			LOG.entering(getName(), "run");
+			while (!isInterrupted()) {
+				sleeep(1000, 3000);
+				try {
+					cons.createPpfDefsIfMissing();
+				} catch (Exception e) {
+					LOG.log(Level.WARNING, getName() + ": createPpfDefs", e);
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+			}
+			LOG.exiting(getName(), "run");
+		}
+	}
+
+	/// second worker thread creating instances
+	private final class Worker2Thread extends Thread {
+		
+		private GoceConsumer cons;
+		
+		private Worker2Thread(String name, GoceConsumer cons) {
+			super(name);
+			this.cons = cons;
+		}
+
+		@Override
+		public void run() {
+			LOG.entering(getName(), "run");
+			while (!isInterrupted()) {
+				sleeep(1000, 3000);
+				try {
+					cons.createPpfInstsIfMissingAndDefsExist();
+				} catch (Exception e) {
+					LOG.log(Level.WARNING, getName() + ": createPpfInst", e);
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+			}
+			LOG.exiting(getName(), "run");
+		}
+	}
 
 	private static final Logger LOG = Logger.getLogger(ThreeGoceConsumersTest.class.getName());
 	
@@ -104,40 +253,9 @@ public class ThreeGoceConsumersTest {
 		assertNotNull(goce1);
 		assertNotNull(goce2);
 		assertNotNull(goce3);
-		Thread worker1 = new Thread("PrProv") {
-			@Override
-			public void run() {
-				LOG.entering(getName(), "run");
-				while (!isInterrupted()) {
-					sleeep(1000, 3000);
-					try {
-						goce1.createPpfDefsIfMissing();
-					} catch (Exception e) {
-						LOG.log(Level.WARNING, getName() + ": createPpfDefs", e);
-						e.printStackTrace();
-						throw new RuntimeException(e);
-					}
-				}
-				LOG.exiting(getName(), "run");
-			}
-		};
-		Thread worker2 = new Thread() {
-			@Override
-			public void run() {
-				LOG.entering(getName(), "run");
-				while (!isInterrupted()) {
-					sleeep(1000, 3000);
-					try {
-						goce2.createPpfInstsIfMissingAndDefsExist();
-					} catch (Exception e) {
-						LOG.log(Level.WARNING, getName() + ": createPpfInst", e);
-						e.printStackTrace();
-						throw new RuntimeException(e);
-					}
-				}
-				LOG.exiting(getName(), "run");
-			}
-		};
+		Thread worker1 = new Worker1Thread("Goce1", goce1);
+		Thread worker2 = new Worker2Thread("Goce2", goce2);
+		
 		Subscription taskSub = new Subscription();
 		String taskSubId = "prCons3taskSubId";
 		taskSub.setSubscriptionId(new Identifier(taskSubId));
@@ -146,46 +264,9 @@ public class ThreeGoceConsumersTest {
 		taskKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		taskReqs.add(new EntityRequest(null, true, true, true, false, taskKeys));
 		taskSub.setEntities(taskReqs);
-		goce3.getStub().monitorTasksRegister(taskSub, new PlanningRequestAdapter() {
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				LOG.log(Level.INFO, "task monitor registration ack");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProps) {
-				LOG.log(Level.INFO, "task monitor registration error");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
-					UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-				LOG.log(Level.INFO, "task monitor notify");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
-				LOG.log(Level.INFO, "task monitor notify error");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				LOG.log(Level.INFO, "task monitor de-registration ack");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
-					throws MALException {
-				LOG.log(Level.INFO, "task other notify");
-			}
-		});
+		TaskMonitor taskMon = new TaskMonitor();
+		goce3.getStub().monitorTasksRegister(taskSub, taskMon);
+		
 		Subscription prSub = new Subscription();
 		String prSubId = "prCons3prSubId";
 		prSub.setSubscriptionId(new Identifier(prSubId));
@@ -194,48 +275,9 @@ public class ThreeGoceConsumersTest {
 		prKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		prReqs.add(new EntityRequest(null, true, true, true, false, prKeys));
 		prSub.setEntities(prReqs);
-		goce3.getStub().monitorPlanningRequestsRegister(prSub, new PlanningRequestAdapter() {
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsRegisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				LOG.log(Level.INFO, "pr monitor registration ack");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsRegisterErrorReceived(MALMessageHeader msgHeader,
-					MALStandardError error, Map qosProps) {
-				LOG.log(Level.INFO, "pr monitor registration error");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
-					UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats,
-					Map qosProps) {
-				LOG.log(Level.INFO, "pr monitor notify");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProps) {
-				LOG.log(Level.INFO, "pr monitor notify error");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorPlanningRequestsDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				LOG.log(Level.INFO, "pr monitor de-registration ack");
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
-					throws MALException {
-				LOG.log(Level.INFO, "pr other notify");
-			}
-		});
+		PrMonitor prMon = new PrMonitor();
+		goce3.getStub().monitorPlanningRequestsRegister(prSub, prMon);
+		
 		worker1.start();
 		worker2.start();
 		LOG.log(Level.INFO, "sleeping..");
@@ -244,31 +286,27 @@ public class ThreeGoceConsumersTest {
 		worker1.interrupt();
 		worker2.interrupt();
 		try {
-			worker1.join(3*1000);
+			worker1.join(4*1000);
 		} catch (InterruptedException e) {
-			// ignore
+			LOG.log(Level.WARNING, "worker1 interrupted: ", e);
 		}
 		try {
-			worker2.join(3*1000);
+			worker2.join(4*1000);
 		} catch (InterruptedException e) {
-			// ignore
+			LOG.log(Level.WARNING, "worker2 interrupted: ", e);
 		}
+		
+		IdentifierList prSubs = new IdentifierList();
+		prSubs.add(new Identifier(prSubId));
+		goce3.getStub().monitorPlanningRequestsDeregister(prSubs);
+		
+		IdentifierList taskSubs = new IdentifierList();
+		taskSubs.add(new Identifier(taskSubId));
+		goce3.getStub().monitorTasksDeregister(taskSubs);
+		
+		assertNotNull(taskMon.taskStats); // assuming 'goce3' received at least one pr and task notification
+		assertNotNull(prMon.prStats);
+		
 		LOG.exiting(getClass().getName(), "testPpf");
 	}
-
-//	@Test
-//	public void testPif() throws MALException, MALInteractionException, ParseException {
-//		goce1.pif();
-//	}
-//
-//	@Test
-//	public void testSpf() throws MALException, MALInteractionException, ParseException {
-//		goce1.spf();
-//	}
-//
-//	@Test
-//	public void testOpf() throws MALException, MALInteractionException, ParseException {
-//		goce1.opf();
-//	}
-
 }

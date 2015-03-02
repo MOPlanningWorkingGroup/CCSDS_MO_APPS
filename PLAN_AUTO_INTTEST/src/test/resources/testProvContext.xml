@@ -20,11 +20,11 @@
   http://www.springframework.org/schema/task
   http://www.springframework.org/schema/task/spring-task-3.2.xsd">
   
-  <context:component-scan base-package="esa.mo.plan" />
+  <context:component-scan base-package="esa.mo.inttest" />
   
   <bean
    id="PlanningRequestProvider"
-   class="esa.mo.plan.provider.PlanningRequestProvider">
+   class="esa.mo.inttest.pr.provider.PlanningRequestProvider">
    
 <!--     <property name="name" value="Program Creek Readers" /> -->
   </bean>

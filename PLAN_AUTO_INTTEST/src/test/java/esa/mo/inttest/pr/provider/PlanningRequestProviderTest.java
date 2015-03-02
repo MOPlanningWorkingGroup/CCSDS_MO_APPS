@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-//import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -13,8 +12,6 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
-//import org.ccsds.moims.mo.mal.transport.MALErrorBody;
-//import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
@@ -31,7 +28,7 @@ import org.junit.Test;
 import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 
 /**
- * Planning request provider test.
+ * Planning request provider test. Invokes provider methods directly skipping MAL layer.
  */
 public class PlanningRequestProviderTest {
 
