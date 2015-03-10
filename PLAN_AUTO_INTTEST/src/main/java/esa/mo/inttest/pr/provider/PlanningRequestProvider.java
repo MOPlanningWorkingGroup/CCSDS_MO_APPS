@@ -1,6 +1,5 @@
 package esa.mo.inttest.pr.provider;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +37,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 
 /**
  * Planning request provider for testing. Implemented as little as necessary.
@@ -46,6 +46,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestProvider.class.getName());
 	
+	private TaskDefStore taskDefs = new TaskDefStore();
+	private PrDefStore prDefs = new PrDefStore();
+	private PrInstStore prInsts = new PrInstStore();
 	private MonitorTasksPublisher taskPub = null;
 	private MonitorPlanningRequestsPublisher prPub = null;
 	
@@ -79,12 +82,12 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 
 	public void setTaskPub(MonitorTasksPublisher taskPub) {
 		this.taskPub = taskPub;
-		LOG.log(Level.INFO, "tasks publisher set to {0}", this.taskPub);
+		LOG.log(Level.INFO, "tasks publisher {0}", (this.taskPub != null ? "set" : "unset"));
 	}
 	
 	public void setPrPub(MonitorPlanningRequestsPublisher prPub) {
 		this.prPub = prPub;
-		LOG.log(Level.INFO, "pr publisher set to {0}", this.prPub);
+		LOG.log(Level.INFO, "pr publisher {0}", (this.prPub != null ? "set" : "unset"));
 	}
 	
 	private void publishTask(UpdateHeaderList updHdrList, ObjectIdList objIdList, TaskStatusDetailsList taskStatsList)
@@ -105,11 +108,19 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 	}
 	
-	protected UpdateHeader createPrUpdateHeader() {
+	private void enter(String msg) {
+		LOG.entering(getClass().getName(), msg);
+	}
+	
+	private void leave(String msg) {
+		LOG.exiting(getClass().getName(), msg);
+	}
+	
+	protected UpdateHeader createPrUpdateHeader(UpdateType updType) {
 		UpdateHeader updHdr = new UpdateHeader();
 		updHdr.setTimestamp(new Time(System.currentTimeMillis())); // mandatory
 		updHdr.setSourceURI(new URI("uri")); // mandatory
-		updHdr.setUpdateType(UpdateType.CREATION); // mandatory
+		updHdr.setUpdateType(updType); // mandatory
 		updHdr.setKey(new EntityKey(new Identifier("*"), 0L, 0L, 0L)); // mandatory
 		return updHdr;
 	}
@@ -123,26 +134,27 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return objId;
 	}
 	
-	protected UpdateHeader createTaskUpdateHeader() {
+	protected UpdateHeader createTaskUpdateHeader(UpdateType updType) {
 		UpdateHeader updHdr2 = new UpdateHeader();
 		updHdr2.setTimestamp(new Time(System.currentTimeMillis())); // all 4 mandatory
-		updHdr2.setSourceURI(new URI("blah"));
-		updHdr2.setUpdateType(UpdateType.CREATION);
+		updHdr2.setSourceURI(new URI("prProv"));
+		updHdr2.setUpdateType(updType);
 		updHdr2.setKey(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		return updHdr2;
 	}
 	
-	protected ObjectId createTaskObjectId(IdentifierList domain) {
+	protected ObjectId createTaskObjectId(IdentifierList domain, Long taskInstId) {
 		ObjectId objId2 = new ObjectId();
 		objId2.setType(new ObjectType(TaskStatusDetails.AREA_SHORT_FORM,
 				TaskStatusDetails.SERVICE_SHORT_FORM, TaskStatusDetails.AREA_VERSION,
 				new UShort(1))); // both mandatory
-		objId2.setKey(new ObjectKey(domain, 1L)); // TODO where do i get task instance id?
+		objId2.setKey(new ObjectKey(domain, taskInstId));
 		return objId2;
 	}
 	
 	public void submitPlanningRequest(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
-			MALInteraction interaction) throws MALInteractionException, MALException {
+			LongList taskDefIds, LongList taskInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
+		enter("submitPlanningRequest");
 		
 		if (prDefId == null) {
 			throw new MALException("pr definition id not given");
@@ -150,12 +162,38 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		if (prInst == null) {
 			throw new MALException("pr instance not given");
 		}
-		// TODO no instances stored, just publishing for testing
+		LOG.log(Level.FINE, "received prDefId={0}, prInstId={1}, prInst={2}",
+				new Object[] { prDefId, prInstId, Dumper.prInst(prInst) });
+		if (null != prInstId) {
+			Object[] old = prInsts.findPr(prInstId);
+			if (null != old) {
+				throw new MALException("pr instance id already exists: " + prInstId);
+			}
+		} // oh, dear
+		
 		PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails();
 		prStat.setPrInstName(prInst.getName()); // mandatory
+		prStat.setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "created"));
+		if (null != prInst.getTasks()) {
+			prStat.setTaskStatuses(new TaskStatusDetailsList()); // init list
+		}
+		
+		for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
+			TaskInstanceDetails taskInst = prInst.getTasks().get(i);
+			if (taskInst == null) {
+				throw new MALException("task instance[" + i + "] is null");
+			}
+			TaskStatusDetails taskStat = new TaskStatusDetails();
+			taskStat.setTaskInstName(taskInst.getName()); // mandatory
+			taskStat.setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "created"));
+			// just add task status'es to pr status - they will be stored all together at once
+			prStat.getTaskStatuses().add(taskStat);
+		}
+		// statuses created, now store and publish
+		prInsts.addPr(prDefId, prInstId, prInst, prStat);
 
 		UpdateHeaderList updHdrs = new UpdateHeaderList();
-		updHdrs.add(createPrUpdateHeader());
+		updHdrs.add(createPrUpdateHeader(UpdateType.CREATION));
 
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("desd"));
@@ -169,21 +207,15 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "publishing pr status creation");
 		publishPr(updHdrs, objIds, prStats);
 
-		if (prInst.getTasks() != null && !prInst.getTasks().isEmpty()) {
-			for (int i = 0; i < prInst.getTasks().size(); ++i) {
-				TaskInstanceDetails taskInst = prInst.getTasks().get(i);
-				if (taskInst == null) {
-					throw new MALException("task instance[" + i + "] is null");
-				}
-
-				TaskStatusDetails taskStat = new TaskStatusDetails();
-				taskStat.setTaskInstName(taskInst.getName()); // mandatory
+		if (prStat.getTaskStatuses() != null && !prStat.getTaskStatuses().isEmpty()) {
+			for (int i = 0; i < prStat.getTaskStatuses().size(); ++i) {
+				TaskStatusDetails taskStat = prStat.getTaskStatuses().get(i);
 
 				UpdateHeaderList updHdrs2 = new UpdateHeaderList();
-				updHdrs2.add(createTaskUpdateHeader());
+				updHdrs2.add(createTaskUpdateHeader(UpdateType.CREATION));
 
 				ObjectIdList objIds2 = new ObjectIdList();
-				objIds2.add(createTaskObjectId(domain));
+				objIds2.add(createTaskObjectId(domain, 1L)); // TODO where do i get task inst id?
 
 				TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
 				taskStats.add(taskStat);
@@ -192,35 +224,165 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				publishTask(updHdrs2, objIds2, taskStats);
 			}
 		}
+		LOG.log(Level.FINE, "returning nothing");
+		leave("submitPlanningRequest");
 	}
 
-	public void updatePlanningRequest(Long prInstId, PlanningRequestInstanceDetails prDetails,
-			MALInteraction interaction) throws MALException, MALInteractionException {
+	public void updatePlanningRequest(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
+			LongList taskDefIds, LongList taskInstIds, MALInteraction interaction) throws MALException, MALInteractionException {
+		enter("updatePlanningRequest");
 		
 		if (prInstId == null) {
 			throw new MALException("pr instance id not given");
 		}
-		if (prDetails == null) {
+		if (prInst == null) {
 			throw new MALException("pr instance not given");
 		}
-		// TODO
+		LOG.log(Level.FINE, "received prInstId={0}, prInst={1}", new Object[] { prInstId, Dumper.prInst(prInst) });
+		Object[] old = prInsts.findPr(prInstId);
+		if (null == old) {
+			throw new MALException("no pr instance with id: " + prInstId);
+		}
+//		PlanningRequestInstanceDetails prInstOld = (PlanningRequestInstanceDetails)old[0];
+		PlanningRequestStatusDetails prStatOld = (PlanningRequestStatusDetails)old[1];
+		
+		// straightforward replace - delete old items, add new items
+		PlanningRequestStatusDetails prStatNew = new PlanningRequestStatusDetails();
+		prStatNew.setPrInstName(prInst.getName()); // mandatory
+		prStatNew.setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "created"));
+		if (null != prInst.getTasks()) {
+			prStatNew.setTaskStatuses(new TaskStatusDetailsList()); // init list
+		}
+		
+		for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
+			TaskInstanceDetails taskInst = prInst.getTasks().get(i);
+			if (taskInst == null) {
+				throw new MALException("task instance[" + i + "] is null");
+			}
+			TaskStatusDetails taskStat = new TaskStatusDetails();
+			taskStat.setTaskInstName(taskInst.getName()); // mandatory
+			taskStat.setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "created"));
+			// just add task status'es to pr status - they will be stored all together at once
+			prStatNew.getTaskStatuses().add(taskStat);
+		}
+		
+		IdentifierList domain = new IdentifierList();
+		domain.add(new Identifier("desd"));
+		
+		for (int i = 0; (null != prStatOld.getTaskStatuses()) && (i < prStatOld.getTaskStatuses().size()); ++i) {
+			UpdateHeaderList updHdrs = new UpdateHeaderList();
+			updHdrs.add(createTaskUpdateHeader(UpdateType.DELETION));
+			
+			ObjectIdList objIds = new ObjectIdList();
+			objIds.add(createTaskObjectId(domain, 1L)); // TODO where do i get task inst id?
+			
+			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
+			prStatOld.getTaskStatuses().get(i).setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "deleted"));
+			taskStats.add(prStatOld.getTaskStatuses().get(i));
+			
+			LOG.log(Level.INFO, "publishing task status deletion");
+			publishTask(updHdrs, objIds, taskStats);
+		}
+		
+		UpdateHeaderList updHdrs = new UpdateHeaderList();
+		updHdrs.add(createPrUpdateHeader(UpdateType.DELETION));
+
+		ObjectIdList objIds = new ObjectIdList();
+		objIds.add(createPrObjectId(domain, prInstId));
+
+		PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+		prStatOld.setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "deleted"));
+		prStats.add(prStatOld);
+
+		LOG.log(Level.INFO, "publishing pr status deletion");
+		publishPr(updHdrs, objIds, prStats);
+		
+		// store new pr instance (including tasks) + new pr status (including task statuses)
+		prInsts.updatePr(prInstId, prInst, prStatNew);
+		
+		for (int i = 0; (null != prStatNew.getTaskStatuses()) && (i < prStatNew.getTaskStatuses().size()); ++i) {
+			UpdateHeaderList updHdrs2 = new UpdateHeaderList();
+			updHdrs2.add(createTaskUpdateHeader(UpdateType.CREATION));
+			
+			ObjectIdList objIds2 = new ObjectIdList();
+			objIds2.add(createTaskObjectId(domain, 1L)); // TODO where do i get task instance id?
+			
+			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
+			taskStats.add(prStatNew.getTaskStatuses().get(i));
+			
+			LOG.log(Level.INFO, "publishing task status creation");
+			publishTask(updHdrs2, objIds2, taskStats);
+		}
+		
+		UpdateHeaderList updHdrs2 = new UpdateHeaderList();
+		updHdrs2.add(createPrUpdateHeader(UpdateType.CREATION));
+
+		ObjectIdList objIds2 = new ObjectIdList();
+		objIds2.add(createPrObjectId(domain, prInstId));
+
+		PlanningRequestStatusDetailsList prStats2 = new PlanningRequestStatusDetailsList();
+		prStats2.add(prStatNew);
+
+		LOG.log(Level.INFO, "publishing pr status creation");
+		publishPr(updHdrs2, objIds2, prStats2);
+
+		leave("updatePlanningRequest");
 	}
 
 	public void removePlanningRequest(Long prInstId, MALInteraction interaction)
 			throws MALException, MALInteractionException {
+		enter("removePlanningRequest");
 		
 		if (prInstId == null) {
 			throw new MALException("no pr instance id given");
 		}
-		// TODO
-	}
+		LOG.log(Level.FINE, "received prInstId={0}", prInstId);
+		Object[] old = prInsts.findPr(prInstId);
+		if (null == old) {
+			throw new MALException("no pr instance with id: " + prInstId);
+		}
+//		PlanningRequestInstanceDetails prInstOld = (PlanningRequestInstanceDetails)old[0];
+		PlanningRequestStatusDetails prStatOld = (PlanningRequestStatusDetails)old[1];
+		
+		prInsts.removePr(prInstId);
+		
+		IdentifierList domain = new IdentifierList();
+		domain.add(new Identifier("desd"));
+		
+		for (int i = 0; (null != prStatOld.getTaskStatuses()) && (i < prStatOld.getTaskStatuses().size()); ++i) {
+			UpdateHeaderList updHdrs = new UpdateHeaderList();
+			updHdrs.add(createTaskUpdateHeader(UpdateType.DELETION));
+			
+			ObjectIdList objIds = new ObjectIdList();
+			objIds.add(createTaskObjectId(domain, 1L)); // TODO where do i get task inst id?
+			
+			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
+			prStatOld.getTaskStatuses().get(i).setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "deleted"));
+			taskStats.add(prStatOld.getTaskStatuses().get(i));
+			
+			LOG.log(Level.INFO, "publishing task status deletion");
+			publishTask(updHdrs, objIds, taskStats);
+		}
+		
+		UpdateHeaderList updHdrs = new UpdateHeaderList();
+		updHdrs.add(createPrUpdateHeader(UpdateType.DELETION));
 
-	private PlanningRequestStatusDetails getPrStatus(Long id) {
-		return null; // TODO
+		ObjectIdList objIds = new ObjectIdList();
+		objIds.add(createPrObjectId(domain, prInstId));
+
+		PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+		prStatOld.setLastModified(new StatusRecord(new Time(System.currentTimeMillis()), "deleted"));
+		prStats.add(prStatOld);
+
+		LOG.log(Level.INFO, "publishing pr status deletion");
+		publishPr(updHdrs, objIds, prStats);
+		
+		leave("removePlanningRequest");
 	}
 
 	public PlanningRequestStatusDetailsList getPlanningRequestStatus(LongList prIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
+		enter("getPlanningRequestStatus");
 		
 		if (prIds == null) {
 			throw new MALException("no pr instance id list given");
@@ -234,18 +396,16 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (id == null) {
 				throw new MALException("pr instance id[" + i + "] is null");
 			}
-			stats.add(getPrStatus(id));
+			Object[] old = prInsts.findPr(id);
+			if (null != old) {
+				PlanningRequestStatusDetails prStat = (PlanningRequestStatusDetails)old[1];
+				if (null != prStat) {
+					stats.add(prStat);
+				}
+			}
 		}
+		leave("getPlanningRequestStatus");
 		return stats;
-	}
-
-	private long lastPrId = 0L;
-	private Map<Long, PlanningRequestDefinitionDetails> prDefs = new HashMap<Long, PlanningRequestDefinitionDetails>();
-
-	private LongList getPrDefs(Identifier id) {
-		LongList list = new LongList();
-		list.addAll(prDefs.keySet()); // TODO
-		return list;
 	}
 
 	public LongList listDefinition(IdentifierList prNames, MALInteraction interaction) throws MALInteractionException,
@@ -263,23 +423,18 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (id == null) {
 				throw new MALException("identifier[" + i + "] is null");
 			}
-			ids.addAll(getPrDefs(id));
+			ids.addAll(prDefs.list(id));
 		}
 		return ids;
 	}
 
-	private Long addPrDef(PlanningRequestDefinitionDetails prDef) {
-		Long id = new Long(++lastPrId);
-		prDefs.put(id, prDef);
-		return id;
-	}
-
 	public LongList addDefinition(PlanningRequestDefinitionDetailsList prDefs, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		
+		enter("addDefinition");
 		if (prDefs == null) {
 			throw new MALException("no pr definition list given");
 		}
+		LOG.log(Level.FINE, "received prDefs={0}", Dumper.prDefs(prDefs));
 		if (prDefs.isEmpty()) {
 			throw new MALException("no pr definitions in list");
 		}
@@ -289,13 +444,11 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (prDef == null) {
 				throw new MALException("pr definition[" + i + "] is null");
 			}
-			ids.add(addPrDef(prDef));
+			ids.add(this.prDefs.add(prDef));
 		}
+		LOG.log(Level.FINE, "returning prDefIds={0}", ids);
+		leave("addDefinition");
 		return ids;
-	}
-
-	private void updatePrDef(Long id, PlanningRequestDefinitionDetails prDef) {
-		prDefs.put(id, prDef);
 	}
 
 	public void updateDefinition(LongList prDefIds, PlanningRequestDefinitionDetailsList prDefs,
@@ -322,12 +475,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (prDef == null) {
 				throw new MALException("pr def[" + i + "] is null");
 			}
-			updatePrDef(id, prDef);
+			this.prDefs.update(id, prDef);
 		}
-	}
-
-	private void removePrDef(Long id) {
-		prDefs.remove(id);
 	}
 
 	public void removeDefinition(LongList prDefIds, MALInteraction interaction) throws MALInteractionException,
@@ -344,16 +493,13 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (id == null) {
 				throw new MALException("pr def id[" + i + "] is null");
 			}
-			removePrDef(id);
+			prDefs.remove(id);
 		}
-	}
-
-	private TaskStatusDetails getTaskStatus(Long id) {
-		return null; // no such task TODO
 	}
 
 	public TaskStatusDetailsList getTaskStatus(LongList taskIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
+		enter("getTaskStatus");
 		
 		if (taskIds == null) {
 			throw new MALException("no task id list given");
@@ -367,17 +513,18 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (id == null) {
 				throw new MALException("task id[" + i + "] is null");
 			}
-			stats.add(getTaskStatus(id));
+			TaskStatusDetails taskStat = prInsts.findTask(id);
+			if (null != taskStat) {
+				stats.add(taskStat);
+			}
 		}
+		leave("getTaskStatus");
 		return stats;
-	}
-
-	private void setTaskStatus(Long id, TaskStatusDetails stat) {
-		// TODO
 	}
 
 	public void setTaskStatus(LongList taskIds, TaskStatusDetailsList taskStatus, MALInteraction interaction)
 			throws MALInteractionException, MALException {
+		enter("setTaskStatus");
 		
 		if (taskIds == null) {
 			throw new MALException("no task id list given");
@@ -400,17 +547,13 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (stat == null) {
 				throw new MALException("task status[" + i + "] is null");
 			}
-			setTaskStatus(id, stat);
+			TaskStatusDetails taskStat = prInsts.findTask(id);
+			if (null == taskStat) {
+				throw new MALException("no such task instance with id: " + id);
+			}
+			prInsts.setTaskStatus(id, stat);
 		}
-	}
-
-	private long lastTaskId = 0L;
-	private Map<Long, TaskDefinitionDetails> taskDefs = new HashMap<Long, TaskDefinitionDetails>();
-
-	private LongList getTaskDefs(Identifier id) {
-		LongList list = new LongList();
-		list.addAll(taskDefs.keySet()); // TODO
-		return list;
+		leave("setTaskStatus");
 	}
 
 	public LongList listTaskDefinition(IdentifierList taskNames, MALInteraction interaction)
@@ -428,23 +571,18 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (taskName == null) {
 				throw new MALException("identifier[" + i + "] is null");
 			}
-			ids.addAll(getTaskDefs(taskName));
+			ids.addAll(taskDefs.list(taskName));
 		}
 		return ids;
 	}
 
-	private Long addTaskDef(TaskDefinitionDetails def) {
-		Long id = new Long(++lastTaskId);
-		taskDefs.put(id, def);
-		return id;
-	}
-
 	public LongList addTaskDefinition(TaskDefinitionDetailsList taskDefs, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		
+		enter("addTaskDefinition");
 		if (taskDefs == null) {
 			throw new MALException("no task def list given");
 		}
+		LOG.log(Level.FINE, "received taskDefs={0}", Dumper.taskDefs(taskDefs));
 		if (taskDefs.isEmpty()) {
 			throw new MALException("no task defs in list");
 		}
@@ -454,13 +592,11 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (def == null) {
 				throw new MALException("task def["+i+"] is null");
 			}
-			ids.add(addTaskDef(def));
+			ids.add(this.taskDefs.add(def));
 		}
+		LOG.log(Level.FINE, "returning taskDefIds={0}", ids);
+		leave("addTaskDefinition");
 		return ids;
-	}
-
-	private void updateTaskDef(Long id, TaskDefinitionDetails def) {
-		taskDefs.put(id, def);
 	}
 
 	public void updateTaskDefinition(LongList taskDefIds, TaskDefinitionDetailsList taskDefs,
@@ -487,12 +623,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (def == null) {
 				throw new MALException("task def[" + i + "] is null");
 			}
-			updateTaskDef(id, def);
+			this.taskDefs.update(id, def);
 		}
-	}
-
-	private void removeTaskDef(Long id) {
-		taskDefs.remove(id);
 	}
 
 	public void removeTaskDefinition(LongList taskDefIds, MALInteraction interaction)
@@ -509,7 +641,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			if (id == null) {
 				throw new MALException("task def id[" + i + "] is null");
 			}
-			removeTaskDef(id);
+			this.taskDefs.remove(id);
 		}
 	}
 

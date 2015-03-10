@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import esa.mo.inttest.goce.GoceConsumer;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
+import esa.mo.inttest.pr.provider.Dumper;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
@@ -41,7 +42,7 @@ public class ThreeGoceConsumersTest {
 	/// class receiving PR notifications
 	private final class PrMonitor extends PlanningRequestAdapter {
 		
-		public PlanningRequestStatusDetailsList prStats = null;
+		protected PlanningRequestStatusDetailsList prStats = null;
 		
 		@SuppressWarnings("rawtypes")
 		@Override
@@ -61,7 +62,8 @@ public class ThreeGoceConsumersTest {
 		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats,
 				Map qosProps) {
-			LOG.log(Level.INFO, "pr monitor notify");
+			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
+					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
 			this.prStats = prStats;
 		}
 
@@ -89,7 +91,7 @@ public class ThreeGoceConsumersTest {
 	/// class receiving Task notifications
 	private final class TaskMonitor extends PlanningRequestAdapter {
 		
-		private TaskStatusDetailsList taskStats = null;
+		protected TaskStatusDetailsList taskStats = null;
 		
 		@SuppressWarnings("rawtypes")
 		@Override
@@ -108,7 +110,8 @@ public class ThreeGoceConsumersTest {
 		@Override
 		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "task monitor notify");
+			LOG.log(Level.INFO, "task monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, taskStatuses={3}",
+					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats) });
 			this.taskStats = taskStats;
 		}
 
@@ -145,14 +148,30 @@ public class ThreeGoceConsumersTest {
 		@Override
 		public void run() {
 			LOG.entering(getName(), "run");
-			while (!isInterrupted()) {
-				sleeep(1000, 3000);
-				try {
-					cons.createPpfDefsIfMissing();
-				} catch (Exception e) {
-					LOG.log(Level.WARNING, getName() + ": createPpfDefs", e);
-					e.printStackTrace();
-					throw new RuntimeException(e);
+			boolean taskDefCreated = false;
+			boolean prDefCreated = false;
+			while (!isInterrupted() && !taskDefCreated && !prDefCreated) {
+				if (!taskDefCreated) {
+					sleeep(1000, 3000);
+					try {
+						taskDefCreated = cons.createPpfTaskDefIfMissing();
+					} catch (Exception e) {
+						taskDefCreated = false;
+						LOG.log(Level.WARNING, getName() + ": createPpfTaskDef: ", e);
+						e.printStackTrace();
+						throw new RuntimeException(e);
+					}
+				}
+				if (!prDefCreated) {
+					sleeep(1000, 3000);
+					try {
+						prDefCreated = cons.createPpfPrDefIfMissing();
+					} catch (Exception e) {
+						prDefCreated = false;
+						LOG.log(Level.WARNING, getName() + ": createPpfPrDef: ", e);
+						e.printStackTrace();
+						throw new RuntimeException(e);
+					}
 				}
 			}
 			LOG.exiting(getName(), "run");
@@ -172,11 +191,13 @@ public class ThreeGoceConsumersTest {
 		@Override
 		public void run() {
 			LOG.entering(getName(), "run");
-			while (!isInterrupted()) {
+			boolean created = false;
+			while (!isInterrupted() && !created) {
 				sleeep(1000, 3000);
 				try {
-					cons.createPpfInstsIfMissingAndDefsExist();
+					created = cons.createPpfInstsIfMissingAndDefsExist();
 				} catch (Exception e) {
+					created = false;
 					LOG.log(Level.WARNING, getName() + ": createPpfInst", e);
 					e.printStackTrace();
 					throw new RuntimeException(e);

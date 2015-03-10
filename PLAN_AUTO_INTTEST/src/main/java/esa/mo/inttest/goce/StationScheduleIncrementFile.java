@@ -10,6 +10,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDet
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
+import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.Union;
@@ -23,11 +24,11 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
 /**
- * Station schedule increment file.
+ * SIST - Station Schedule Increment File.
  */
-public class StationScheduleIncrementFile /*extends CommonFile*/ {
+public class StationScheduleIncrementFile extends CommonFile {
 
-	private static final String schName = "SIST";
+	private static final String SCH_NAME = "SIST";
 	
 	public StationScheduleIncrementFile() {
 	}
@@ -43,13 +44,14 @@ public class StationScheduleIncrementFile /*extends CommonFile*/ {
 	}
 	
 	protected ScheduleItemInstanceDetails createItemInst(String itemName, String name, ObjectId delegate,
-			AttributeValueList args, TriggerDetails trigger) {
+			ArgumentDefinitionDetailsList argDefs, AttributeValueList argVals, TriggerDetailsList triggers) {
 		ScheduleItemInstanceDetails schItem = new ScheduleItemInstanceDetails();
 		schItem.setScheduleInstName(new Identifier(name));
 		schItem.setScheduleItemInstName(new Identifier(itemName));
 		schItem.setDelegateItem(delegate);
-		schItem.setArgumentValues(args);
-		schItem.setTimingConstraints(trigger);
+		schItem.setArgumentTypes(argDefs);
+		schItem.setArgumentValues(argVals);
+		schItem.setTimingConstraints(triggers);
 		return schItem;
 	}
 	
@@ -64,18 +66,23 @@ public class StationScheduleIncrementFile /*extends CommonFile*/ {
 		return schInst;
 	}
 	
-	protected AttributeValueList createItemArgs(String template) {
+	protected ArgumentDefinitionDetailsList createItemArgDefs() {
+		ArgumentDefinitionDetailsList args = new ArgumentDefinitionDetailsList();
+		args.add(createArgDef("template", /*"",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
+		return args;
+	}
+	
+	protected AttributeValueList createItemArgVals(String template) {
 		AttributeValueList args = new AttributeValueList();
 		args.add(new AttributeValue(new Union(template)));
 		return args;
 	}
 	
-	protected TriggerDetails createItemTriggers(Time time) {
-		TriggerDetails trig = new TriggerDetails();
-		trig.setTriggerName(TriggerName.START);
-		trig.setTriggerType(TriggerType.TIME);
-		trig.setTimeTrigger(new TimeTrigger(time, true));
-		return trig;
+	protected TriggerDetailsList createItemTriggers(Time startTime, Time endTime) {
+		TriggerDetailsList trigs = new TriggerDetailsList();
+		trigs.add(new TriggerDetails(TriggerName.START, TriggerType.TIME, new TimeTrigger(startTime, true), null));
+		trigs.add(new TriggerDetails(TriggerName.END, TriggerType.TIME, new TimeTrigger(endTime, false), null));
+		return trigs;
 	}
 	
 	protected Time parseTime(String s) throws ParseException {
@@ -86,20 +93,30 @@ public class StationScheduleIncrementFile /*extends CommonFile*/ {
 		return t;
 	}
 	
+	protected Time parseDelta(String s) throws ParseException {
+		SimpleDateFormat sdf = new SimpleDateFormat("'ST'HH.mm.ss");
+		Date d = sdf.parse(s);
+		long l = d.getTime();
+		Time t = new Time(l);
+		return t;
+	}
+	
 	public ScheduleItemInstanceDetails createSchItem1() throws ParseException {
-		ScheduleItemInstanceDetails item = createItemInst("346001", schName, null, createItemArgs("GOC_CONF"),
-				createItemTriggers(parseTime("2008.346.00.31.02.000"))); // FIXME item has only one trigger
+		ScheduleItemInstanceDetails item = createItemInst("346001", SCH_NAME, null, createItemArgDefs(),
+				createItemArgVals("GOC_CONF"), createItemTriggers(
+						parseTime("2008.346.00.31.02.000"), parseDelta("ST+00.00.00")));
 		return item;
 	}
-
+	
 	public ScheduleItemInstanceDetails createSchItem2() throws ParseException {
-		ScheduleItemInstanceDetails item = createItemInst("346002", schName, null, createItemArgs("GOCDFTON"),
-				createItemTriggers(parseTime("2008.346.00.36.02.000"))); // FIXME item has only one trigger
+		ScheduleItemInstanceDetails item = createItemInst("346002", SCH_NAME, null, createItemArgDefs(),
+				createItemArgVals("GOCDFTON"), createItemTriggers(
+						parseTime("2008.346.00.36.02.000"), parseDelta("ST+00.00.00")));
 		return item;
 	}
 	
 	public ScheduleInstanceDetails createSchedule(ScheduleItemInstanceDetailsList items) {
-		ScheduleInstanceDetails inst = createInst(schName, "SIST example", null, null, items);
+		ScheduleInstanceDetails inst = createInst(SCH_NAME, "SIST example", null, null, items);
 		return inst;
 	}
 }

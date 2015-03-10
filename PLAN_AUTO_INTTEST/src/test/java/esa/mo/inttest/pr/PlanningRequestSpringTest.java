@@ -14,7 +14,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 
 /**
- * Testing if it works with spring.
+ * Testing how it works with spring.
  * Guide from http://www.programcreek.com/2014/01/spring-helloworld-example-using-eclipse-and-maven/
  */
 public class PlanningRequestSpringTest {

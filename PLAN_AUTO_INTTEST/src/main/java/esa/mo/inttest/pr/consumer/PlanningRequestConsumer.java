@@ -10,6 +10,8 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDef
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 
 /**
  * Planning request consumer for testing.
@@ -40,8 +42,19 @@ public class PlanningRequestConsumer {
 		
 		LongList prDefIds = stub.addDefinition(prDefs);
 		
-		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
+		TaskInstanceDetails taskInst = new TaskInstanceDetails();
 		
-		stub.submitPlanningRequest(prDefIds.get(0), null, prInst);
+		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
+		taskInsts.add(taskInst);
+		
+		LongList taskInstIds = new LongList();
+		taskInstIds.add(new Long(1L));
+		
+		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
+		prInst.setTasks(taskInsts);
+		
+		Long prInstId = new Long(2L);
+		
+		stub.submitPlanningRequest(prDefIds.get(0), prInstId, prInst, taskDefIds, taskInstIds);
 	}
 }

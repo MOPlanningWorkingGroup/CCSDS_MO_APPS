@@ -1,7 +1,5 @@
 package esa.mo.inttest.pr.consumer;
 
-import static org.junit.Assert.*;
-
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetails;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectDetails;
@@ -36,12 +34,9 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.util.AbstractMap;
 import java.util.Map;
@@ -51,6 +46,7 @@ import java.util.logging.Logger;
 import esa.mo.inttest.ca.consumer.ComArchiveConsumerFactory;
 import esa.mo.inttest.ca.provider.ComArchiveProviderFactory;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
+import esa.mo.inttest.pr.provider.Dumper;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
@@ -58,19 +54,19 @@ import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
  */
 //@RunWith(SpringJUnit4ClassRunner.class)
 //@ContextConfiguration("classpath*:**/testIntContext.xml")
-public class PlanningRequestStubTest {
+public class PlanningRequestStubBaseTest {
 	
-	private final class TaskMonitor extends PlanningRequestAdapter {
+	protected final class TaskMonitor extends PlanningRequestAdapter {
 		
-		public boolean registered = false;
-		public TaskStatusDetailsList taskStats = null;
-		public boolean deRegistered = false;
+		protected boolean registered = false;
+		protected TaskStatusDetailsList taskStats = null;
+		protected boolean deRegistered = false;
 
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
 		{
-			LOG.log(Level.INFO, "register task monitor ack");
+			LOG.log(Level.INFO, "task monitor registration ack");
 			registered = true;
 		}
 
@@ -79,15 +75,15 @@ public class PlanningRequestStubTest {
 		public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 				Map qosProperties)
 		{
-			LOG.log(Level.INFO, "register task monitor err");
+			LOG.log(Level.INFO, "task monitor registration err");
 		}
 
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier id, UpdateHeaderList updHdrs,
+		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId, UpdateHeaderList updHdrs,
 				ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "task notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
-				+ taskStats + " ; " + qosProps);
+			LOG.log(Level.INFO, "task monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, taskStatuses={3}",
+					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats) });
 			this.taskStats = taskStats;
 		}
 
@@ -95,30 +91,30 @@ public class PlanningRequestStubTest {
 		@Override
 		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 				Map qosProps) {
-			LOG.log(Level.INFO, "task notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+			LOG.log(Level.INFO, "task monitor notify error: {0}", error);
 		}
 
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
 				throws MALException {
-			LOG.log(Level.INFO, "task other notify: " + msgHeader + " ; " + body + " ; " + qosProps);
+			LOG.log(Level.INFO, "task monitor other notify: {0}", body);
 		}
 		
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
 		{
-			LOG.log(Level.INFO, "de-register task monitor ack");
+			LOG.log(Level.INFO, "task monitor de-registration ack");
 			deRegistered = true;
 		}
 	}
 
-	private final class PrMonitor extends PlanningRequestAdapter {
+	protected final class PrMonitor extends PlanningRequestAdapter {
 		
-		public boolean registered = false;
-		public PlanningRequestStatusDetailsList prStats = null;
-		public boolean deRegistered = false;
+		protected boolean registered = false;
+		protected PlanningRequestStatusDetailsList prStats = null;
+		protected boolean deRegistered = false;
 
 		@SuppressWarnings("rawtypes")
 		@Override
@@ -138,11 +134,11 @@ public class PlanningRequestStubTest {
 
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier id,
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds,
 				PlanningRequestStatusDetailsList prStats, Map qosProps) {
-			LOG.log(Level.INFO, "pr notify: " + msgHeader + " ; " + id + " ; " + updHdrs + " ; " + objIds + " ; "
-				+ prStats + " ; " + qosProps);
+			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
+					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
 			this.prStats = prStats;
 		}
 
@@ -150,14 +146,14 @@ public class PlanningRequestStubTest {
 		@Override
 		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 				Map qosProps) {
-			LOG.log(Level.INFO, "pr notify err: " + msgHeader + " ; " + error + " ; " + qosProps);
+			LOG.log(Level.INFO, "pr monitor notify error: {0}", error);
 		}
 
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
 				throws MALException {
-			LOG.log(Level.INFO, "pr other notify: " + msgHeader + " ; " + body);
+			LOG.log(Level.INFO, "pr monitor other notify: {0}", body);
 		}
 		
 		@SuppressWarnings("rawtypes")
@@ -169,7 +165,7 @@ public class PlanningRequestStubTest {
 		}
 	}
 
-	private static final Logger LOG = Logger.getLogger(PlanningRequestStubTest.class.getName());
+	private static final Logger LOG = Logger.getLogger(PlanningRequestStubBaseTest.class.getName());
 	
 	private ComArchiveProviderFactory caProvFct;
 	
@@ -178,7 +174,7 @@ public class PlanningRequestStubTest {
 	
 //	@Autowired
 	private PlanningRequestConsumerFactory prConsFct;
-	private PlanningRequestStub prCons;
+	protected PlanningRequestStub prCons;
 	
 	private ComArchiveConsumerFactory caConsFct;
 	
@@ -258,12 +254,12 @@ public class PlanningRequestStubTest {
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
 		prDefs.add(prDef);
 		LongList prDefIdList = prCons.addDefinition(prDefs);
-		Long prDefId = prDefIdList.get(0);
-		return prDefId;
+		return prDefIdList.get(0);
 	}
 	
 	private PlanningRequestInstanceDetails createPrInst(PlanningRequestDefinitionDetails prDef,
 			TaskInstanceDetailsList taskInsts) {
+		
 		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
 		prInst.setName(prDef.getName()); // mandatory
 		prInst.setTasks(taskInsts);
@@ -301,12 +297,10 @@ public class PlanningRequestStubTest {
 		caConsFct.getConsumer().store(false, objType, domain, arcDetails, elements);
 	}
 	
-	@Test
-	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
-		enter("testSubmitPR");
+	protected Object[] createAndSubmitPlanningRequest() throws MALException,
+				MALInteractionException {
 		
 		PlanningRequestDefinitionDetails prDef = createPrDef("id1");
-		
 		Long prDefId = submitPrDef(prDef);
 		
 		PlanningRequestInstanceDetails prInst = createPrInst(prDef, null);
@@ -314,49 +308,12 @@ public class PlanningRequestStubTest {
 		
 		storePrInst(prDefId, prInstId, prInst);
 		
-		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
+		prCons.submitPlanningRequest(prDefId, prInstId, prInst, null, null);
 		
-		leave("testSubmitPR");
+		return new Object[] { prDefId, prDef, prInstId, prInst };
 	}
 
-	@Test
-	public void testSubmitPlanningRequestWithMonitoring() throws MALException, MALInteractionException {
-		enter("testSubmitPrWithMonitor");
-		
-		String subId = "subId1";
-		EntityRequestList entityReqs = new EntityRequestList();
-		EntityKeyList entityKeys = new EntityKeyList();
-		entityKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		entityReqs.add(new EntityRequest(null, true, true, true, false, entityKeys));
-		Subscription sub = new Subscription(new Identifier(subId), entityReqs);
-		PrMonitor prMon = new PrMonitor();
-		prCons.monitorPlanningRequestsRegister(sub, prMon);
-		
-		PlanningRequestDefinitionDetails prDef = createPrDef("id2");
-		
-		Long prDefId = submitPrDef(prDef);
-		
-		PlanningRequestInstanceDetails prInst = createPrInst(prDef, null);
-		Long prInstId = generateId();
-		
-		storePrInst(prDefId, prInstId, prInst);
-		
-		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
-		
-		sleep(3000); // give broker a sec to respond
-		
-		assertNotNull(prMon.prStats);
-		assertEquals(1, prMon.prStats.size());
-		assertNotNull(prMon.prStats.get(0));
-		
-		IdentifierList subIds = new IdentifierList();
-		subIds.add(new Identifier(subId));
-		prCons.monitorPlanningRequestsDeregister(subIds);
-		
-		leave("testSubmitPrWithMonitor");
-	}
-
-	private TaskDefinitionDetails createTaskDef(String id, String prDefName) {
+	protected TaskDefinitionDetails createTaskDef(String id, String prDefName) {
 		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
 		taskDef.setName(new Identifier(id)); // mandatory
 		taskDef.setPrDefName(new Identifier(prDefName)); // mandatory
@@ -403,22 +360,17 @@ public class PlanningRequestStubTest {
 		caConsFct.getConsumer().store(false, objType, domain, arcDetails, elements);
 	}
 	
-	@Test
-	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
-		enter("testSubmitPrWithTask");
+	protected Long[] createAndSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
 		
 		String prDefName = "id1";
 		TaskDefinitionDetails taskDef = createTaskDef("id2", prDefName);
-		
 		Long taskDefId = submitTaskDef(taskDef);
 		
 		PlanningRequestDefinitionDetails prDef = createPrDef(prDefName);
-		
 		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst = createTaskInst(taskDef);
 		Long taskInstId = generateId();
-		
 		storeTaskInst(taskDefId, taskInstId, taskInst);
 		
 		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
@@ -426,92 +378,61 @@ public class PlanningRequestStubTest {
 		
 		PlanningRequestInstanceDetails prInst = createPrInst(prDef, taskInsts);
 		Long prInstId = generateId();
-		
 		storePrInst(prDefId, prInstId, prInst);
 		
-		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
+		LongList taskDefIds = new LongList();
+		taskDefIds.add(taskDefId);
 		
-		leave("testSubmitPrWithTask");
+		LongList taskInstIds = new LongList();
+		taskInstIds.add(taskInstId);
+		
+		prCons.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		
+		return new Long[] { prInstId, taskInstId };
 	}
 
-	@Test
-	public void testSubmitPlanningRequestWithTaskAndMonitoring() throws MALException, MALInteractionException {
-		enter("testSubmitPrWithTaskAndMonitoring");
+	protected void updatePlanningRequestWithTask(Object[] details) throws MALException, MALInteractionException {
 		
-		String prSubId = "prSubId";
-		Subscription prSub = new Subscription();
-		prSub.setSubscriptionId(new Identifier(prSubId));
-		EntityRequestList entityReqs = new EntityRequestList();
-		EntityKeyList entityKeys = new EntityKeyList();
-		entityKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		entityReqs.add(new EntityRequest(null, true, true, true, false, entityKeys));
-		prSub.setEntities(entityReqs);
-		PrMonitor prMon = new PrMonitor();
-		prCons.monitorPlanningRequestsRegister(prSub, prMon);
+		PlanningRequestDefinitionDetails prDef = (PlanningRequestDefinitionDetails)details[1];
 		
-		String taskSubId = "taskSubId";
-		Subscription taskSub = new Subscription();
-		taskSub.setSubscriptionId(new Identifier(taskSubId));
-		taskSub.setEntities(entityReqs);
-		TaskMonitor taskMon = new TaskMonitor();
-		prCons.monitorTasksRegister(taskSub, taskMon);
-		
-		String prDefName = "id1";
-		TaskDefinitionDetails taskDef = createTaskDef("id2", prDefName);
-		
+		TaskDefinitionDetails taskDef = createTaskDef("id2", prDef.getName().getValue());
 		Long taskDefId = submitTaskDef(taskDef);
-		
-		PlanningRequestDefinitionDetails prDef = createPrDef(prDefName);
-		
-		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst = createTaskInst(taskDef);
 		Long taskInstId = generateId();
-		
 		storeTaskInst(taskDefId, taskInstId, taskInst);
 		
 		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
 		taskInsts.add(taskInst);
 		
-		PlanningRequestInstanceDetails prInst = createPrInst(prDef, taskInsts);
-		Long prInstId = generateId();
+		PlanningRequestInstanceDetails prInst = (PlanningRequestInstanceDetails)details[3];
+		prInst.setDescription("new updated desc");
+		prInst.setTasks(taskInsts);
 		
-		storePrInst(prDefId, prInstId, prInst);
+		Long prDefId = (Long)details[0];
+		Long prInstId = (Long)details[2];
 		
-		prCons.submitPlanningRequest(prDefId, prInstId, prInst);
+		LongList taskDefIds = new LongList();
+		taskDefIds.add(taskDefId);
 		
-		sleep(3000); // give broker a sec to respond
+		LongList taskInstIds = new LongList();
+		taskInstIds.add(taskInstId);
 		
-		assertNotNull(prMon.prStats);
-		assertEquals(1, prMon.prStats.size());
-		assertNotNull(prMon.prStats.get(0));
-		
-		assertNotNull(taskMon.taskStats);
-		assertEquals(1, taskMon.taskStats.size());
-		assertNotNull(taskMon.taskStats.get(0));
-		
-		IdentifierList subIds = new IdentifierList();
-		subIds.add(new Identifier(taskSubId));
-		prCons.monitorTasksDeregister(subIds);
-		
-		IdentifierList subIds2 = new IdentifierList();
-		subIds2.add(new Identifier(prSubId));
-		prCons.monitorPlanningRequestsDeregister(subIds2);
-		
-		leave("testSubmitPrWithTaskAndMonitoring");
+		prCons.updatePlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 	}
-
-	@Test
-	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException {
-		enter("testGetPrStatus");
+	
+	protected void removePlanningRequest(Long prInstId) throws MALException, MALInteractionException {
+		prCons.removePlanningRequest(prInstId);
+	}
+	
+	protected PlanningRequestStatusDetailsList getPlanningRequestStatus(Long prInstId) throws MALException, MALInteractionException {
 		LongList prInstIds = new LongList();
-		prInstIds.add(1L);
+		prInstIds.add(prInstId);
 		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prInstIds);
-		assertNotNull(prStats);
-		leave("testGetPrStatus end");
+		return prStats;
 	}
 
-	private PrMonitor registerPrMonitor(String subId) throws MALException, MALInteractionException {
+	protected PrMonitor registerPrMonitor(String subId) throws MALException, MALInteractionException {
 		Identifier id = new Identifier(subId);
 		EntityRequestList entityList = new EntityRequestList();
 		EntityKeyList keys = new EntityKeyList();
@@ -522,49 +443,20 @@ public class PlanningRequestStubTest {
 		prCons.monitorPlanningRequestsRegister(sub, prReg);
 		return prReg;
 	}
-
-	@Ignore("register ack response never arrives")
-	@Test
-	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
-		enter("testMonitorPrReg");
-		String subId = "subId";
-		PrMonitor prReg = registerPrMonitor(subId);
-		sleep(1000); // give broker a second to fire callback
-		assertTrue(prReg.registered);
-		leave("testMonitorPrReg");
-	}
-
-	@Ignore("de-register ack response never arrives")
-	@Test
-	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
-		enter("testMonitorPrDeReg");
-		String subId = "subId2";
-		PrMonitor prMon = registerPrMonitor(subId);
-		sleep(1000); // wait a sec before de-registering
+	
+	protected void deRegisterPrMonitor(String subId) throws MALException, MALInteractionException {
 		IdentifierList subIdList = new IdentifierList();
 		subIdList.add(new Identifier(subId));
 		prCons.monitorPlanningRequestsDeregister(subIdList);
-		sleep(1000); // give broker a sec to fire callback
-		assertTrue(prMon.deRegistered);
-		leave("testMonitorPrDeReg");
 	}
-
-	private LongList listPrDefs(String id) throws MALException, MALInteractionException {
+	
+	protected LongList listPrDefs(String id) throws MALException, MALInteractionException {
 		IdentifierList ids = new IdentifierList();
 		ids.add(new Identifier(id));
 		return prCons.listDefinition(ids);
 	}
 	
-	@Test
-	public void testListDefinition() throws MALException, MALInteractionException {
-		enter("testListPrDefs");
-		LongList ids = listPrDefs("*");
-		assertNotNull(ids);
-		assertEquals(0, ids.size());
-		leave("testListPrDefs");
-	}
-
-	private Map.Entry<LongList, PlanningRequestDefinitionDetailsList> addPrDef() throws MALException, MALInteractionException {
+	protected Map.Entry<LongList, PlanningRequestDefinitionDetailsList> addPrDef() throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
 		prDef.setName(new Identifier("new pr def"));
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
@@ -573,66 +465,7 @@ public class PlanningRequestStubTest {
 		return new AbstractMap.SimpleEntry<LongList, PlanningRequestDefinitionDetailsList>(prDefIds, prDefs);
 	}
 	
-	@Test
-	public void testAddDefinition() throws MALException, MALInteractionException {
-		enter("testAddPrDef");
-		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-		assertNotNull(e.getKey());
-		assertEquals(1, e.getKey().size());
-		assertNotNull(e.getKey().get(0));
-		// added pr id is listed
-		LongList ids = listPrDefs("*");
-		assertTrue(ids.contains(e.getKey().get(0)));
-		leave("testAddPrDef");
-	}
-
-	@Test
-	public void testUpdateDefinition() throws MALException, MALInteractionException {
-		enter("testUpdatePrDef");
-		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-		e.getValue().get(0).setDescription("updated desc");
-		prCons.updateDefinition(e.getKey(), e.getValue());
-		// updated pr id is still listed, but verify description
-		LongList ids = listPrDefs("*");
-		assertTrue(ids.contains(e.getKey().get(0)));
-		leave("testUpdatePrDef");
-	}
-
-	@Test
-	public void testRemoveDefinition() throws MALException, MALInteractionException {
-		enter("testRemovePrDef");
-		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-		prCons.removeDefinition(e.getKey());
-		// removed pr id is not listed anymore
-		LongList ids = listPrDefs("*");
-		assertFalse(ids.contains(e.getKey().get(0)));
-		leave("testRemovePrDef");
-	}
-
-	@Test
-	public void testGetTaskStatus() throws MALException, MALInteractionException {
-		enter("testGetTaskStatus");
-		LongList taskInstIds = new LongList();
-		taskInstIds.add(new Long(1L));
-		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
-		assertNotNull(taskStats);
-		leave("testGetTaskStatus");
-	}
-
-	@Test
-	public void testSetTaskStatus() throws MALException, MALInteractionException {
-		enter("testSetTaskStatus");
-		LongList taskInstIds = new LongList();
-		taskInstIds.add(new Long(1L));
-		TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-		TaskStatusDetails taskStat = new TaskStatusDetails();
-		taskStat.setTaskInstName(new Identifier("id")); // mandatory
-		taskStats.add(taskStat);
-		prCons.setTaskStatus(taskInstIds, taskStats);
-		leave("testSetTaskStatus");
-	}
-
-	private TaskMonitor registerTaskMonitor(String subId) throws MALException, MALInteractionException {
+	protected TaskMonitor registerTaskMonitor(String subId) throws MALException, MALInteractionException {
 		Identifier id = new Identifier(subId);
 		EntityRequestList entityList = new EntityRequestList();
 		EntityKeyList keys = new EntityKeyList();
@@ -644,7 +477,7 @@ public class PlanningRequestStubTest {
 		return taskMon;
 	}
 	
-	private void sleep(long ms) {
+	protected void sleep(long ms) {
 		try { // give broker a second to fire callback
 			Thread.sleep(ms);
 		} catch (InterruptedException e) {
@@ -652,96 +485,23 @@ public class PlanningRequestStubTest {
 		}
 	}
 	
-	@Ignore("register ack response never arrives")
-	@Test
-	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
-		enter("testMonitorTasksRegister");
-		String subId = "subId";
-		TaskMonitor taskMon = registerTaskMonitor(subId);
-		sleep(1000); // give broker a second to fire callback
-		assertTrue(taskMon.registered);
-		leave("testMonitorTasksRegister");
-	}
-
-	@Ignore("de-register ack response never arrives")
-	@Test
-	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
-		enter("testMonitorTasksDeregister");
-		String subId = "subId2";
-		TaskMonitor taskMon = registerTaskMonitor(subId);
-		sleep(1000); // wait a sec before de-registering
+	protected void deRegisterTaskMonitor(String subId) throws MALException, MALInteractionException {
 		IdentifierList subIdList = new IdentifierList();
 		subIdList.add(new Identifier(subId));
 		prCons.monitorTasksDeregister(subIdList);
-		sleep(1000); // give broker a sec to fire callback
-		assertTrue(taskMon.deRegistered);
-		leave("testMonitorTasksDeregister");
 	}
-
-	private LongList listTaskDefs(String f) throws MALException, MALInteractionException {
+	
+	protected LongList listTaskDefs(String f) throws MALException, MALInteractionException {
 		IdentifierList idList = new IdentifierList();
 		idList.add(new Identifier(f));
 		return prCons.listTaskDefinition(idList);
 	}
 	
-	@Test
-	public void testListTaskDefinition() throws MALException, MALInteractionException {
-		enter("testListTaskDefs");
-		LongList taskDefIdList = listTaskDefs("*");
-		assertNotNull(taskDefIdList);
-		assertEquals(0, taskDefIdList.size());
-		leave("testListTaskDefs");
-	}
-
-	private Map.Entry<LongList, TaskDefinitionDetailsList> addTaskDef() throws MALException, MALInteractionException {
+	protected Object[] addTaskDef() throws MALException, MALInteractionException {
 		TaskDefinitionDetailsList taskDefList = new TaskDefinitionDetailsList();
-		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
-		taskDef.setName(new Identifier("new task def")); // mandatory
-		taskDef.setPrDefName(new Identifier("new pr def")); // mandatory
+		TaskDefinitionDetails taskDef = createTaskDef("new task def", "new pr def");
 		taskDefList.add(taskDef);
 		LongList taskDefIdList = prCons.addTaskDefinition(taskDefList);
-		return new AbstractMap.SimpleEntry<LongList, TaskDefinitionDetailsList>(taskDefIdList, taskDefList);
+		return new Object[] { taskDefIdList.get(0), taskDefList.get(0) };
 	}
-	
-	@Test
-	public void testAddTaskDefinition() throws MALException, MALInteractionException {
-		enter("testAddTaskDef");
-		Map.Entry<LongList, TaskDefinitionDetailsList> e = addTaskDef();
-		assertNotNull(e.getKey());
-		assertEquals(1, e.getKey().size());
-		assertNotNull(e.getKey().get(0));
-		
-		LongList taskDefIdList = listTaskDefs("*");
-		assertNotNull(taskDefIdList);
-		assertEquals(1, taskDefIdList.size());
-		assertNotNull(taskDefIdList.get(0));
-		// id from add() matches id from list()
-		assertEquals(e.getKey().get(0), taskDefIdList.get(0));
-		leave("testAddTaskDef");
-	}
-	
-	@Test
-	public void testUpdateTaskDefinition() throws MALException, MALInteractionException {
-		enter("testUpdateTaskDef");
-		Map.Entry<LongList, TaskDefinitionDetailsList> e = addTaskDef();
-		e.getValue().get(0).setDescription("whoa");
-		prCons.updateTaskDefinition(e.getKey(), e.getValue());
-		// list() returns id - unable to verify description
-		LongList taskDefIdList = listTaskDefs("*");
-		// added id is still listed
-		assertTrue(taskDefIdList.contains(e.getKey().get(0)));
-		leave("testUpdateTaskDef");
-	}
-
-	@Test
-	public void testRemoveTaskDefinition() throws MALException, MALInteractionException {
-		enter("testRemoveTaskDef");
-		Map.Entry<LongList, TaskDefinitionDetailsList> e = addTaskDef();
-		prCons.removeTaskDefinition(e.getKey());
-		LongList taskDefIdList = listTaskDefs("*");
-		// added id is not listed anymore
-		assertFalse(taskDefIdList.contains(e.getKey().get(0)));
-		leave("testRemoveTaskDef");
-	}
-
 }
