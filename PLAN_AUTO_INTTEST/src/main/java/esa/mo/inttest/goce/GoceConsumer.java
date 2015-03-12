@@ -8,6 +8,7 @@ import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
+import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
@@ -47,7 +48,7 @@ public class GoceConsumer {
 		TaskDefinitionDetailsList taskDefsList = new TaskDefinitionDetailsList();
 		taskDefsList.add(taskDef);
 		LongList taskIdsList = null;
-		taskIdsList = stub.addTaskDefinition(taskDefsList);
+		taskIdsList = stub.addDefinition(DefinitionType.TASK_DEF, taskDefsList);
 		return (taskIdsList != null && !taskIdsList.isEmpty()) ? taskIdsList.get(0) : null;
 	}
 	
@@ -55,7 +56,7 @@ public class GoceConsumer {
 		PlanningRequestDefinitionDetailsList prDefsList = new PlanningRequestDefinitionDetailsList();
 		prDefsList.add(prDef);
 		LongList defIdsList = null;
-		defIdsList = stub.addDefinition(prDefsList);
+		defIdsList = stub.addDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefsList);
 		return (defIdsList != null && !defIdsList.isEmpty()) ? defIdsList.get(0) : null;
 	}
 	
@@ -99,7 +100,7 @@ public class GoceConsumer {
 		IdentifierList taskNames = new IdentifierList();
 		taskNames.add(new Identifier(ppf.getTaskDefName()));
 		
-		LongList taskIds = stub.listTaskDefinition(taskNames);
+		LongList taskIds = stub.listDefinition(DefinitionType.TASK_DEF, taskNames);
 		if (taskIds.isEmpty()) {
 			TaskDefinitionDetails taskDef = ppf.createTaskDef();
 			Long taskDefId = submitTaskDef(taskDef);
@@ -119,7 +120,7 @@ public class GoceConsumer {
 		IdentifierList prNames = new IdentifierList();
 		prNames.add(new Identifier(ppf.getPrDefName()));
 		
-		LongList prIds = stub.listDefinition(prNames);
+		LongList prIds = stub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
 		
 		if (prIds.isEmpty()) {
 			PlanningRequestDefinitionDetails prDef = ppf.createPrDef(getTaskNameList(ppf.getTaskDefName()));
@@ -140,7 +141,7 @@ public class GoceConsumer {
 		IdentifierList taskNames = new IdentifierList();
 		taskNames.add(new Identifier(ppf.getTaskDefName()));
 		
-		LongList taskIds = stub.listTaskDefinition(taskNames);
+		LongList taskIds = stub.listDefinition(DefinitionType.TASK_DEF, taskNames);
 		
 		TaskInstanceDetails taskInst1 = null;
 		Long taskInst1Id = null;
@@ -165,7 +166,7 @@ public class GoceConsumer {
 		IdentifierList prNames = new IdentifierList();
 		prNames.add(new Identifier(ppf.getPrDefName()));
 		
-		LongList prIds = stub.listDefinition(prNames);
+		LongList prIds = stub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
 		
 		if (prIds.isEmpty()) {
 			// no pr def - nothing to do

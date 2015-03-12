@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.com.COMHelper;
+import org.ccsds.moims.mo.goce.GOCEHelper;
 import org.ccsds.moims.mo.mal.MALContext;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
@@ -61,14 +62,15 @@ public class PlanningRequestConsumerFactory {
 	
 	private void initHelpers() throws MALException {
 		LOG.entering(getClass().getName(), "initHelpers");
-		MALHelper.init(MALContextFactory.getElementFactoryRegistry());
-		COMHelper.init(MALContextFactory.getElementFactoryRegistry());
-		PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
-		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
 		if (tmp == null) {
+			MALHelper.init(MALContextFactory.getElementFactoryRegistry());
+			COMHelper.init(MALContextFactory.getElementFactoryRegistry());
+			PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
+			PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-		}
+			GOCEHelper.init(MALContextFactory.getElementFactoryRegistry());
+		} // else already initialized
 		LOG.exiting(getClass().getName(), "initHelpers");
 	}
 
@@ -122,7 +124,6 @@ public class PlanningRequestConsumerFactory {
 		if (cons != null && cons.getConsumer() != null) {
 			cons.getConsumer().close();
 		}
-//		cons = null; //pointless
 		if (malConsMgr != null) {
 			malConsMgr.close();
 		}

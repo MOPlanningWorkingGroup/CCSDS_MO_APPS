@@ -4,11 +4,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.ccsds.moims.mo.goce.GOCEHelper;
+import org.ccsds.moims.mo.goce.structures.RQ_ParameterList;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UOctet;
+import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
@@ -36,7 +39,7 @@ public class CommonFile {
 	 * @param type
 	 * @return argDef
 	 */
-	protected ArgumentDefinitionDetails createArgDef(String id/*, String desc*/, int type, Short area) {
+	protected ArgumentDefinitionDetails createArgDef(String id, int type, UShort area) {
 		byte attr = (byte)(0xff & type);
 		return new ArgumentDefinitionDetails(new Identifier(id), new Byte(attr), area);
 	}
@@ -48,13 +51,10 @@ public class CommonFile {
 	 * @param prDefName
 	 * @return taskDef
 	 */
-	protected TaskDefinitionDetails createTaskDef(String taskDefName, String desc, String prDefName/*,
-			ArgumentDefinitionDetailsList fields, ArgumentDefinitionDetailsList args*/) {
+	protected TaskDefinitionDetails createTaskDef(String taskDefName, String desc, String prDefName) {
 		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
 		taskDef.setName(new Identifier(taskDefName));
 		taskDef.setDescription(desc);
-//		taskDef.setFields(fields);
-//		taskDef.setArguments(args);
 		taskDef.setPrDefName(new Identifier(prDefName));
 		return taskDef;
 	}
@@ -65,9 +65,9 @@ public class CommonFile {
 	 */
 	protected ArgumentDefinitionDetailsList createTaskDefArgDefs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("RQ_Source", /*"task source",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Destination", /*"task destination",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Type", /*"task type",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("RQ_Source", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("RQ_Destination", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("RQ_Type", Attribute.STRING_TYPE_SHORT_FORM, null));
 		return argDefs;
 	}
 	
@@ -76,13 +76,7 @@ public class CommonFile {
 	 * @param argDefs
 	 */
 	protected ArgumentDefinitionDetailsList setTaskDefParamDefs(ArgumentDefinitionDetailsList argDefs) {
-		argDefs.add(createArgDef("RQ_Parameters_count", /*"task parameters count",*/ Attribute.OCTET_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Parameter_Name", /*"task parameter name",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Parameter_Description", /*"task parameter description",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Parameter_Representation", /*"task parameter representation",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Parameter_Radix", /*"task parameter radix",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Parameter_Unit", /*"task parameter unit",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Parameter_Value", /*"task parameter value",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("List_of_RQ_Parameters", RQ_ParameterList.TYPE_SHORT_FORM, GOCEHelper.GOCE_AREA_NUMBER));
 		return argDefs;
 	}
 	
@@ -92,12 +86,10 @@ public class CommonFile {
 	 * @param desc
 	 * @return
 	 */
-	protected PlanningRequestDefinitionDetails createPrDef(String prDefName, String desc/*,
-			ArgumentDefinitionDetailsList fields*/) {
+	protected PlanningRequestDefinitionDetails createPrDef(String prDefName, String desc) {
 		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
 		prDef.setName(new Identifier(prDefName));
 		prDef.setDescription(desc);
-//		prDef.setFields(fields);
 		return prDef;
 	}
 	
@@ -107,9 +99,9 @@ public class CommonFile {
 	 */
 	protected ArgumentDefinitionDetailsList createPrDefArgDefs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("EVRQ_Time", /*"planning request time",*/ Attribute.TIME_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EVRQ_Type", /*"planning request type",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EVRQ_Description", /*"planning request description",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EVRQ_Time", Attribute.TIME_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EVRQ_Type", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EVRQ_Description", Attribute.STRING_TYPE_SHORT_FORM, null));
 		return argDefs;
 	}
 	
@@ -121,13 +113,11 @@ public class CommonFile {
 	 * @param triggers
 	 * @return taskInst
 	 */
-	protected TaskInstanceDetails createTaskInst(String taskName, String desc, String prName/*,
-			AttributeValueList fields, AttributeValueList args*/, TriggerDetailsList triggers) {
+	protected TaskInstanceDetails createTaskInst(String taskName, String desc, String prName,
+			TriggerDetailsList triggers) {
 		TaskInstanceDetails taskInst = new TaskInstanceDetails();
 		taskInst.setName(new Identifier(taskName));
 		taskInst.setDescription(desc);
-//		taskInst.setFieldValues(fields);
-//		taskInst.setArgumentValues(args);
 		taskInst.setTimingConstraints(triggers);
 		taskInst.setPrName(new Identifier(prName));
 		return taskInst;
@@ -242,11 +232,10 @@ public class CommonFile {
 	 * @param desc
 	 * @return
 	 */
-	protected PlanningRequestInstanceDetails createPrInst(String prName, String desc/*, AttributeValueList fields*/) {
+	protected PlanningRequestInstanceDetails createPrInst(String prName, String desc) {
 		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
 		prInst.setName(new Identifier(prName));
 		prInst.setDescription(desc);
-//		prInst.setFieldValues(fields);
 		return prInst;
 	}
 

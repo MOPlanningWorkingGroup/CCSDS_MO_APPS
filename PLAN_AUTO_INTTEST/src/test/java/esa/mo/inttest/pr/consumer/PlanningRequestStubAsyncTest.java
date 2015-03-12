@@ -9,20 +9,23 @@ import java.util.logging.Logger;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.MALStandardError;
+import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.EntityKeyList;
+import org.ccsds.moims.mo.mal.structures.EntityRequest;
+import org.ccsds.moims.mo.mal.structures.EntityRequestList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.transport.MALMessage;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
+import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class PlanningRequestStubAsyncTest extends PlanningRequestStubBaseTest {
+public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestStubAsyncTest.class.getName());
 	
@@ -34,77 +37,121 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubBaseTest {
 		LOG.exiting(getClass().getName(), msg);
 	}
 
-	@Before
-	public void setUp() throws Exception {
-		enter("setUp");
-		super.setUp();
-		leave("setUp");
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		enter("tearDown");
-		super.tearDown();
-		leave("tearDown");
+	protected Object[] asyncRegisterPrMonitor(String subId) throws MALException, MALInteractionException {
+		Identifier id = new Identifier(subId);
+		EntityRequestList entityList = new EntityRequestList();
+		EntityKeyList keys = new EntityKeyList();
+		keys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		entityList.add(new EntityRequest(null, true, true, true, false, keys));
+		Subscription sub = new Subscription(id, entityList);
+		PrMonitor prMon = new PrMonitor();
+		MALMessage malMsg = prCons.asyncMonitorPlanningRequestsRegister(sub, prMon);
+		return new Object[] { malMsg, prMon };
 	}
 	
-	@Ignore("register pr monitor ack response never arrives")
 	@Test
-	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
+	public void testAsyncMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
 		enter("testMonitorPrReg");
+		
 		String subId = "subId";
-		PrMonitor prReg = registerPrMonitor(subId);
+		Object[] details = asyncRegisterPrMonitor(subId);
+		MALMessage malMsg = (MALMessage)details[0];
+		PrMonitor prMon = (PrMonitor)details[1];
 		
 		sleep(1000); // give broker a second to fire callback
 		
-		assertTrue(prReg.registered);
+		assertTrue(prMon.registered);
+		
+		malMsg.free();
+		
 		leave("testMonitorPrReg");
 	}
 	
-	@Ignore("de-register pr monitor ack response never arrives")
+	protected MALMessage asyncDeRegisterPrMonitor(String subId, PrMonitor prMon) throws MALException, MALInteractionException {
+		IdentifierList subIdList = new IdentifierList();
+		subIdList.add(new Identifier(subId));
+		return prCons.asyncMonitorPlanningRequestsDeregister(subIdList, prMon);
+	}
+	
 	@Test
-	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
+	public void testAsyncMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorPrDeReg");
+		
 		String subId = "subId2";
-		PrMonitor prMon = registerPrMonitor(subId);
+		Object[] details = asyncRegisterPrMonitor(subId);
+		MALMessage malMsg = (MALMessage)details[0];
+		PrMonitor prMon = (PrMonitor)details[1];
 		
 		sleep(1000); // wait a sec before de-registering
 		
-		deRegisterPrMonitor(subId);
+		MALMessage malMsg2 = asyncDeRegisterPrMonitor(subId, prMon);
 		
 		sleep(1000); // give broker a sec to fire callback
 		
 		assertTrue(prMon.deRegistered);
+		
+		malMsg2.free();
+		malMsg.free();
+		
 		leave("testMonitorPrDeReg");
 	}
 	
-	@Ignore("register task monitor ack response never arrives")
+	protected Object[] asyncRegisterTaskMonitor(String subId) throws MALException, MALInteractionException {
+		Identifier id = new Identifier(subId);
+		EntityRequestList entityList = new EntityRequestList();
+		EntityKeyList keys = new EntityKeyList();
+		keys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		entityList.add(new EntityRequest(null, true, true, true, false, keys));
+		Subscription sub = new Subscription(id, entityList);
+		TaskMonitor taskMon = new TaskMonitor();
+		MALMessage malMsg = prCons.asyncMonitorTasksRegister(sub, taskMon);
+		return new Object[] { malMsg, taskMon };
+	}
+	
 	@Test
-	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
+	public void testAsyncMonitorTasksRegister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksRegister");
+		
 		String subId = "subId";
-		TaskMonitor taskMon = registerTaskMonitor(subId);
+		Object[] details = asyncRegisterTaskMonitor(subId);
+		MALMessage malMsg = (MALMessage)details[0];
+		TaskMonitor taskMon = (TaskMonitor)details[1];
 		
 		sleep(1000); // give broker a second to fire callback
 		
 		assertTrue(taskMon.registered);
+		
+		malMsg.free();
+		
 		leave("testMonitorTasksRegister");
 	}
 	
-	@Ignore("de-register task monitor ack response never arrives")
+	protected MALMessage asyncDeRegisterTaskMonitor(String subId, TaskMonitor taskMon) throws MALException, MALInteractionException {
+		IdentifierList subIdList = new IdentifierList();
+		subIdList.add(new Identifier(subId));
+		return prCons.asyncMonitorTasksDeregister(subIdList, taskMon);
+	}
+	
 	@Test
-	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
+	public void testAsyncMonitorTasksDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksDeregister");
+		
 		String subId = "subId2";
-		TaskMonitor taskMon = registerTaskMonitor(subId);
+		Object[] details = asyncRegisterTaskMonitor(subId);
+		MALMessage malMsg = (MALMessage)details[0];
+		TaskMonitor taskMon = (TaskMonitor)details[1];
 		
 		sleep(1000); // wait a sec before de-registering
 		
-		deRegisterTaskMonitor(subId);
+		MALMessage malMsg2 = asyncDeRegisterTaskMonitor(subId, taskMon);
 		
 		sleep(1000); // give broker a sec to fire callback
 		
 		assertTrue(taskMon.deRegistered);
+		
+		malMsg2.free();
+		malMsg.free();
+		
 		leave("testMonitorTasksDeregister");
 	}
 	
@@ -286,17 +333,17 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubBaseTest {
 		
 		final LongList[] taskDefIds = { null };
 		LOG.log(Level.INFO, "sending list task defs request");
-		MALMessage malMsg = prCons.asyncListTaskDefinition(taskNames, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncListDefinition(DefinitionType.TASK_DEF, taskNames, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void listTaskDefinitionResponseReceived(MALMessageHeader msgHeader, LongList taskDefInstIds,
+			public void listDefinitionResponseReceived(MALMessageHeader msgHeader, LongList taskDefInstIds,
 					Map qosProperties) {
 				LOG.log(Level.INFO, "list task defs resp={0}", taskDefInstIds);
 				taskDefIds[0] = taskDefInstIds;
 			}
 
 			@SuppressWarnings("rawtypes")
-			public void listTaskDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+			public void listDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties) {
 				LOG.log(Level.INFO, "list task defs err={0}", error);
 			}
@@ -322,17 +369,17 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubBaseTest {
 		
 		final LongList[] taskDefIds = { null };
 		LOG.log(Level.INFO, "sending add task def request");
-		MALMessage malMsg = prCons.asyncAddTaskDefinition(taskDefs, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncAddDefinition(DefinitionType.TASK_DEF, taskDefs, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void addTaskDefinitionResponseReceived(MALMessageHeader msgHeader, LongList taskDefInstIds,
+			public void addDefinitionResponseReceived(MALMessageHeader msgHeader, LongList taskDefInstIds,
 					Map qosProperties) {
 				LOG.log(Level.INFO, "add task def resp={0}", taskDefInstIds);
 				taskDefIds[0] = taskDefInstIds;
 			}
 
 			@SuppressWarnings("rawtypes")
-			public void addTaskDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+			public void addDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties) {
 				LOG.log(Level.INFO, "add task def err={0}", error);
 			}
@@ -375,16 +422,16 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubBaseTest {
 		
 		final Boolean[] updated = { false };
 		LOG.log(Level.INFO, "sending update task def request");
-		MALMessage malMsg = prCons.asyncUpdateTaskDefinition(taskDefIds, taskDefs, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncUpdateDefinition(DefinitionType.TASK_DEF, taskDefIds, taskDefs, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void updateTaskDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
 				LOG.log(Level.INFO, "update task def resp");
 				updated[0] = true;
 			}
 
 			@SuppressWarnings("rawtypes")
-			public void updateTaskDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+			public void updateDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties) {
 				LOG.log(Level.INFO, "update task def err={0}", error);
 			}
@@ -415,16 +462,16 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubBaseTest {
 		
 		final Boolean[] removed = { false };
 		LOG.log(Level.INFO, "sending remove task def request");
-		prCons.asyncRemoveTaskDefinition(taskDefIds, new PlanningRequestAdapter() {
+		prCons.asyncRemoveDefinition(DefinitionType.TASK_DEF, taskDefIds, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void removeTaskDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			public void removeDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
 				LOG.log(Level.INFO, "remove task def resp");
 				removed[0] = true;
 			}
 
 			@SuppressWarnings("rawtypes")
-			public void removeTaskDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+			public void removeDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProps) {
 				LOG.log(Level.INFO, "remove task def err={0}", error);
 			}

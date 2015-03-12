@@ -33,12 +33,12 @@ public class StationScheduleIncrementFile extends CommonFile {
 	public StationScheduleIncrementFile() {
 	}
 	
-	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList args,
+	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList argDefs,
 			ObjectTypeList eventTypes) {
 		ScheduleDefinitionDetails schDef = new ScheduleDefinitionDetails();
 		schDef.setName(new Identifier(name));
 		schDef.setDescription(desc);
-		schDef.setArguments(args);
+		schDef.setArgumentDefs(argDefs);
 		schDef.setEventTypes(eventTypes);
 		return schDef;
 	}
@@ -68,7 +68,7 @@ public class StationScheduleIncrementFile extends CommonFile {
 	
 	protected ArgumentDefinitionDetailsList createItemArgDefs() {
 		ArgumentDefinitionDetailsList args = new ArgumentDefinitionDetailsList();
-		args.add(createArgDef("template", /*"",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
+		args.add(createArgDef("template", Attribute.STRING_TYPE_SHORT_FORM, null));
 		return args;
 	}
 	

@@ -7,6 +7,7 @@ import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -28,7 +29,7 @@ public class PlanningRequestSpringTest {
 		
 		IdentifierList idList = new IdentifierList();
 		idList.add(new Identifier("*"));
-		LongList taskIdList = svc.listTaskDefinition(idList, null);
+		LongList taskIdList = svc.listDefinition(DefinitionType.TASK_DEF, idList, null);
 		assertNotNull(taskIdList);
 	}
 

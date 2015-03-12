@@ -9,12 +9,12 @@ import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
-import org.junit.After;
-import org.junit.Before;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.junit.Test;
 
-public class PlanningRequestStubMonitorTest extends PlanningRequestStubBaseTest {
+public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase {
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestStubMonitorTest.class.getName());
 	
@@ -24,20 +24,6 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubBaseTest 
 	
 	private void leave(String msg) {
 		LOG.exiting(getClass().getName(), msg);
-	}
-
-	@Before
-	public void setUp() throws Exception {
-		enter("setUp");
-		super.setUp();
-		leave("setUp");
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		enter("tearDown");
-		super.tearDown();
-		leave("tearDown");
 	}
 
 	@Test
@@ -170,6 +156,20 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubBaseTest 
 		leave("testRemovePlanningRequest");
 	}
 
+	private void addOrReplaceStatus(StatusRecordList srl, InstanceState is, Time time, String comm) {
+		int i = 0;
+		for ( ; i < srl.size(); ++i) {
+			StatusRecord sr = srl.get(i);
+			if (sr.getState() == is) {
+				sr.setDate(time);
+				sr.setComment(comm);
+			}
+		}
+		if (srl.size() <= i) {
+			srl.add(new StatusRecord(is, time, comm));
+		}
+	}
+	
 	@Test
 	public void testSetTaskStatus() throws MALException, MALInteractionException {
 		String taskSubId = "subId8";
@@ -184,8 +184,9 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubBaseTest 
 		LongList taskIds = new LongList();
 		taskIds.add(taskInstId);
 		
+		addOrReplaceStatus(taskMon.taskStats.get(0).getStatus(), InstanceState.SCHEDULED, new Time(System.currentTimeMillis()), "scheduled");
+		
 		TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-		taskMon.taskStats.get(0).setScheduled(new StatusRecord(new Time(System.currentTimeMillis()), "scheduled"));
 		taskStats.add(taskMon.taskStats.get(0));
 		
 		// reset notify helpers

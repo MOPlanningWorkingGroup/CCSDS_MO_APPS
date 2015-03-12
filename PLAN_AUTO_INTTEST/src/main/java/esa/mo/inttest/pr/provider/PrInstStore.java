@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
@@ -15,13 +16,18 @@ public class PrInstStore {
 		private Long defId;
 		private Long instId;
 		private PlanningRequestInstanceDetails pr;
-		private PlanningRequestStatusDetails st;
+		private LongList taskDefIds;
+		private LongList taskInstIds;
+		private PlanningRequestStatusDetails stat;
 		
-		public Item(Long defId, Long instId, PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails st) {
+		public Item(Long defId, Long instId, PlanningRequestInstanceDetails pr, LongList taskDefIds,
+				LongList taskInstIds, PlanningRequestStatusDetails stat) {
 			this.defId = defId;
 			this.instId = instId;
 			this.pr = pr;
-			this.st = st;
+			this.taskDefIds = taskDefIds;
+			this.taskInstIds = taskInstIds;
+			this.stat = stat;
 		}
 	}
 	
@@ -30,8 +36,9 @@ public class PrInstStore {
 	public PrInstStore() {
 	}
 
-	public void addPr(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
-		prs.add(new Item(prDefId, prInstId, prInst, prStat));
+	public void addPr(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
+			LongList taskInstIds, PlanningRequestStatusDetails prStat) {
+		prs.add(new Item(prDefId, prInstId, prInst, taskDefIds, taskInstIds, prStat));
 	}
 	
 	public Object[] findPr(Long prInstId) {
@@ -40,7 +47,7 @@ public class PrInstStore {
 		while (it.hasNext()) {
 			Item item = it.next();
 			if (prInstId == item.instId) {
-				rval = new Object[] { item.pr, item.st, };
+				rval = new Object[] { item.pr, item.stat, };
 				break;
 			}
 		}
@@ -53,7 +60,7 @@ public class PrInstStore {
 			Item item = it.next();
 			if (prInstId == item.instId) {
 				item.pr = prInst;
-				item.st = prStat;
+				item.stat = prStat;
 				break;
 			}
 		}
@@ -71,7 +78,25 @@ public class PrInstStore {
 	}
 	
 	public TaskStatusDetails findTask(Long taskInstId) {
-		return null; // TODO
+		TaskStatusDetails taskStat = null;
+		Iterator<Item> it = prs.iterator();
+		// go through prs
+		while (it.hasNext()) {
+			Item item = it.next();
+			// should have same amount of tasks instance ids and task statuses
+			Iterator<Long> idIt = item.taskInstIds.iterator();
+			Iterator<TaskStatusDetails> taskStatIt = item.stat.getTaskStatuses().iterator();
+			// go through task instance ids and task statuses
+			while (idIt.hasNext() && taskStatIt.hasNext()) {
+				Long id = idIt.next();
+				TaskStatusDetails ts = taskStatIt.next();
+				if (taskInstId == id) {
+					taskStat = ts;
+					break;
+				}
+			}
+		}
+		return taskStat;
 	}
 	
 	public void setTaskStatus(Long taskStatusId, TaskStatusDetails taskStat) {

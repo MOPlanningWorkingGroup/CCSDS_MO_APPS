@@ -5,9 +5,12 @@ import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinition;
+import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
@@ -23,9 +26,13 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
+import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
 /**
  * Pretty printing for planning request data structures.
@@ -51,11 +58,24 @@ public final class Dumper {
 		return s;
 	}
 	
+	private static String quote(String s) {
+		return (null != s) ? "\"" + s + "\"" : null;
+	}
+	
+	private static String dumpId(Identifier id) {
+		StringBuilder s = new StringBuilder();
+		if (null != id) {
+			s.append(quote(id.getValue()));
+		} else {
+			s.append("null");
+		}
+		return s.toString();
+	}
+	
 	private static String dumpArg(ArgumentDefinitionDetails arg) {
 		StringBuilder s = new StringBuilder();
 		if (null != arg) {
-			s.append("{ name=\"").append(arg.getName()).append("\", ");
-//			s.append("description=\"").append(arg.getDescription()).append("\", ");
+			s.append("{ name=").append(dumpId(arg.getName())).append(", ");
 			s.append("attrType=").append(dumpAttr(arg.getAttributeType())).append(", ");
 			s.append("attrArea=").append(arg.getArea()).append(" }");
 		} else {
@@ -82,11 +102,9 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != td) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("name=\"").append(td.getName()).append("\",\n");
-			s.append(ind).append(STEP).append("description=\"").append(td.getDescription()).append("\",\n");
-			s.append(ind).append(STEP).append("prDefName=\"").append(td.getPrDefName()).append("\",\n");
-//			s.append(ind).append(STEP).append("fields=").append(dumpArgDefs(td.getFields(), ind+STEP)).append(",\n");
-//			s.append(ind).append(STEP).append("arguments=").append(dumpArgDefs(td.getArguments(), ind+STEP)).append("\n");
+			s.append(ind).append(STEP).append("name=").append(dumpId(td.getName())).append(",\n");
+			s.append(ind).append(STEP).append("description=").append(quote(td.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("prDefName=").append(dumpId(td.getPrDefName())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(td.getArgumentDefs(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
@@ -123,13 +141,16 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	public static String names(IdentifierList il) {
+		return dumpNames(il, "");
+	}
+	
 	private static String dumpPrDef(PlanningRequestDefinitionDetails prd, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != prd) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("name=\"").append(prd.getName()).append("\",\n");
-			s.append(ind).append(STEP).append("description=\"").append(prd.getDescription()).append("\",\n");
-//			s.append(ind).append(STEP).append("fields=").append(dumpArgDefs(prd.getFields(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("name=").append(dumpId(prd.getName())).append(",\n");
+			s.append(ind).append(STEP).append("description=").append(quote(prd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(prd.getArgumentDefs(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("taskDefNames=").append(dumpNames(prd.getTaskDefNames(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -189,12 +210,20 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	private static String dumpTrigName(TriggerName tn) {
+		return (null != tn) ? quote(tn.toString()) : "null";
+	}
+	
+	private static String dumpTrigType(TriggerType tt) {
+		return (null != tt) ? quote(tt.toString()) : "null";
+	}
+	
 	private static String dumpTrigger(TriggerDetails t, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("triggerName=\"").append(t.getTriggerName()).append("\",\n");
-			s.append(ind).append(STEP).append("triggerType=\"").append(t.getTriggerType()).append("\",\n");
+			s.append(ind).append(STEP).append("triggerName=").append(dumpTrigName(t.getTriggerName())).append(",\n");
+			s.append(ind).append(STEP).append("triggerType=").append(dumpTrigType(t.getTriggerType())).append(",\n");
 			s.append(ind).append(STEP).append("timeTrigger=").append(dumpTimeTrig(t.getTimeTrigger())).append(",\n");
 			s.append(ind).append(STEP).append("eventTrigger=").append(t.getEventTrigger()).append("\n");
 			s.append(ind).append("}");
@@ -222,10 +251,9 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != ti) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("name=\"").append(ti.getName()).append("\",\n");
-			s.append(ind).append(STEP).append("prName=\"").append(ti.getPrName()).append("\",\n");
-			s.append(ind).append(STEP).append("description=\"").append(ti.getDescription()).append("\",\n");
-//			s.append(ind).append(STEP).append("fieldValues=").append(dumpAttrVals(ti.getFieldValues(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("name=").append(dumpId(ti.getName())).append(",\n");
+			s.append(ind).append(STEP).append("prName=").append(dumpId(ti.getPrName())).append(",\n");
+			s.append(ind).append(STEP).append("description=").append(quote(ti.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(ti.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(ti.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(ti.getTimingConstraints(), ind+STEP)).append("\n");
@@ -254,9 +282,8 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != pri) {
 			s.append("{\n");
-			s.append(STEP).append("name=\"").append(pri.getName()).append("\",\n");
-			s.append(STEP).append("description=\"").append(pri.getDescription()).append("\",\n");
-//			s.append(STEP).append("fieldValues=").append(dumpAttrVals(pri.getFieldValues(), STEP)).append(",\n");
+			s.append(STEP).append("name=").append(dumpId(pri.getName())).append(",\n");
+			s.append(STEP).append("description=").append(quote(pri.getDescription())).append(",\n");
 			s.append(STEP).append("argDefNames=").append(dumpNames(pri.getArgumentDefNames(), STEP)).append(",\n");
 			s.append(STEP).append("argValues=").append(dumpAttrVals(pri.getArgumentValues(), STEP)).append(",\n");
 			s.append(STEP).append("timingConstraints=").append(dumpTriggers(pri.getTimingConstraints(), STEP)).append(",\n");
@@ -270,7 +297,7 @@ public final class Dumper {
 	
 	private static String dumpEntKey(EntityKey ek) {
 		StringBuilder s = new StringBuilder();
-		s.append("{ first=\"").append(ek.getFirstSubKey().getValue()).append("\", ");
+		s.append("{ first=").append(dumpId(ek.getFirstSubKey())).append(", ");
 		s.append("second=").append(ek.getSecondSubKey()).append(", ");
 		s.append("third=").append(ek.getThirdSubKey()).append(", ");
 		s.append("fourth=").append(ek.getFourthSubKey()).append(" }");
@@ -280,7 +307,7 @@ public final class Dumper {
 	private static String dumpUpdHdr(UpdateHeader uh, String ind) {
 		StringBuilder s = new StringBuilder("{\n");
 		s.append(ind).append(STEP).append("key=").append(dumpEntKey(uh.getKey())).append(",\n");
-		s.append(ind).append(STEP).append("sourceUri=\"").append(uh.getSourceURI().getValue()).append("\",\n");
+		s.append(ind).append(STEP).append("sourceUri=").append(uh.getSourceURI()).append(",\n");
 		s.append(ind).append(STEP).append("timeStamp=").append(uh.getTimestamp()).append(",\n");
 		s.append(ind).append(STEP).append("updateType=").append(uh.getUpdateType()).append(",\n");
 		s.append(STEP).append("}");
@@ -331,22 +358,33 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	private static String dumpStat(StatusRecord sr, String ind) {
+		StringBuilder s = new StringBuilder();
+		s.append("{ date=").append(sr.getDate()).append(", ");
+		s.append("state=").append(sr.getState()).append(", ");
+		s.append("comment=").append(quote(sr.getComment())).append(" }");
+		return s.toString();
+	}
+	
+	private static String dumpStats(StatusRecordList srl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != srl) {
+			s.append("list (size=").append(srl.size()).append(") [").append(srl.isEmpty() ? "]" : "").append("\n");
+			for (int i = 0; i < srl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpStat(srl.get(i), ind+STEP)).append("\n");
+			}
+			s.append(ind).append(srl.isEmpty()? "" : "]");
+		} else {
+			s.append("null");
+		}
+		return s.toString();
+	}
+	
 	private static String dumpPrStat(PlanningRequestStatusDetails prs, String ind) {
 		StringBuilder s = new StringBuilder("{\n");
-		s.append(ind).append(STEP).append("accepted=").append(prs.getAccepted()).append(",\n");
-		s.append(ind).append(STEP).append("distForExec=").append(prs.getDistributedForExecution()).append(",\n");
-		s.append(ind).append(STEP).append("execCompleted=").append(prs.getExecuteCompleted()).append(",\n");
-		s.append(ind).append(STEP).append("execFailed=").append(prs.getExecuteFailed()).append(",\n");
-		s.append(ind).append(STEP).append("invalid=").append(prs.getInvalid()).append(",\n");
-		s.append(ind).append(STEP).append("lastModif=").append(prs.getLastModified()).append(",\n");
-		s.append(ind).append(STEP).append("planConflict=").append(prs.getPlanConflict()).append(",\n");
-		s.append(ind).append(STEP).append("planned=").append(prs.getPlanned()).append(",\n");
-		s.append(ind).append(STEP).append("prInstName=").append(prs.getPrInstName()).append(",\n");
-		s.append(ind).append(STEP).append("rejected=").append(prs.getRejected()).append(",\n");
-		s.append(ind).append(STEP).append("scheduled=").append(prs.getScheduled()).append(",\n");
-		s.append(ind).append(STEP).append("submitted=").append(prs.getSubmitted()).append(",\n");
-		s.append(ind).append(STEP).append("taskStatuses=").append(prs.getTaskStatuses()).append(",\n");
-		s.append(ind).append(STEP).append("validated=").append(prs.getValidated()).append("\n");
+		s.append(ind).append(STEP).append("prInstName=").append(dumpId(prs.getPrInstName())).append(",\n");
+		s.append(ind).append(STEP).append("status=").append(dumpStats(prs.getStatus(), ind+STEP)).append(",\n");
+		s.append(ind).append(STEP).append("taskStatuses=").append(prs.getTaskStatuses()).append("\n");
 		s.append(ind).append("}");
 		return s.toString();
 	}
@@ -367,19 +405,8 @@ public final class Dumper {
 	
 	private static String dumpTaskStat(TaskStatusDetails ts, String ind) {
 		StringBuilder s = new StringBuilder("{\n");
-		s.append(ind).append(STEP).append("accepted=").append(ts.getAccepted()).append(",\n");
-		s.append(ind).append(STEP).append("distForExec=").append(ts.getDistributedForExecution()).append(",\n");
-		s.append(ind).append(STEP).append("execCompleted=").append(ts.getExecuteCompleted()).append(",\n");
-		s.append(ind).append(STEP).append("execFailed=").append(ts.getExecuteFailed()).append(",\n");
-		s.append(ind).append(STEP).append("invalid=").append(ts.getInvalid()).append(",\n");
-		s.append(ind).append(STEP).append("lastModif=").append(ts.getLastModified()).append(",\n");
-		s.append(ind).append(STEP).append("planConflict=").append(ts.getPlanConflict()).append(",\n");
-		s.append(ind).append(STEP).append("planned=").append(ts.getPlanned()).append(",\n");
-		s.append(ind).append(STEP).append("rejected=").append(ts.getRejected()).append(",\n");
-		s.append(ind).append(STEP).append("scheduled=").append(ts.getScheduled()).append(",\n");
-		s.append(ind).append(STEP).append("submitted=").append(ts.getSubmitted()).append(",\n");
-		s.append(ind).append(STEP).append("taskInstName=").append(ts.getTaskInstName()).append(",\n");
-		s.append(ind).append(STEP).append("validated=").append(ts.getValidated()).append(",\n");
+		s.append(ind).append(STEP).append("taskInstName=").append(dumpId(ts.getTaskInstName())).append(",\n");
+		s.append(ind).append(STEP).append("status=").append(dumpStats(ts.getStatus(), ind+STEP)).append("\n");
 		s.append(ind).append("}");
 		return s.toString();
 	}
@@ -392,6 +419,39 @@ public final class Dumper {
 				s.append(STEP).append(i).append(": ").append(dumpTaskStat(tsl.get(i), STEP)).append("\n");
 			}
 			s.append(tsl.isEmpty() ? "" : "]");
+		} else {
+			s.append("null");
+		}
+		return s.toString();
+	}
+	
+	private static String dumpBaseDef(BaseDefinition bd, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != bd) {
+			if (bd instanceof TaskDefinitionDetails) {
+				TaskDefinitionDetails td = (TaskDefinitionDetails)bd;
+				s.append(dumpTaskDef(td, ind));
+			} else if (bd instanceof PlanningRequestDefinitionDetails) {
+				PlanningRequestDefinitionDetails prd = (PlanningRequestDefinitionDetails)bd;
+				s.append(dumpPrDef(prd, ind));
+			} else {
+				s.append(bd);
+			}
+		} else {
+			s.append("null");
+		}
+		return s.toString();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static String baseDefs(BaseDefinitionList bdl) {
+		StringBuilder s = new StringBuilder();
+		if (null != bdl) {
+			s.append("list (size=").append(bdl.size()).append(") [").append(bdl.isEmpty() ? "]" : "").append("\n");
+			for (int i = 0; i < bdl.size(); ++i) {
+				s.append(STEP).append(i).append(": ").append(dumpBaseDef((BaseDefinition)bdl.get(i), STEP)).append("\n");
+			}
+			s.append(bdl.isEmpty() ? "" : "]");
 		} else {
 			s.append("null");
 		}
