@@ -7,15 +7,17 @@ import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.junit.Test;
 
 public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
@@ -33,20 +35,23 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	@Test
 	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
 		enter("testMonitorPrReg");
+		
 		String subId = "subId";
-		PrMonitor prReg = registerPrMonitor(subId);
+		registerPrMonitor(subId);
 		
 		sleep(1000); // give broker a second to fire callback
 		
 		assertTrue(true);
+		
 		leave("testMonitorPrReg");
 	}
 	
 	@Test
 	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorPrDeReg");
+		
 		String subId = "subId2";
-		PrMonitor prMon = registerPrMonitor(subId);
+		registerPrMonitor(subId);
 		
 		sleep(1000); // wait a sec before de-registering
 		
@@ -55,26 +60,30 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		sleep(1000); // give broker a sec to fire callback
 		
 		assertTrue(true);
+		
 		leave("testMonitorPrDeReg");
 	}
 	
 	@Test
 	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksRegister");
+		
 		String subId = "subId";
-		TaskMonitor taskMon = registerTaskMonitor(subId);
+		registerTaskMonitor(subId);
 		
 		sleep(1000); // give broker a second to fire callback
 		
 		assertTrue(true);
+		
 		leave("testMonitorTasksRegister");
 	}
 	
 	@Test
 	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksDeregister");
+		
 		String subId = "subId2";
-		TaskMonitor taskMon = registerTaskMonitor(subId);
+		registerTaskMonitor(subId);
 		
 		sleep(1000); // wait a sec before de-registering
 		
@@ -83,6 +92,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		sleep(1000); // give broker a sec to fire callback
 		
 		assertTrue(true);
+		
 		leave("testMonitorTasksDeregister");
 	}
 	
@@ -205,16 +215,34 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testSetTaskStatus() throws MALException, MALInteractionException {
 		enter("testSetTaskStatus");
 		
-		LongList taskInstIds = new LongList();
-		taskInstIds.add(new Long(1L));
+		Long[] ids = createAndSubmitPlanningRequestWithTask();
+		Long taskInstId = ids[1];
 		
-		TaskStatusDetails taskStat = new TaskStatusDetails();
-		taskStat.setTaskInstName(new Identifier("id")); // mandatory
+		LongList taskIds = new LongList();
+		taskIds.add(new Long(taskInstId));
 		
-		TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-		taskStats.add(taskStat);
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskIds);
+		// assuming there is one task status
+		TaskStatusDetails taskStat = taskStats.get(0);
+		StatusRecordList stats = taskStat.getStatus();
+		if (null == stats) {
+			stats = new StatusRecordList();
+		}
+		StatusRecord rec = null;
+		for (StatusRecord sr: stats) {
+			if (sr.getState() == InstanceState.INVALID) {
+				rec = sr;
+			}
+		}
+		if (null == rec) {
+			rec = new StatusRecord(InstanceState.INVALID, new Time(System.currentTimeMillis()), "invalid");
+			stats.add(rec);
+		} else {
+			rec.setDate(new Time(System.currentTimeMillis()));
+			rec.setComment("invalid");
+		}
 		
-		prCons.setTaskStatus(taskInstIds, taskStats);
+		prCons.setTaskStatus(taskIds, taskStats);
 		
 		leave("testSetTaskStatus");
 	}
@@ -297,19 +325,22 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testAddTaskDef");
 		
 		Object[] details = addTaskDef();
-		Long taskDefId = (Long)details[0];
-		TaskDefinitionDetails taskDef = (TaskDefinitionDetails)details[1];
+		LongList taskDefIds = (LongList)details[0];
+		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
 		
-		assertNotNull(taskDefId);
-		assertNotNull(taskDef);
+		assertNotNull(taskDefIds);
+		assertEquals(1, taskDefIds.size());
+		assertNotNull(taskDefIds.get(0));
 		
-		LongList taskDefIdList = listTaskDefs("*");
+		assertNotNull(taskDefs);
+		assertEquals(1, taskDefs.size());
+		assertNotNull(taskDefs.get(0));
 		
-		assertNotNull(taskDefIdList);
-		assertEquals(1, taskDefIdList.size());
-		assertNotNull(taskDefIdList.get(0));
-		// id from add() matches id from list()
-		assertEquals(taskDefId, taskDefIdList.get(0));
+		LongList taskDefIds2 = listTaskDefs("*");
+		
+		assertNotNull(taskDefIds2);
+		// id from add() is list()ed
+		assertTrue(taskDefIds2.contains(taskDefIds.get(0)));
 		
 		leave("testAddTaskDef");
 	}
@@ -319,23 +350,19 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testUpdateTaskDef");
 		
 		Object[] details = addTaskDef();
-		Long taskDefId = (Long)details[0];
-		TaskDefinitionDetails taskDef = (TaskDefinitionDetails)details[1];
+		LongList taskDefIds = (LongList)details[0];
+		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
 		
-		taskDef.setDescription("whoa");
-		
-		LongList taskDefIds = new LongList();
-		taskDefIds.add(taskDefId);
-		
-		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
-		taskDefs.add(taskDef);
+		taskDefs.get(0).setDescription("whoa");
 		
 		prCons.updateDefinition(DefinitionType.TASK_DEF, taskDefIds, taskDefs);
 		
-		// list() returns id - unable to verify description
-		LongList taskDefIdList = listTaskDefs("*");
-		// added id is still listed
-		assertTrue(taskDefIdList.contains(taskDefId));
+		LongList taskDefIds2 = listTaskDefs("*");
+		
+		assertNotNull(taskDefIds2);
+		// list() returns id, but unable to verify description
+		// update()d id is still list()ed
+		assertTrue(taskDefIds2.contains(taskDefIds.get(0)));
 		
 		leave("testUpdateTaskDef");
 	}
@@ -345,16 +372,15 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testRemoveTaskDef");
 		
 		Object[] details = addTaskDef();
-		Long taskDefId = (Long)details[0];
-		
-		LongList taskDefIds = new LongList();
-		taskDefIds.add(taskDefId);
+		LongList taskDefIds = (LongList)details[0];
 		
 		prCons.removeDefinition(DefinitionType.TASK_DEF, taskDefIds);
 		
-		LongList taskDefIdList = listTaskDefs("*");
-		// added id is not listed anymore
-		assertFalse(taskDefIdList.contains(taskDefId));
+		LongList taskDefIds2 = listTaskDefs("*");
+		
+		assertNotNull(taskDefIds2);
+		// remove()d id is not list()ed anymore
+		assertFalse(taskDefIds2.contains(taskDefIds.get(0)));
 		
 		leave("testRemoveTaskDef");
 	}

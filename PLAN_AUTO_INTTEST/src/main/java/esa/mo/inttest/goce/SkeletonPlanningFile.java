@@ -26,25 +26,24 @@ public class SkeletonPlanningFile extends CommonFile {
 
 	protected ArgumentDefinitionDetailsList createSpfTaskDefArgs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("EV_Parameters_count", /*"task event parameters count",*/ Attribute.OCTET_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Name", /*"task parameter name",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Description", /*"task parameter description",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Representation", /*"task parameter representation",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Radix", /*"task parameter radix",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Unit", /*"task parameter unit",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Value", /*"task parameter value",*/ Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameters_count", Attribute.OCTET_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameter_Name", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameter_Description", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameter_Representation", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameter_Radix", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameter_Unit", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameter_Value", Attribute.STRING_TYPE_SHORT_FORM, null));
 		return argDefs;
 	}
 	
 	public TaskDefinitionDetails createTaskDef() {
-		TaskDefinitionDetails taskDef = createTaskDef("goce spf task def", "skeleton plan task", PR_DEF_NAME/*, null,
-				createSpfTaskDefArgs()*/);
+		TaskDefinitionDetails taskDef = createTaskDef("goce spf task def", "skeleton plan task", PR_DEF_NAME);
 		taskDef.setArgumentDefs(createSpfTaskDefArgs());
 		return taskDef;
 	}
 	
 	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) {
-		PlanningRequestDefinitionDetails prDef = createPrDef("plan3", PR_DEF_NAME/*, createPrDefFields()*/);
+		PlanningRequestDefinitionDetails prDef = createPrDef("plan3", PR_DEF_NAME);
 		prDef.setArgumentDefs(createPrDefArgDefs());
 		prDef.setTaskDefNames(taskDefNames);
 		return prDef;
@@ -55,8 +54,7 @@ public class SkeletonPlanningFile extends CommonFile {
 	}
 	
 	public TaskInstanceDetails createTaskInst(int idx) {
-		TaskInstanceDetails taskInst = createTaskInst("NODE", "goce_task_" + (3+idx), getPrName(idx), null/*,
-				createTaskArgsZeroValues(), null*/);
+		TaskInstanceDetails taskInst = createTaskInst("NODE", "goce_task_" + (3+idx), getPrName(idx), null);
 		taskInst.setArgumentDefNames(new IdentifierList());
 		taskInst.setArgumentValues(new AttributeValueList());
 		setTaskParamsCount(taskInst, (short)0);
@@ -68,8 +66,7 @@ public class SkeletonPlanningFile extends CommonFile {
 	}
 	
 	public PlanningRequestInstanceDetails createPrInst(int idx, TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = createPrInst(getPrName(idx), "GOCE plan " + (4+idx)/*,
-				createPrFieldsValues(parseTime(PR_DATES[idx]), "Event", "Ascending node crossing")*/);
+		PlanningRequestInstanceDetails prInst = createPrInst(getPrName(idx), "GOCE plan " + (4+idx));
 		setPrArgs(prInst, parseTime(PR_DATES[idx]), "Event", "Ascending node crossing");
 		prInst.setTasks(taskInsts);
 		return prInst;

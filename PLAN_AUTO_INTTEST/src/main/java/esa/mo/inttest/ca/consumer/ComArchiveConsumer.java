@@ -1,6 +1,8 @@
 package esa.mo.inttest.ca.consumer;
 
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.com.archive.consumer.ArchiveAdapter;
 import org.ccsds.moims.mo.com.archive.consumer.ArchiveStub;
@@ -22,6 +24,8 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
  */
 public class ComArchiveConsumer {
 
+	private static final Logger LOG = Logger.getLogger(ComArchiveConsumer.class.getName());
+
 	private ArchiveStub stub;
 
 	public ComArchiveConsumer(ArchiveStub stub) {
@@ -40,25 +44,31 @@ public class ComArchiveConsumer {
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void retrieveAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+				LOG.log(Level.INFO, "retrieve ack={0}", msgHeader);
 			}
 			
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void retrieveAckErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProperties) {
+				LOG.log(Level.INFO, "retrieve ack error={0}", error);
 			}
 			
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void retrieveResponseReceived(MALMessageHeader msgHeader, ArchiveDetailsList objDetails,
 					ElementList objBodies, Map qosProperties) {
+				LOG.log(Level.INFO, "retrieve resp: objDetails={0}, objBodies={1}", new Object[] { objDetails,  objBodies });
 			}
 			
 			@SuppressWarnings("rawtypes")
 			@Override
 			public void retrieveResponseErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 					Map qosProperties) {
+				LOG.log(Level.INFO, "retrieve error={0}", error);
 			}
 		};
+		LOG.log(Level.INFO, "retrieving..");
 		stub.retrieve(objType, domain, objIds, adapter);
+		LOG.log(Level.INFO, "retrieved.");
 	}
 }

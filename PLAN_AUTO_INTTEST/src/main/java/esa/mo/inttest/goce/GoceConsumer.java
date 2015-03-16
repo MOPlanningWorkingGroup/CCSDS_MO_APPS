@@ -60,7 +60,12 @@ public class GoceConsumer {
 		return (defIdsList != null && !defIdsList.isEmpty()) ? defIdsList.get(0) : null;
 	}
 	
-	// PPF - payload plan file
+	/**
+	 * Creates Task and PR structures from PPF example file. Submits them to PR provider.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 * @throws ParseException
+	 */
 	public void ppf() throws MALException, MALInteractionException, ParseException {
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 		
@@ -93,6 +98,12 @@ public class GoceConsumer {
 		stub.submitPlanningRequest(prDefId, prInstId2, prInst2, taskDefIds, taskInstIds2);
 	}
 	
+	/**
+	 * Creates TaskDef structures from PPF example and submits them to PR provider.
+	 * @return
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	public boolean createPpfTaskDefIfMissing() throws MALException, MALInteractionException {
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 		boolean exists = false;
@@ -113,6 +124,12 @@ public class GoceConsumer {
 		return exists || created;
 	}
 	
+	/**
+	 * Creates PrDef structures from PPF file and submits them to PR provider.
+	 * @return
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	public boolean createPpfPrDefIfMissing() throws MALException, MALInteractionException {
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 		boolean exists = false;
@@ -134,6 +151,13 @@ public class GoceConsumer {
 		return exists || created;
 	}
 	
+	/**
+	 * Creates TaskInst and PrInst structures and submits them to PR provider. 
+	 * @return
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 * @throws ParseException
+	 */
 	public boolean createPpfInstsIfMissingAndDefsExist() throws MALException, MALInteractionException, ParseException {
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 		boolean task1Created = false;
@@ -195,7 +219,12 @@ public class GoceConsumer {
 	}
 	
 
-	// PIF - plan increment file
+	/**
+	 * Creates structures from PIF example and submits them to PR provider.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 * @throws ParseException
+	 */
 	public void pif() throws MALException, MALInteractionException, ParseException {
 		PlanIncrementFile pif = new PlanIncrementFile();
 		
@@ -220,7 +249,12 @@ public class GoceConsumer {
 		stub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 	}
 	
-	// SPF - skeleton planning file
+	/**
+	 * Creates structures from SPF example file and submits them to PR provider.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 * @throws ParseException
+	 */
 	public void spf() throws MALException, MALInteractionException, ParseException {
 		SkeletonPlanningFile spf = new SkeletonPlanningFile();
 		
@@ -249,7 +283,12 @@ public class GoceConsumer {
 		}
 	}
 	
-	// OPF - operations planning file
+	/**
+	 * Creates structures from OPF example and submits them to PR provider.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 * @throws ParseException
+	 */
 	public void opf() throws MALException, MALInteractionException, ParseException {
 		OperationsPlanningFile opf = new OperationsPlanningFile();
 		

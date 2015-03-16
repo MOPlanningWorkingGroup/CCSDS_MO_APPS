@@ -180,14 +180,25 @@ public class CommonFile {
 		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Value"));
 		taskInst.getArgumentValues().add(new AttributeValue(new Union(value)));
 	}
-
+	
+	/**
+	 * Creates TimeTrigger from Time.
+	 * @param time
+	 * @return
+	 */
 	protected TimeTrigger createTaskTime(Time time) {
 		TimeTrigger tt = new TimeTrigger();
 		tt.setTimeValue(time);
 		tt.setAbsoluteTime(new Boolean(true));
 		return tt;
 	}
-
+	
+	/**
+	 * Creates TIME-type trigger.
+	 * @param name
+	 * @param value
+	 * @return
+	 */
 	protected TriggerDetails createTaskTrigger(TriggerName name, Time value) {
 		TriggerDetails trig = new TriggerDetails();
 		trig.setTriggerName(name);
@@ -196,13 +207,18 @@ public class CommonFile {
 		trig.setEventTrigger(null);
 		return trig;
 	}
-
+	
+	/**
+	 * Parses datetime string to Time class.
+	 * @param s
+	 * @return
+	 * @throws ParseException
+	 */
 	protected Time parseTime(String s) throws ParseException {
 		SimpleDateFormat sdf = new SimpleDateFormat("zzz=yyyy-MM-dd'T'HH:mm:ss");
 		Date d = sdf.parse(s);
 		long l = d.getTime();
-		Time t = new Time(l);
-		return t;
+		return new Time(l);
 	}
 	
 	/**
@@ -238,7 +254,13 @@ public class CommonFile {
 		prInst.setDescription(desc);
 		return prInst;
 	}
-
+	
+	/**
+	 * Creates "UPLINK" & "START" TriggerDetailsList.
+	 * @param uplink
+	 * @param exec
+	 * @return
+	 */
 	protected TriggerDetailsList createPpfTaskTriggers(Time uplink, Time exec) {
 		TriggerDetailsList list = new TriggerDetailsList();
 		list.add(createTaskTrigger(TriggerName.UPLINK, uplink));

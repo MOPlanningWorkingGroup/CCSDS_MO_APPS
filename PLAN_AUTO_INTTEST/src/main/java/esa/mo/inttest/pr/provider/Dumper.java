@@ -1,5 +1,7 @@
 package esa.mo.inttest.pr.provider;
 
+import java.util.List;
+
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
@@ -14,6 +16,8 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
@@ -40,6 +44,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 public final class Dumper {
 
 	private static final String STEP = "  ";
+	private static final String NULL = "null";
 	
 	private Dumper() {
 	}
@@ -59,7 +64,13 @@ public final class Dumper {
 	}
 	
 	private static String quote(String s) {
-		return (null != s) ? "\"" + s + "\"" : null;
+		String z = NULL;
+		if (null != s) {
+			if (!s.equals(NULL)) {
+				z = "\"" + s + "\"";
+			}
+		}
+		return z;
 	}
 	
 	private static String dumpId(Identifier id) {
@@ -67,7 +78,7 @@ public final class Dumper {
 		if (null != id) {
 			s.append(quote(id.getValue()));
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -75,25 +86,36 @@ public final class Dumper {
 	private static String dumpArg(ArgumentDefinitionDetails arg) {
 		StringBuilder s = new StringBuilder();
 		if (null != arg) {
-			s.append("{ name=").append(dumpId(arg.getName())).append(", ");
-			s.append("attrType=").append(dumpAttr(arg.getAttributeType())).append(", ");
-			s.append("attrArea=").append(arg.getArea()).append(" }");
+			s.append("{ name=").append(dumpId(arg.getName()));
+			s.append(", attrType=").append(dumpAttr(arg.getAttributeType()));
+			s.append(", attrArea=").append(arg.getArea());
+			s.append(" }");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private static void openList(StringBuilder s, List list) {
+		s.append("list (size=").append(list.size()).append(") [").append(list.isEmpty() ? "]" : "").append("\n");
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private static void closeList(StringBuilder s, List list, String ind) {
+		s.append(list.isEmpty() ? "" : ind + "]");
 	}
 	
 	private static String dumpArgDefs(ArgumentDefinitionDetailsList args, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != args) {
-			s.append("list (size=").append(args.size()).append(") [").append(args.isEmpty() ? "]" : "").append("\n");
+			openList(s, args);
 			for (int i = 0; i < args.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpArg(args.get(i))).append("\n");
 			}
-			s.append(args.isEmpty() ? "" : ind + "]");
+			closeList(s, args, ind);
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -108,7 +130,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(td.getArgumentDefs(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -116,13 +138,13 @@ public final class Dumper {
 	public static String taskDefs(TaskDefinitionDetailsList tdl) {
 		StringBuilder s = new StringBuilder();
 		if (null != tdl) {
-			s.append("list (size=").append(tdl.size()).append(") [").append(tdl.isEmpty() ? "]" : "").append("\n");
+			openList(s, tdl);
 			for (int i = 0; i < tdl.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpTaskDef(tdl.get(i), STEP)).append("\n");
 			}
-			s.append(tdl.isEmpty() ? "" : "]");
+			closeList(s, tdl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -130,13 +152,13 @@ public final class Dumper {
 	private static String dumpNames(IdentifierList il, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != il) {
-			s.append("list (size=").append(il.size()).append(") [").append(il.isEmpty() ? "]" : "").append("\n");
+			openList(s, il);
 			for (int i = 0; i < il.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": \"").append(il.get(i)).append("\"\n");
 			}
-			s.append(il.isEmpty() ? "" : ind + "]");
+			closeList(s, il, ind);
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -155,7 +177,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("taskDefNames=").append(dumpNames(prd.getTaskDefNames(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -163,13 +185,13 @@ public final class Dumper {
 	public static String prDefs(PlanningRequestDefinitionDetailsList prdl) {
 		StringBuilder s = new StringBuilder();
 		if (null != prdl) {
-			s.append("(size=").append(prdl.size()).append(") [").append(prdl.isEmpty() ? "]" : "").append("\n");
+			openList(s, prdl);
 			for (int i = 0; i < prdl.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpPrDef(prdl.get(i), STEP)).append("\n");
 			}
-			s.append(prdl.isEmpty() ? "" : "]");
+			closeList(s, prdl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -177,10 +199,11 @@ public final class Dumper {
 	private static String dumpAttrVal(AttributeValue av) {
 		StringBuilder s = new StringBuilder();
 		if (null != av) {
-			s.append("{ value=\"").append(av.getValue()).append("\", ");
-			s.append("type=").append(dumpAttr((byte)(0xff & av.getValue().getTypeShortForm()))).append(" }");
+			s.append("{ value=").append(av.getValue());
+			s.append(", type=").append(dumpAttr((byte)(0xff & av.getValue().getTypeShortForm())));
+			s.append(" }");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -188,13 +211,13 @@ public final class Dumper {
 	private static String dumpAttrVals(AttributeValueList avl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != avl) {
-			s.append("list (size=").append(avl.size()).append(") [").append(avl.isEmpty() ? "]" : "").append("\n");
+			openList(s, avl);
 			for (int i = 0; i < avl.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpAttrVal(avl.get(i))).append("\n");
 			}
-			s.append(ind).append(avl.isEmpty() ? "" : "]");
+			closeList(s, avl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -202,20 +225,21 @@ public final class Dumper {
 	private static String dumpTimeTrig(TimeTrigger t) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
-			s.append("{ value=").append(t.getTimeValue()).append(", ");
-			s.append("isAbsoluteTime=").append(t.getIsAbsoluteTime()).append(" }");
+			s.append("{ value=").append(t.getTimeValue());
+			s.append(", isAbsoluteTime=").append(t.getIsAbsoluteTime());
+			s.append(" }");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
 	
 	private static String dumpTrigName(TriggerName tn) {
-		return (null != tn) ? quote(tn.toString()) : "null";
+		return (null != tn) ? quote(tn.toString()) : NULL;
 	}
 	
 	private static String dumpTrigType(TriggerType tt) {
-		return (null != tt) ? quote(tt.toString()) : "null";
+		return (null != tt) ? quote(tt.toString()) : NULL;
 	}
 	
 	private static String dumpTrigger(TriggerDetails t, String ind) {
@@ -228,7 +252,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("eventTrigger=").append(t.getEventTrigger()).append("\n");
 			s.append(ind).append("}");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -236,13 +260,13 @@ public final class Dumper {
 	private static String dumpTriggers(TriggerDetailsList tl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != tl) {
-			s.append("list (size=").append(tl.size()).append(") [").append(tl.isEmpty() ? "]" : "").append("\n");
+			openList(s, tl);
 			for (int i = 0; i < tl.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpTrigger(tl.get(i), ind+STEP)).append("\n");
 			}
-			s.append(ind).append(tl.isEmpty() ? "" : "]");
+			closeList(s, tl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -259,7 +283,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(ti.getTimingConstraints(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -267,13 +291,13 @@ public final class Dumper {
 	private static String dumpTaskInsts(TaskInstanceDetailsList til, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != til) {
-			s.append("list (size=").append(til.size()).append(") [").append(til.isEmpty() ? "]" : "").append("\n");
+			openList(s, til);
 			for (int i = 0; i < til.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskInst(til.get(i), ind+STEP)).append("\n");
 			}
-			s.append(ind).append(til.isEmpty() ? "" : "]");
+			closeList(s, til, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -290,17 +314,18 @@ public final class Dumper {
 			s.append(STEP).append("tasks=").append(dumpTaskInsts(pri.getTasks(), STEP)).append("\n");
 			s.append("}");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
 	
 	private static String dumpEntKey(EntityKey ek) {
 		StringBuilder s = new StringBuilder();
-		s.append("{ first=").append(dumpId(ek.getFirstSubKey())).append(", ");
-		s.append("second=").append(ek.getSecondSubKey()).append(", ");
-		s.append("third=").append(ek.getThirdSubKey()).append(", ");
-		s.append("fourth=").append(ek.getFourthSubKey()).append(" }");
+		s.append("{ first=").append(dumpId(ek.getFirstSubKey()));
+		s.append(", second=").append(ek.getSecondSubKey());
+		s.append(", third=").append(ek.getThirdSubKey());
+		s.append(", fourth=").append(ek.getFourthSubKey());
+		s.append(" }");
 		return s.toString();
 	}
 	
@@ -309,7 +334,7 @@ public final class Dumper {
 		s.append(ind).append(STEP).append("key=").append(dumpEntKey(uh.getKey())).append(",\n");
 		s.append(ind).append(STEP).append("sourceUri=").append(uh.getSourceURI()).append(",\n");
 		s.append(ind).append(STEP).append("timeStamp=").append(uh.getTimestamp()).append(",\n");
-		s.append(ind).append(STEP).append("updateType=").append(uh.getUpdateType()).append(",\n");
+		s.append(ind).append(STEP).append("updateType=").append(uh.getUpdateType()).append("\n");
 		s.append(STEP).append("}");
 		return s.toString();
 	}
@@ -317,13 +342,13 @@ public final class Dumper {
 	public static String updHdrs(UpdateHeaderList uhl) {
 		StringBuilder s = new StringBuilder();
 		if (null != uhl) {
-			s.append("list (size=").append(uhl.size()).append(") [").append(uhl.isEmpty() ? "]" : "").append("\n");
+			openList(s, uhl);
 			for (int i = 0; i < uhl.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpUpdHdr(uhl.get(i), STEP)).append("\n");
 			}
-			s.append(uhl.isEmpty() ? "" : "]");
+			closeList(s, uhl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -338,7 +363,7 @@ public final class Dumper {
 	
 	private static String dumpObjId(ObjectId oi, String ind) {
 		StringBuilder s = new StringBuilder("{\n");
-		s.append(ind).append(STEP).append("key=").append(dumpObjKey(oi.getKey(), ind+STEP)).append("\n");
+		s.append(ind).append(STEP).append("key=").append(dumpObjKey(oi.getKey(), ind+STEP)).append(",\n");
 		s.append(ind).append(STEP).append("type=").append(oi.getType()).append("\n");
 		s.append(ind).append("}");
 		return s.toString();
@@ -347,35 +372,36 @@ public final class Dumper {
 	public static String objIds(ObjectIdList oil) {
 		StringBuilder s = new StringBuilder();
 		if (null != oil) {
-			s.append("list (size=").append(oil.size()).append(") [").append(oil.isEmpty() ? "]" : "").append("\n");
+			openList(s, oil);
 			for (int i = 0; i < oil.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpObjId(oil.get(i), STEP)).append("\n");
 			}
-			s.append(oil.isEmpty() ? "" : "]");
+			closeList(s, oil, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
 	
 	private static String dumpStat(StatusRecord sr, String ind) {
 		StringBuilder s = new StringBuilder();
-		s.append("{ date=").append(sr.getDate()).append(", ");
-		s.append("state=").append(sr.getState()).append(", ");
-		s.append("comment=").append(quote(sr.getComment())).append(" }");
+		s.append("{ date=").append(sr.getDate());
+		s.append(", state=").append(sr.getState());
+		s.append(", comment=").append(quote(sr.getComment()));
+		s.append(" }");
 		return s.toString();
 	}
 	
 	private static String dumpStats(StatusRecordList srl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != srl) {
-			s.append("list (size=").append(srl.size()).append(") [").append(srl.isEmpty() ? "]" : "").append("\n");
+			openList(s, srl);
 			for (int i = 0; i < srl.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpStat(srl.get(i), ind+STEP)).append("\n");
 			}
-			s.append(ind).append(srl.isEmpty()? "" : "]");
+			closeList(s, srl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -392,35 +418,40 @@ public final class Dumper {
 	public static String prStats(PlanningRequestStatusDetailsList prsl) {
 		StringBuilder s = new StringBuilder();
 		if (null != prsl) {
-			s.append("list (size=").append(prsl.size()).append(") [").append(prsl.isEmpty() ? "]" : "").append("\n");
+			openList(s, prsl);
 			for (int i = 0; i < prsl.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), STEP)).append("\n");
 			}
-			s.append(prsl.isEmpty() ? "" : "]");
+			closeList(s, prsl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
 	
 	private static String dumpTaskStat(TaskStatusDetails ts, String ind) {
-		StringBuilder s = new StringBuilder("{\n");
-		s.append(ind).append(STEP).append("taskInstName=").append(dumpId(ts.getTaskInstName())).append(",\n");
-		s.append(ind).append(STEP).append("status=").append(dumpStats(ts.getStatus(), ind+STEP)).append("\n");
-		s.append(ind).append("}");
+		StringBuilder s = new StringBuilder();
+		if (null != ts) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("taskInstName=").append(dumpId(ts.getTaskInstName())).append(",\n");
+			s.append(ind).append(STEP).append("status=").append(dumpStats(ts.getStatus(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
 		return s.toString();
 	}
 	
 	public static String taskStats(TaskStatusDetailsList tsl) {
 		StringBuilder s = new StringBuilder();
 		if (null != tsl) {
-			s.append("list (size=").append(tsl.size()).append(") [").append(tsl.isEmpty() ? "]" : "").append("\n");
+			openList(s, tsl);
 			for (int i = 0; i < tsl.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpTaskStat(tsl.get(i), STEP)).append("\n");
 			}
-			s.append(tsl.isEmpty() ? "" : "]");
+			closeList(s, tsl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -438,7 +469,7 @@ public final class Dumper {
 				s.append(bd);
 			}
 		} else {
-			s.append("null");
+			s.append(NULL);
 		}
 		return s.toString();
 	}
@@ -447,13 +478,42 @@ public final class Dumper {
 	public static String baseDefs(BaseDefinitionList bdl) {
 		StringBuilder s = new StringBuilder();
 		if (null != bdl) {
-			s.append("list (size=").append(bdl.size()).append(") [").append(bdl.isEmpty() ? "]" : "").append("\n");
+			openList(s, bdl);
 			for (int i = 0; i < bdl.size(); ++i) {
 				s.append(STEP).append(i).append(": ").append(dumpBaseDef((BaseDefinition)bdl.get(i), STEP)).append("\n");
 			}
-			s.append(bdl.isEmpty() ? "" : "]");
+			closeList(s, bdl, "");
 		} else {
-			s.append("null");
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpPrResp(PlanningRequestResponseInstanceDetails prr, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != prr) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prr.getPrInstName())).append(",\n");
+			s.append(ind).append(STEP).append("date=").append(prr.getDate()).append(",\n");
+			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(prr.getArgumentDefNames(), STEP)).append(",\n");
+			s.append(ind).append(STEP).append("argDefValues=").append(dumpAttrVals(prr.getArgumentValues(), STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String prResps(PlanningRequestResponseInstanceDetailsList prrl) {
+		StringBuilder s = new StringBuilder();
+		if (null != prrl) {
+			openList(s, prrl);
+			for (int i = 0; i < prrl.size(); ++i) {
+				s.append(STEP).append(i).append(": ").append(dumpPrResp(prrl.get(i), STEP)).append("\n");
+			}
+			closeList(s, prrl, "");
+		} else {
+			s.append(NULL);
 		}
 		return s.toString();
 	}

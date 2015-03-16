@@ -1,19 +1,11 @@
 package esa.mo.inttest.pr.provider;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.com.COMHelper;
-import org.ccsds.moims.mo.goce.GOCEHelper;
-import org.ccsds.moims.mo.mal.MALContext;
-import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
-import org.ccsds.moims.mo.mal.MALHelper;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.mal.MALService;
 import org.ccsds.moims.mo.mal.provider.MALProvider;
 import org.ccsds.moims.mo.mal.provider.MALProviderManager;
 import org.ccsds.moims.mo.mal.structures.Blob;
@@ -25,86 +17,67 @@ import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
-import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
-import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
+
+import esa.mo.inttest.pr.PlanningRequestFactory;
 
 /**
- * Planning request provider factory.
+ * Planning request provider factory. Produces single provider with Task and PR publishing.
  */
-public class PlanningRequestProviderFactory {
+public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestProviderFactory.class.getName());
 	
-	private String propertyFile = null;
-	private MALContext malCtx = null;
 	private PlanningRequestProvider prov = null;
+	private URI brokerUri = null;
 	private MonitorTasksPublisher taskPub = null;
 	private MonitorPlanningRequestsPublisher prPub = null;
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
-
-	public void setPropertyFile(String fn) {
-		propertyFile = fn;
-		LOG.log(Level.CONFIG, "property file name set to {0}", propertyFile);
+	private IdentifierList domain = new IdentifierList();
+	
+	/**
+	 * Ctor.
+	 */
+	public PlanningRequestProviderFactory() {
+		domain.add(new Identifier("desd"));
 	}
 	
-	private void initProperties() throws IOException {
-		LOG.entering(getClass().getName(), "initProperties");
-		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(propertyFile);
-		Properties props = new Properties();
-		props.load(is);
-		is.close();
-		System.getProperties().putAll(props);
-		LOG.log(Level.CONFIG, "property rmi transport: {0}", System.getProperty("org.ccsds.moims.mo.mal.transport.protocol.rmi"));
-		LOG.log(Level.CONFIG, "property string encoder: {0}", System.getProperty("org.ccsds.moims.mo.mal.encoding.protocol.rmi"));
-		LOG.log(Level.CONFIG, "property gen wrap: {0}", System.getProperty("org.ccsds.moims.mo.mal.transport.gen.wrap"));
-		LOG.exiting(getClass().getName(), "initProperties");
-	}
-	
-	private void initContext() throws MALException {
-		LOG.entering(getClass().getName(), "initContext");
-		malCtx = MALContextFactory.newFactory().createMALContext(System.getProperties());
-		LOG.exiting(getClass().getName(), "initContext");
-	}
-
-	private void initHelpers() throws MALException {
-		LOG.entering(getClass().getName(), "initHelpers");
-		MALService tmp = PlanningHelper.PLANNING_AREA.getServiceByName(PlanningRequestHelper.PLANNINGREQUEST_SERVICE_NAME);
-		if (tmp == null) { // re-init error workaround
-			MALHelper.init(MALContextFactory.getElementFactoryRegistry());
-			COMHelper.init(MALContextFactory.getElementFactoryRegistry()); // required for publishing
-			PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
-			PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
-			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-			GOCEHelper.init(MALContextFactory.getElementFactoryRegistry());
-		} // else already initialized
-		LOG.exiting(getClass().getName(), "initHelpers");
+	/**
+	 * Set broker to use. If null, provider will create one itself.
+	 * @param broker
+	 */
+	public void setBrokerUri(URI broker) {
+		brokerUri = broker;
+		LOG.log(Level.CONFIG, "broker uri set: {0}", brokerUri);
 	}
 	
 	private void initProvider() throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
+		
 		malProvMgr = malCtx.createProviderManager();
 		prov = new PlanningRequestProvider();
+		
+		prov.setDomain(domain);
+		
 		String provName = "testPrProv";
 		String proto = "rmi";
 		Blob authId = new Blob("".getBytes());
 		QoSLevel[] expQos = { QoSLevel.ASSURED, };
 		UInteger priority = new UInteger(1L);
 		boolean isPublisher = true;
-		URI brokerUri = null;
 		
 		malProv = malProvMgr.createProvider(provName, proto, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
+		
 		LOG.exiting(getClass().getName(), "initProvider");
 	}
 
 	private void initTaskPublisher() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "initTaskPublicher");
-		IdentifierList domain = new IdentifierList();
-		domain.add(new Identifier("desd"));
+		
 		Identifier network = new Identifier("junit");
 		SessionType sessionType = SessionType.LIVE;
 		Identifier sessionName = new Identifier("test");
@@ -116,16 +89,17 @@ public class PlanningRequestProviderFactory {
 		
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		
 		taskPub.register(keyList, prov);
 		
 		prov.setTaskPub(taskPub);
+		
 		LOG.exiting(getClass().getName(), "initTaskPublisher");
 	}
 
 	private void initPrPublisher() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "initPrPublisher");
-		IdentifierList domain = new IdentifierList();
-		domain.add(new Identifier("desd"));
+		
 		Identifier network = new Identifier("junit");
 		SessionType sessionType = SessionType.LIVE;
 		Identifier sessionName = new Identifier("test");
@@ -137,37 +111,60 @@ public class PlanningRequestProviderFactory {
 		
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		
 		prPub.register(keyList, prov);
 		
 		prov.setPrPub(prPub);
+		
 		LOG.exiting(getClass().getName(), "initPrPublisher");
 	}
 
+	/**
+	 * Creates provider and gets it up and running.
+	 * @throws IOException
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	public void start() throws IOException, MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "start");
-		initProperties();
-		initContext();
-		initHelpers();
+		
+		super.init();
+		
 		initProvider();
 		initTaskPublisher();
 		initPrPublisher();
+		
 		LOG.exiting(getClass().getName(), "start");
 	}
-	
+
+	/**
+	 * Returns provider URI for consumer to connect to.
+	 * @return
+	 */
 	public URI getProviderUri() {
 		URI uri = malProv.getURI();
 		LOG.log(Level.CONFIG, "provider uri: {0}", uri.getValue());
 		return uri;
 	}
-	
+
+	/**
+	 * Returns used broker URI.
+	 * @return
+	 */
 	public URI getBrokerUri() {
 		URI uri = malProv.getBrokerURI();
 		LOG.log(Level.CONFIG, "broker uri: {0}", uri.getValue());
 		return uri;
 	}
-	
+
+	/**
+	 * Stops provider.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	public void stop() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "stop");
+		
 		if (taskPub != null) {
 			try {
 				taskPub.deregister();
@@ -195,10 +192,9 @@ public class PlanningRequestProviderFactory {
 		}
 		malProvMgr = null;
 		prov = null;
-		if (malCtx != null) {
-			malCtx.close();
-		}
-		malCtx = null;
+		
+		super.close();
+		
 		LOG.exiting(getClass().getName(), "stop");
 	}
 }

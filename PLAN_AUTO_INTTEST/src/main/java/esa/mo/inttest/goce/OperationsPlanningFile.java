@@ -22,8 +22,7 @@ public class OperationsPlanningFile extends CommonFile {
 	}
 
 	public TaskDefinitionDetails createTaskDef() {
-		TaskDefinitionDetails taskDef = createTaskDef("goce opf task", "operations task 4", PR_DEF_NAME/*,
-				createTaskDefFields(), createTaskDefArgs()*/);
+		TaskDefinitionDetails taskDef = createTaskDef("goce opf task", "operations task 4", PR_DEF_NAME);
 		ArgumentDefinitionDetailsList argDefs = createTaskDefArgDefs();
 		setTaskDefParamDefs(argDefs);
 		taskDef.setArgumentDefs(argDefs);
@@ -31,15 +30,14 @@ public class OperationsPlanningFile extends CommonFile {
 	}
 	
 	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) {
-		PlanningRequestDefinitionDetails prDef = createPrDef(PR_DEF_NAME, "plan4"/*, createPrDefFields()*/);
+		PlanningRequestDefinitionDetails prDef = createPrDef(PR_DEF_NAME, "plan4");
 		prDef.setArgumentDefs(createPrDefArgDefs());
 		prDef.setTaskDefNames(taskDefNames);
 		return prDef;
 	}
 	
 	public TaskInstanceDetails createTaskInst() throws ParseException {
-		TaskInstanceDetails taskInst = createTaskInst("MCDD10HZ", "DIS_DFACS_10_HZ v01", PR_NAME/*,
-				createPpfTaskFieldsValues("FCT", "MPS", "Time-tagged Sequence"), createTaskArgsZeroValues()*/,
+		TaskInstanceDetails taskInst = createTaskInst("MCDD10HZ", "DIS_DFACS_10_HZ v01", PR_NAME,
 				createPpfTaskTriggers(null, parseTime("UTC=2007-01-02T12:10:00")));
 		setTaskArgs(taskInst, "FCT", "MPS", "Time-tagged sequence");
 		setTaskParamsCount(taskInst, (short)0);
@@ -47,8 +45,7 @@ public class OperationsPlanningFile extends CommonFile {
 	}
 	
 	public PlanningRequestInstanceDetails createPrInst(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = createPrInst(PR_NAME, "goce plan 7"/*,
-				createPrFieldsValues(parseTime("UTC=2007-01-01T12:10:00"), "Request", "")*/);
+		PlanningRequestInstanceDetails prInst = createPrInst(PR_NAME, "goce plan 7");
 		setPrArgs(prInst, parseTime("UTC=2007-01-01T12:10:00"), "Request", "");
 		prInst.setTasks(taskInsts);
 		return prInst;

@@ -63,7 +63,6 @@ public class PlanningRequestStubTestBase {
 		protected TaskStatusDetailsList taskStats = null;
 		protected boolean deRegistered = false;
 		
-		// FIXME this callback is for async register?
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorTasksRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
@@ -72,7 +71,6 @@ public class PlanningRequestStubTestBase {
 			registered = true;
 		}
 		
-		// FIXME this callback is for async register?
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorTasksRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
@@ -104,7 +102,6 @@ public class PlanningRequestStubTestBase {
 			LOG.log(Level.INFO, "task monitor other notify: {0}", body);
 		}
 		
-		// FIXME this callback is for async de-register?
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorTasksDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
@@ -120,7 +117,6 @@ public class PlanningRequestStubTestBase {
 		protected PlanningRequestStatusDetailsList prStats = null;
 		protected boolean deRegistered = false;
 		
-		// FIXME this callback is for async register?
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorPlanningRequestsRegisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
@@ -129,7 +125,6 @@ public class PlanningRequestStubTestBase {
 			registered = true;
 		}
 		
-		// FIXME this callback is for async register?
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorPlanningRequestsRegisterErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
@@ -141,8 +136,7 @@ public class PlanningRequestStubTestBase {
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
-				UpdateHeaderList updHdrs, ObjectIdList objIds,
-				PlanningRequestStatusDetailsList prStats, Map qosProps) {
+				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps) {
 			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
 			this.prStats = prStats;
@@ -162,7 +156,6 @@ public class PlanningRequestStubTestBase {
 			LOG.log(Level.INFO, "pr monitor other notify: {0}", body);
 		}
 		
-		// FIXME this callback is for async de-register?
 		@SuppressWarnings("rawtypes")
 		@Override
 		public void monitorPlanningRequestsDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties)
@@ -331,8 +324,7 @@ public class PlanningRequestStubTestBase {
 		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
 		taskDefs.add(taskDef);
 		LongList taskDefIds = prCons.addDefinition(DefinitionType.TASK_DEF, taskDefs);
-		Long taskDefId = taskDefIds.get(0);
-		return taskDefId;
+		return taskDefIds.get(0);
 	}
 	
 	private TaskInstanceDetails createTaskInst(TaskDefinitionDetails taskDef) {
@@ -435,8 +427,7 @@ public class PlanningRequestStubTestBase {
 	protected PlanningRequestStatusDetailsList getPlanningRequestStatus(Long prInstId) throws MALException, MALInteractionException {
 		LongList prInstIds = new LongList();
 		prInstIds.add(prInstId);
-		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prInstIds);
-		return prStats;
+		return prCons.getPlanningRequestStatus(prInstIds);
 	}
 
 	protected PrMonitor registerPrMonitor(String subId) throws MALException, MALInteractionException {
@@ -504,11 +495,17 @@ public class PlanningRequestStubTestBase {
 		return prCons.listDefinition(DefinitionType.TASK_DEF, idList);
 	}
 	
+	/**
+	 * Creates dummy task def and submits it to PR provider.
+	 * @return Object[] { taskDefIdList, taskDefList }
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	protected Object[] addTaskDef() throws MALException, MALInteractionException {
 		TaskDefinitionDetailsList taskDefList = new TaskDefinitionDetailsList();
 		TaskDefinitionDetails taskDef = createTaskDef("new task def", "new pr def");
 		taskDefList.add(taskDef);
 		LongList taskDefIdList = prCons.addDefinition(DefinitionType.TASK_DEF, taskDefList);
-		return new Object[] { taskDefIdList.get(0), taskDefList.get(0) };
+		return new Object[] { taskDefIdList, taskDefList };
 	}
 }

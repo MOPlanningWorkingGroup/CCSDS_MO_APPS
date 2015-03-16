@@ -89,16 +89,14 @@ public class StationScheduleIncrementFile extends CommonFile {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy.ddd.HH.mm.ss.SSS");
 		Date d = sdf.parse(s);
 		long l = d.getTime();
-		Time t = new Time(l);
-		return t;
+		return new Time(l);
 	}
 	
 	protected Time parseDelta(String s) throws ParseException {
 		SimpleDateFormat sdf = new SimpleDateFormat("'ST'HH.mm.ss");
 		Date d = sdf.parse(s);
 		long l = d.getTime();
-		Time t = new Time(l);
-		return t;
+		return new Time(l);
 	}
 	
 	public ScheduleItemInstanceDetails createSchItem1() throws ParseException {

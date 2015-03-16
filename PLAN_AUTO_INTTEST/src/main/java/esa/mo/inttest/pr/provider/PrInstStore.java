@@ -9,8 +9,14 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestIns
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 
+/**
+ * PR instances storage.
+ */
 public class PrInstStore {
 
+	/**
+	 * Structure to hold PR def Id, PR inst Id, PR instance, PR status, task def Ids, task inst Ids.
+	 */
 	private final class Item {
 		
 		private Long defId;
@@ -47,7 +53,7 @@ public class PrInstStore {
 		while (it.hasNext()) {
 			Item item = it.next();
 			if (prInstId == item.instId) {
-				rval = new Object[] { item.pr, item.stat, };
+				rval = new Object[] { item.pr, item.stat, item.taskInstIds };
 				break;
 			}
 		}
@@ -99,7 +105,21 @@ public class PrInstStore {
 		return taskStat;
 	}
 	
-	public void setTaskStatus(Long taskStatusId, TaskStatusDetails taskStat) {
-		// TODO
+	public void setTaskStatus(Long taskInstId, TaskStatusDetails taskStat) {
+		Iterator<Item> it = prs.iterator();
+		while (it.hasNext()) {
+			Item item = it.next();
+			Iterator<Long> idIt = item.taskInstIds.iterator();
+			Iterator<TaskStatusDetails> statIt = item.stat.getTaskStatuses().iterator();
+			while (idIt.hasNext() && statIt.hasNext()) {
+				Long id = idIt.next();
+				TaskStatusDetails ts = statIt.next();
+				if (taskInstId == id) {
+					int idx = item.stat.getTaskStatuses().indexOf(ts);
+					item.stat.getTaskStatuses().set(idx, taskStat);
+					break;
+				}
+			}
+		}
 	}
 }

@@ -176,7 +176,6 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		TaskMonitor taskMon = registerTaskMonitor(taskSubId);
 		
 		Long[] ids = createAndSubmitPlanningRequestWithTask();
-//		Long prInstId = ids[0];
 		Long taskInstId = ids[1];
 		
 		sleep(2000);
