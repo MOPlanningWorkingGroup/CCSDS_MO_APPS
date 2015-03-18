@@ -14,6 +14,8 @@ import org.ccsds.moims.mo.mal.MALService;
 import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
+import org.ccsds.moims.mo.planningprototype.PlanningPrototypeHelper;
+import org.ccsds.moims.mo.planningprototype.planningrequesttest.PlanningRequestTestHelper;
 
 /**
  * Common factory for PR. Initializes same Helpers on consumer and provider side.
@@ -53,10 +55,12 @@ public abstract class PlanningRequestFactory {
 			PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
 			GOCEHelper.init(MALContextFactory.getElementFactoryRegistry());
+			PlanningPrototypeHelper.init(MALContextFactory.getElementFactoryRegistry()); // testing support
+			PlanningRequestTestHelper.init(MALContextFactory.getElementFactoryRegistry()); // testing support
 		} // else already initialized
 	}
 
-	protected void init() throws IOException, MALException/*, MALInteractionException*/ {
+	protected void init() throws IOException, MALException {
 		initProperties();
 		initContext();
 		initHelpers();

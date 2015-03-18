@@ -20,6 +20,7 @@ import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
+import org.ccsds.moims.mo.planningprototype.planningrequesttest.PlanningRequestTestHelper;
 
 import esa.mo.inttest.pr.PlanningRequestFactory;
 
@@ -37,6 +38,9 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
 	private IdentifierList domain = new IdentifierList();
+	
+	private PlanningRequestTestSupportProvider testProv = null;
+	private MALProvider testMalProv = null;
 	
 	/**
 	 * Ctor.
@@ -58,8 +62,8 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		LOG.entering(getClass().getName(), "initProvider");
 		
 		malProvMgr = malCtx.createProviderManager();
-		prov = new PlanningRequestProvider();
 		
+		prov = new PlanningRequestProvider();
 		prov.setDomain(domain);
 		
 		String provName = "testPrProv";
@@ -71,6 +75,15 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		
 		malProv = malProvMgr.createProvider(provName, proto, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
+		
+		// testing support
+		testProv = new PlanningRequestTestSupportProvider();
+		testProv.setProvider(prov);
+		
+		String testProvName = "testPrTestProv";
+		
+		testMalProv = malProvMgr.createProvider(testProvName, proto, PlanningRequestTestHelper.PLANNINGREQUESTTEST_SERVICE,
+				authId, testProv, expQos, priority, System.getProperties(), false, (null==brokerUri)?malProv.getBrokerURI():brokerUri);
 		
 		LOG.exiting(getClass().getName(), "initProvider");
 	}
@@ -158,6 +171,16 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	}
 
 	/**
+	 * Returns testing support provider URI for consumer to connect to.
+	 * @return
+	 */
+	public URI getTestProviderUri() {
+		URI uri = testMalProv.getURI();
+		LOG.log(Level.CONFIG, "testProvider uri: {0}", uri.getValue());
+		return uri;
+	}
+
+	/**
 	 * Stops provider.
 	 * @throws MALException
 	 * @throws MALInteractionException
@@ -183,6 +206,10 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 			prPub.close();
 		}
 		prPub = null;
+		if (testMalProv != null) {
+			testMalProv.close();
+		}
+		testMalProv = null;
 		if (malProv != null) {
 			malProv.close();
 		}
@@ -191,6 +218,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 			malProvMgr.close();
 		}
 		malProvMgr = null;
+		testProv = null;
 		prov = null;
 		
 		super.close();

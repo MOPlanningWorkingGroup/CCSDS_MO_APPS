@@ -244,20 +244,20 @@ public class PlanningRequestStubTestBase {
 		leave("tearDown");
 	}
 
-	private PlanningRequestDefinitionDetails createPrDef(String id) {
+	protected PlanningRequestDefinitionDetails createPrDef(String id) {
 		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
 		prDef.setName(new Identifier(id)); // mandatory - encoding exception if missing/null
 		return prDef;
 	}
 	
-	private Long submitPrDef(PlanningRequestDefinitionDetails prDef) throws MALException, MALInteractionException {
+	protected Long submitPrDef(PlanningRequestDefinitionDetails prDef) throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
 		prDefs.add(prDef);
 		LongList prDefIdList = prCons.addDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefs);
 		return prDefIdList.get(0);
 	}
 	
-	private PlanningRequestInstanceDetails createPrInst(PlanningRequestDefinitionDetails prDef,
+	protected PlanningRequestInstanceDetails createPrInst(PlanningRequestDefinitionDetails prDef,
 			TaskInstanceDetailsList taskInsts) {
 		
 		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
@@ -268,11 +268,11 @@ public class PlanningRequestStubTestBase {
 	
 	private long lastId = 0;
 	
-	private Long generateId() {
+	protected Long generateId() {
 		return ++lastId;
 	}
 	
-	private void storePrInst(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst) throws MALException,
+	protected void storePrInst(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst) throws MALException,
 			MALInteractionException {
 		
 		ObjectType objType = new ObjectType(PlanningHelper.PLANNING_AREA_NUMBER,
@@ -320,21 +320,21 @@ public class PlanningRequestStubTestBase {
 		return taskDef;
 	}
 	
-	private Long submitTaskDef(TaskDefinitionDetails taskDef) throws MALException, MALInteractionException {
+	protected Long submitTaskDef(TaskDefinitionDetails taskDef) throws MALException, MALInteractionException {
 		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
 		taskDefs.add(taskDef);
 		LongList taskDefIds = prCons.addDefinition(DefinitionType.TASK_DEF, taskDefs);
 		return taskDefIds.get(0);
 	}
 	
-	private TaskInstanceDetails createTaskInst(TaskDefinitionDetails taskDef) {
+	protected TaskInstanceDetails createTaskInst(TaskDefinitionDetails taskDef) {
 		TaskInstanceDetails taskInst = new TaskInstanceDetails();
 		taskInst.setName(taskDef.getName()); // mandatory
 		taskInst.setPrName(taskDef.getPrDefName()); // mandatory
 		return taskInst;
 	}
 	
-	private void storeTaskInst(Long taskDefId, Long taskInstId, TaskInstanceDetails taskInst) throws MALException,
+	protected void storeTaskInst(Long taskDefId, Long taskInstId, TaskInstanceDetails taskInst) throws MALException,
 			MALInteractionException {
 		
 		ObjectType objType = new ObjectType(TaskInstanceDetails.AREA_SHORT_FORM, TaskInstanceDetails.SERVICE_SHORT_FORM,
@@ -359,7 +359,7 @@ public class PlanningRequestStubTestBase {
 		caConsFct.getConsumer().store(false, objType, domain, arcDetails, elements);
 	}
 	
-	protected Long[] createAndSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
+	protected Object[] createAndSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
 		
 		String prDefName = "id1";
 		TaskDefinitionDetails taskDef = createTaskDef("id2", prDefName);
@@ -387,7 +387,7 @@ public class PlanningRequestStubTestBase {
 		
 		prCons.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 		
-		return new Long[] { prInstId, taskInstId };
+		return new Object[] { prDefId, prInstId, prInst, taskDefIds, taskInstIds };
 	}
 
 	protected void updatePlanningRequestWithTask(Object[] details) throws MALException, MALInteractionException {

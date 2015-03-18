@@ -5,6 +5,7 @@ import java.util.List;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
+import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -65,10 +66,8 @@ public final class Dumper {
 	
 	private static String quote(String s) {
 		String z = NULL;
-		if (null != s) {
-			if (!s.equals(NULL)) {
-				z = "\"" + s + "\"";
-			}
+		if (null != s && !s.equals(NULL)) {
+			z = "\"" + s + "\"";
 		}
 		return z;
 	}
@@ -215,7 +214,7 @@ public final class Dumper {
 			for (int i = 0; i < avl.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpAttrVal(avl.get(i))).append("\n");
 			}
-			closeList(s, avl, "");
+			closeList(s, avl, ind);
 		} else {
 			s.append(NULL);
 		}
@@ -264,7 +263,7 @@ public final class Dumper {
 			for (int i = 0; i < tl.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpTrigger(tl.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, tl, "");
+			closeList(s, tl, ind);
 		} else {
 			s.append(NULL);
 		}
@@ -295,7 +294,7 @@ public final class Dumper {
 			for (int i = 0; i < til.size(); ++i) {
 				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskInst(til.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, til, "");
+			closeList(s, til, ind);
 		} else {
 			s.append(NULL);
 		}
@@ -361,10 +360,24 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	public static String objType(ObjectType ot) {
+		StringBuilder s = new StringBuilder();
+		if (null != ot) {
+			s.append("{ area=").append(ot.getArea());
+			s.append(", service=").append(ot.getService());
+			s.append(", version=").append(ot.getVersion());
+			s.append(", number=").append(ot.getNumber());
+			s.append(" }");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
 	private static String dumpObjId(ObjectId oi, String ind) {
 		StringBuilder s = new StringBuilder("{\n");
 		s.append(ind).append(STEP).append("key=").append(dumpObjKey(oi.getKey(), ind+STEP)).append(",\n");
-		s.append(ind).append(STEP).append("type=").append(oi.getType()).append("\n");
+		s.append(ind).append(STEP).append("type=").append(objType(oi.getType())).append("\n");
 		s.append(ind).append("}");
 		return s.toString();
 	}
@@ -383,7 +396,7 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	private static String dumpStat(StatusRecord sr, String ind) {
+	private static String dumpStat(StatusRecord sr) {
 		StringBuilder s = new StringBuilder();
 		s.append("{ date=").append(sr.getDate());
 		s.append(", state=").append(sr.getState());
@@ -397,32 +410,9 @@ public final class Dumper {
 		if (null != srl) {
 			openList(s, srl);
 			for (int i = 0; i < srl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpStat(srl.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpStat(srl.get(i))).append("\n");
 			}
-			closeList(s, srl, "");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
-	private static String dumpPrStat(PlanningRequestStatusDetails prs, String ind) {
-		StringBuilder s = new StringBuilder("{\n");
-		s.append(ind).append(STEP).append("prInstName=").append(dumpId(prs.getPrInstName())).append(",\n");
-		s.append(ind).append(STEP).append("status=").append(dumpStats(prs.getStatus(), ind+STEP)).append(",\n");
-		s.append(ind).append(STEP).append("taskStatuses=").append(prs.getTaskStatuses()).append("\n");
-		s.append(ind).append("}");
-		return s.toString();
-	}
-	
-	public static String prStats(PlanningRequestStatusDetailsList prsl) {
-		StringBuilder s = new StringBuilder();
-		if (null != prsl) {
-			openList(s, prsl);
-			for (int i = 0; i < prsl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), STEP)).append("\n");
-			}
-			closeList(s, prsl, "");
+			closeList(s, srl, ind);
 		} else {
 			s.append(NULL);
 		}
@@ -442,18 +432,50 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	public static String taskStats(TaskStatusDetailsList tsl) {
+	private static String dumpTaskStats(TaskStatusDetailsList tsl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != tsl) {
 			openList(s, tsl);
 			for (int i = 0; i < tsl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpTaskStat(tsl.get(i), STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskStat(tsl.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, tsl, "");
+			closeList(s, tsl, ind);
 		} else {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	private static String dumpPrStat(PlanningRequestStatusDetails prs, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != prs) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prs.getPrInstName())).append(",\n");
+			s.append(ind).append(STEP).append("status=").append(dumpStats(prs.getStatus(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("taskStatuses=").append(dumpTaskStats(prs.getTaskStatuses(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String prStats(PlanningRequestStatusDetailsList prsl) {
+		StringBuilder s = new StringBuilder();
+		if (null != prsl) {
+			openList(s, prsl);
+			for (int i = 0; i < prsl.size(); ++i) {
+				s.append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), STEP)).append("\n");
+			}
+			closeList(s, prsl, "");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String taskStats(TaskStatusDetailsList tsl) {
+		return dumpTaskStats(tsl, "");
 	}
 	
 	private static String dumpBaseDef(BaseDefinition bd, String ind) {
@@ -495,8 +517,8 @@ public final class Dumper {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prr.getPrInstName())).append(",\n");
 			s.append(ind).append(STEP).append("date=").append(prr.getDate()).append(",\n");
-			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(prr.getArgumentDefNames(), STEP)).append(",\n");
-			s.append(ind).append(STEP).append("argDefValues=").append(dumpAttrVals(prr.getArgumentValues(), STEP)).append("\n");
+			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(prr.getArgumentDefNames(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("argDefValues=").append(dumpAttrVals(prr.getArgumentValues(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);

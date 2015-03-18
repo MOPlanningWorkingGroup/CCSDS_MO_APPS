@@ -60,6 +60,17 @@ public class PrInstStore {
 		return rval;
 	}
 	
+	public void setPrStatus(Long prInstId, PlanningRequestStatusDetails prStat) {
+		Iterator<Item> it = prs.iterator();
+		while (it.hasNext()) {
+			Item item = it.next();
+			if (prInstId == item.instId) {
+				item.stat = prStat;
+				break;
+			}
+		}
+	}
+	
 	public void updatePr(Long prInstId, PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {

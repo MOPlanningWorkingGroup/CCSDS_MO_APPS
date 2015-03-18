@@ -22,7 +22,7 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 /**
  * COM Archive consumer for testing.
  */
-public class ComArchiveConsumer {
+public class ComArchiveConsumer extends ArchiveAdapter {
 
 	private static final Logger LOG = Logger.getLogger(ComArchiveConsumer.class.getName());
 
@@ -31,44 +31,45 @@ public class ComArchiveConsumer {
 	public ComArchiveConsumer(ArchiveStub stub) {
 		this.stub = stub;
 	}
-
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void retrieveAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+		LOG.log(Level.INFO, "retrieve ack={0}", msgHeader);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void retrieveAckErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProperties) {
+		LOG.log(Level.INFO, "retrieve ack error={0}", error);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void retrieveResponseReceived(MALMessageHeader msgHeader, ArchiveDetailsList objDetails,
+			ElementList objBodies, Map qosProperties) {
+		LOG.log(Level.INFO, "retrieve resp: objDetails={0}, objBodies={1}", new Object[] { objDetails,  objBodies });
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void retrieveResponseErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+			Map qosProperties) {
+		LOG.log(Level.INFO, "retrieve error={0}", error);
+	}
+	
 	public void retrieveSomething() throws MALException, MALInteractionException {
 		
 		ObjectType objType = new ObjectType(new UShort(0), new UShort(0), new UOctet((short)0), new UShort(0));
+		
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("test"));
+		
 		LongList objIds = new LongList();
 		objIds.add(new Long(1L));
-		ArchiveAdapter adapter = new ArchiveAdapter() {
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void retrieveAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
-				LOG.log(Level.INFO, "retrieve ack={0}", msgHeader);
-			}
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void retrieveAckErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProperties) {
-				LOG.log(Level.INFO, "retrieve ack error={0}", error);
-			}
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void retrieveResponseReceived(MALMessageHeader msgHeader, ArchiveDetailsList objDetails,
-					ElementList objBodies, Map qosProperties) {
-				LOG.log(Level.INFO, "retrieve resp: objDetails={0}, objBodies={1}", new Object[] { objDetails,  objBodies });
-			}
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void retrieveResponseErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties) {
-				LOG.log(Level.INFO, "retrieve error={0}", error);
-			}
-		};
+		
 		LOG.log(Level.INFO, "retrieving..");
-		stub.retrieve(objType, domain, objIds, adapter);
+		stub.retrieve(objType, domain, objIds, this);
 		LOG.log(Level.INFO, "retrieved.");
 	}
 }

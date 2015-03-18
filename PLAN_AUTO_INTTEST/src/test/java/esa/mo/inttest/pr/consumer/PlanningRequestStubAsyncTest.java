@@ -21,8 +21,16 @@ import org.ccsds.moims.mo.mal.transport.MALMessage;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.Test;
 
 public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
@@ -50,7 +58,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAsyncMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
+	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
 		enter("testMonitorPrReg");
 		
 		String subId = "subId";
@@ -74,15 +82,13 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAsyncMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
+	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorPrDeReg");
 		
 		String subId = "subId2";
 		Object[] details = asyncRegisterPrMonitor(subId);
 		MALMessage malMsg = (MALMessage)details[0];
 		PrMonitor prMon = (PrMonitor)details[1];
-		
-//		sleep(1000); // wait a sec before de-registering
 		
 		MALMessage malMsg2 = asyncDeRegisterPrMonitor(subId, prMon);
 		
@@ -109,7 +115,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAsyncMonitorTasksRegister() throws MALException, MALInteractionException {
+	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksRegister");
 		
 		String subId = "subId";
@@ -133,15 +139,13 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAsyncMonitorTasksDeregister() throws MALException, MALInteractionException {
+	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
 		enter("testMonitorTasksDeregister");
 		
 		String subId = "subId2";
 		Object[] details = asyncRegisterTaskMonitor(subId);
 		MALMessage malMsg = (MALMessage)details[0];
 		TaskMonitor taskMon = (TaskMonitor)details[1];
-		
-//		sleep(1000); // wait a sec before de-registering
 		
 		MALMessage malMsg2 = asyncDeRegisterTaskMonitor(subId, taskMon);
 		
@@ -155,178 +159,457 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		leave("testMonitorTasksDeregister");
 	}
 	
-//	@Test
-//	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
-//		enter("testSubmitPlanningRequest");
-//		
-//		Object[] details = createAndSubmitPlanningRequest();
-//		Long prInstId = (Long)details[1];
-//		
-//		LongList prIds = new LongList();
-//		prIds.add(prInstId);
-//		
-//		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-//		
-//		assertNotNull(prStats);
-//		assertEquals(1, prStats.size());
-//		assertNotNull(prStats.get(0));
-//		
-//		leave("testSubmitPlanningRequest");
-//	}
+	@Test
+	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
+		enter("testSubmitPlanningRequest");
+		
+		PlanningRequestDefinitionDetails prDef = createPrDef("async pr def");
+		Long prDefId = submitPrDef(prDef);
+		
+		PlanningRequestInstanceDetails prInst = createPrInst(prDef, null);
+		Long prInstId = generateId();
+		
+		storePrInst(prDefId, prInstId, prInst);
+		
+		final PlanningRequestResponseInstanceDetailsList[] response = { null };
+		
+		MALMessage malMsg = prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, null, null, new PlanningRequestAdapter() {
+			@SuppressWarnings("rawtypes")
+			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
+					PlanningRequestResponseInstanceDetailsList resp, Map qosProperties) {
+				LOG.log(Level.INFO, "submit pr resp={0}", resp);
+				response[0] = resp;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProperties) {
+				LOG.log(Level.INFO, "submit pr error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertNotNull(response[0]);
+		assertEquals(1, response[0].size());
+		assertNotNull(response[0].get(0));
+		
+		LongList prIds = new LongList();
+		prIds.add(prInstId);
+		
+		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
+		
+		assertNotNull(prStats);
+		assertEquals(1, prStats.size());
+		assertNotNull(prStats.get(0));
+		
+		malMsg.free();
+		
+		leave("testSubmitPlanningRequest");
+	}
 
-//	@Test
-//	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
-//		enter("testSubmitPlanningRequestWithTask");
-//		
-//		Long[] ids = createAndSubmitPlanningRequestWithTask();
-//		Long prInstId = ids[0];
-//		Long taskId = ids[1];
-//		
-//		LongList prIds = new LongList();
-//		prIds.add(prInstId);
-//		
-//		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-//		
-//		assertNotNull(prStats);
-//		assertEquals(1, prStats.size());
-//		assertNotNull(prStats.get(0));
-//		
-//		LongList taskIds = new LongList();
-//		taskIds.add(taskId);
-//		
-//		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskIds);
-//		
-//		assertNotNull(taskStats);
-//		assertEquals(1, taskStats.size());
-//		assertNotNull(taskStats.get(0));
-//		
-//		leave("testSubmitPlanningRequestWithTask");
-//	}
+	@Test
+	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
+		enter("testSubmitPlanningRequestWithTask");
+		
+		TaskDefinitionDetails taskDef = createTaskDef("async task def", "async pr def");
+		Long taskDefId = submitTaskDef(taskDef);
+		
+		TaskInstanceDetails taskInst = createTaskInst(taskDef);
+		Long taskInstId = generateId();
+		
+		storeTaskInst(taskDefId, taskInstId, taskInst);
+		
+		PlanningRequestDefinitionDetails prDef = createPrDef("async pr def");
+		Long prDefId = submitPrDef(prDef);
+		
+		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
+		taskInsts.add(taskInst);
+		
+		PlanningRequestInstanceDetails prInst = createPrInst(prDef, taskInsts);
+		Long prInstId = generateId();
+		
+		storePrInst(prDefId, prInstId, prInst);
+		
+		LongList taskDefIds = new LongList();
+		taskDefIds.add(taskDefId);
+		
+		LongList taskInstIds = new LongList();
+		taskInstIds.add(taskInstId);
+		
+		final PlanningRequestResponseInstanceDetailsList[] response = { null };
+		
+		MALMessage malMsg = prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds, new PlanningRequestAdapter() {
+			@SuppressWarnings("rawtypes")
+			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
+					PlanningRequestResponseInstanceDetailsList resp, Map qosProperties) {
+				LOG.log(Level.INFO, "submit pr resp={0}", resp);
+				response[0] = resp;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProperties) {
+				LOG.log(Level.INFO, "submit pr error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertNotNull(response[0]);
+		assertEquals(1, response[0].size());
+		assertNotNull(response[0].get(0));
+		
+		LongList prIds = new LongList();
+		prIds.add(prInstId);
+		
+		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
+		
+		assertNotNull(prStats);
+		assertEquals(1, prStats.size());
+		assertNotNull(prStats.get(0));
+		
+		LongList taskIds = new LongList();
+		taskIds.add(taskInstId);
+		
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskIds);
+		
+		assertNotNull(taskStats);
+		assertEquals(1, taskStats.size());
+		assertNotNull(taskStats.get(0));
+		
+		malMsg.free();
+		
+		leave("testSubmitPlanningRequestWithTask");
+	}
 
-//	@Test
-//	public void testUpdatePlanningRequest() throws MALException, MALInteractionException {
-//		enter("testUpdatePlanningRequest");
-//		
-//		Object[] details = createAndSubmitPlanningRequest();
-//		
-//		updatePlanningRequestWithTask(details);
-//		
-//		leave("testUpdatePlanningRequest");
-//	}
+	@Test
+	public void testUpdatePlanningRequest() throws MALException, MALInteractionException {
+		enter("testUpdatePlanningRequest");
+		
+		Object[] details = createAndSubmitPlanningRequestWithTask();
+		Long prDefId = (Long)details[0];
+		Long prInstId = (Long)details[1];
+		PlanningRequestInstanceDetails prInst = (PlanningRequestInstanceDetails)details[2];
+		LongList taskDefIds = (LongList)details[3];
+		LongList taskInstIds = (LongList)details[4];
+		
+		prInst.setDescription("async updated");
+		
+		final boolean[] updated = { false };
+		
+		MALMessage malMsg = prCons.asyncUpdatePlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds, new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void updatePlanningRequestAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+				LOG.log(Level.INFO, "update pr ack");
+				updated[0] = true;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void updatePlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProps) {
+				LOG.log(Level.INFO, "update pr error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertTrue(updated[0]);
+		
+		LongList prIds = new LongList();
+		prIds.add(prInstId);
+		
+		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
+		
+		assertNotNull(prStats);
+		assertEquals(1, prStats.size());
+		assertNotNull(prStats.get(0));
+		
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
+		
+		assertNotNull(taskStats);
+		assertEquals(1, taskStats.size());
+		assertNotNull(taskStats.get(0));
+		
+		malMsg.free();
+		
+		leave("testUpdatePlanningRequest");
+	}
 
-//	@Test
-//	public void testRemovePlanningRequest() throws MALException, MALInteractionException {
-//		enter("testRemovePlanningRequest");
-//		
-//		Long[] ids = createAndSubmitPlanningRequestWithTask();
-//		Long prInstId = ids[0];
-//		
-//		removePlanningRequest(prInstId);
-//		
-//		leave("testRemovePlanningRequest");
-//	}
+	@Test
+	public void testRemovePlanningRequest() throws MALException, MALInteractionException {
+		enter("testRemovePlanningRequest");
+		
+		Object[] details = createAndSubmitPlanningRequestWithTask();
+		Long prInstId = (Long)details[1];
+		LongList taskInstIds = (LongList)details[4];
+		
+		final boolean[] removed = { false };
+		
+		MALMessage malMsg = prCons.asyncRemovePlanningRequest(prInstId, new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void removePlanningRequestAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+				LOG.log(Level.INFO, "remove pr ack");
+				removed[0] = true;
+			}
 
-//	@Test
-//	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException {
-//		enter("testGetPlanningRequestStatus");
-//		
-//		// ask for random pr status
-//		PlanningRequestStatusDetailsList prStats = getPlanningRequestStatus(1L);
-//		// should get nothing
-//		assertNotNull(prStats);
-//		assertEquals(0, prStats.size());
-//		
-//		leave("testGetPlanningRequestStatus");
-//	}
-	
-//	@Test
-//	public void testGetTaskStatus() throws MALException, MALInteractionException {
-//		enter("testGetTaskStatus");
-//		
-//		LongList taskInstIds = new LongList();
-//		taskInstIds.add(new Long(1L));
-//		
-//		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
-//		
-//		assertNotNull(taskStats);
-//		assertEquals(0, taskStats.size());
-//		
-//		leave("testGetTaskStatus");
-//	}
-	
-//	@Test
-//	public void testSetTaskStatus() throws MALException, MALInteractionException {
-//		enter("testSetTaskStatus");
-//		
-//		LongList taskInstIds = new LongList();
-//		taskInstIds.add(new Long(1L));
-//		
-//		TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-//		TaskStatusDetails taskStat = new TaskStatusDetails();
-//		taskStat.setTaskInstName(new Identifier("id")); // mandatory
-//		taskStats.add(taskStat);
-//		
-//		prCons.setTaskStatus(taskInstIds, taskStats);
-//		
-//		leave("testSetTaskStatus");
-//	}
-	
-//	@Test
-//	public void testListDefinition() throws MALException, MALInteractionException {
-//		enter("testListPrDefs");
-//		LongList ids = listPrDefs("*");
-//		
-//		assertNotNull(ids);
-//		assertEquals(0, ids.size());
-//		leave("testListPrDefs");
-//	}
-	
-//	@Test
-//	public void testAddDefinition() throws MALException, MALInteractionException {
-//		enter("testAddPrDef");
-//		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-//		
-//		assertNotNull(e.getKey());
-//		assertEquals(1, e.getKey().size());
-//		assertNotNull(e.getKey().get(0));
-//		// added pr id is listed
-//		LongList ids = listPrDefs("*");
-//		
-//		assertTrue(ids.contains(e.getKey().get(0)));
-//		leave("testAddPrDef");
-//	}
-	
-//	@Test
-//	public void testUpdateDefinition() throws MALException, MALInteractionException {
-//		enter("testUpdatePrDef");
-//		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-//		
-//		e.getValue().get(0).setDescription("updated desc");
-//		
-//		prCons.updateDefinition(e.getKey(), e.getValue());
-//		// updated pr id is still listed, but cant verify description
-//		LongList ids = listPrDefs("*");
-//		
-//		assertTrue(ids.contains(e.getKey().get(0)));
-//		leave("testUpdatePrDef");
-//	}
-	
-//	@Test
-//	public void testRemoveDefinition() throws MALException, MALInteractionException {
-//		enter("testRemovePrDef");
-//		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
-//		
-//		prCons.removeDefinition(e.getKey());
-//		// removed pr id is not listed anymore
-//		LongList ids = listPrDefs("*");
-//		
-//		assertFalse(ids.contains(e.getKey().get(0)));
-//		leave("testRemovePrDef");
-//	}
+			@SuppressWarnings("rawtypes")
+			public void removePlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProps) {
+				LOG.log(Level.INFO, "remove pr error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertTrue(removed[0]);
+		
+		LongList prIds = new LongList();
+		prIds.add(prInstId);
+		
+		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
+		
+		assertNotNull(prStats);
+		assertEquals(1, prStats.size());
+		assertNull(prStats.get(0));
+		
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
+		
+		assertNotNull(taskStats);
+		assertEquals(1, taskStats.size());
+		assertNull(taskStats.get(0));
+		
+		malMsg.free();
+		
+		leave("testRemovePlanningRequest");
+	}
+
+	@Test
+	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException {
+		enter("testGetPlanningRequestStatus");
+		
+		LongList prInstIds = new LongList();
+		prInstIds.add(1L);
+		
+		final PlanningRequestStatusDetailsList[] stats = { null };
+		
+		MALMessage malMsg = prCons.asyncGetPlanningRequestStatus(prInstIds, new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void getPlanningRequestStatusResponseReceived(MALMessageHeader msgHeader,
+					PlanningRequestStatusDetailsList prStats, Map qosProps) {
+				LOG.log(Level.INFO, "get pr status resp={0}", prStats);
+				stats[0] = prStats;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void getPlanningRequestStatusErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProps) {
+				LOG.log(Level.INFO, "get pr status error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		// should get null
+		assertNotNull(stats[0]);
+		assertEquals(1, stats[0].size());
+		assertNull(stats[0].get(0));
+		
+		malMsg.free();
+		
+		leave("testGetPlanningRequestStatus");
+	}
 	
 	@Test
-	public void testAsyncListTaskDefinition() throws MALException, MALInteractionException {
-		enter("testAsyncListTaskDefs");
+	public void testGetTaskStatus() throws MALException, MALInteractionException {
+		enter("testGetTaskStatus");
+		
+		LongList taskInstIds = new LongList();
+		taskInstIds.add(new Long(1L));
+		
+		final TaskStatusDetailsList[] stats = { null };
+		
+		MALMessage malMsg = prCons.asyncGetTaskStatus(taskInstIds, new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void getTaskStatusResponseReceived(MALMessageHeader msgHeader, TaskStatusDetailsList taskStats,
+					Map qosProps) {
+				LOG.log(Level.INFO, "get task status resp={0}", taskStats);
+				stats[0] = taskStats;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void getTaskStatusErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+				LOG.log(Level.INFO, "get task status error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertNotNull(stats[0]);
+		assertEquals(1, stats[0].size());
+		assertNull(stats[0].get(0));
+		
+		malMsg.free();
+		
+		leave("testGetTaskStatus");
+	}
+	
+	@Test
+	public void testListPrDefinition() throws MALException, MALInteractionException {
+		enter("testListPrDefs");
+		
+		IdentifierList names = new IdentifierList();
+		names.add(new Identifier("*"));
+		
+		final LongList[] ids =  { null };
+		
+		MALMessage malMsg = prCons.asyncListDefinition(DefinitionType.PLANNING_REQUEST_DEF, names, new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void listDefinitionResponseReceived(MALMessageHeader msgHeader, LongList prDefIds,
+					Map qosProps) {
+				LOG.log(Level.INFO, "list pr defs resp={0}", prDefIds);
+				ids[0] = prDefIds;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void listDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProps) {
+				LOG.log(Level.INFO, "list pr defs error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertNotNull(ids[0]);
+		assertEquals(0, ids[0].size());
+		
+		malMsg.free();
+		
+		leave("testListPrDefs");
+	}
+	
+	@Test
+	public void testAddPrDefinition() throws MALException, MALInteractionException {
+		enter("testAddPrDef");
+		
+		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
+		prDefs.add(createPrDef("async pr def"));
+		
+		final LongList[] ids = { null };
+		
+		MALMessage malMsg = prCons.asyncAddDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefs, new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void addDefinitionResponseReceived(MALMessageHeader msgHeader, LongList prDefIds,
+					Map qosProps) {
+				LOG.log(Level.INFO, "add pr defs resp={0}", prDefIds);
+				ids[0] = prDefIds;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void addDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProps) {
+				LOG.log(Level.INFO, "add pr defs err={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertNotNull(ids[0]);
+		assertEquals(1, ids[0].size());
+		assertNotNull(ids[0].get(0));
+		// added pr id is listed
+		LongList ids2 = listPrDefs("*");
+		
+		assertTrue(ids2.contains(ids[0].get(0)));
+		
+		malMsg.free();
+		
+		leave("testAddPrDef");
+	}
+	
+	@Test
+	public void testUpdatePrDefinition() throws MALException, MALInteractionException {
+		enter("testUpdatePrDef");
+		
+		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
+		
+		e.getValue().get(0).setDescription("updated desc");
+		
+		final boolean[] updated = { false };
+		
+		MALMessage malMsg = prCons.asyncUpdateDefinition(DefinitionType.PLANNING_REQUEST_DEF, e.getKey(), e.getValue(), new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+				LOG.log(Level.INFO, "update pr def ack");
+				updated[0] = true;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void updateDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProps) {
+				LOG.log(Level.INFO, "update pr def error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertTrue(updated[0]);
+		
+		// updated pr id is still listed, but cant verify description
+		LongList ids = listPrDefs("*");
+		
+		assertTrue(ids.contains(e.getKey().get(0)));
+		
+		malMsg.free();
+		
+		leave("testUpdatePrDef");
+	}
+	
+	@Test
+	public void testRemovePrDefinition() throws MALException, MALInteractionException {
+		enter("testRemovePrDef");
+		
+		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
+		
+		final boolean[] removed = { false };
+		
+		MALMessage malMsg = prCons.asyncRemoveDefinition(DefinitionType.PLANNING_REQUEST_DEF, e.getKey(), new PlanningRequestAdapter() {
+			@SuppressWarnings("rawtypes")
+			public void removeDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+				LOG.log(Level.INFO, "remove pr def ack");
+				removed[0] = true;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void removeDefinitionErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProperties) {
+				LOG.log(Level.INFO, "remove pr def error={0}", error);
+			}
+		});
+		
+		sleep(1000);
+		
+		assertTrue(removed[0]);
+		
+		// removed pr id is not listed anymore
+		LongList ids = listPrDefs("*");
+		
+		assertFalse(ids.contains(e.getKey().get(0)));
+		
+		malMsg.free();
+		
+		leave("testRemovePrDef");
+	}
+	
+	@Test
+	public void testListTaskDefinition() throws MALException, MALInteractionException {
+		enter("testListTaskDefs");
 		
 		IdentifierList taskNames = new IdentifierList();
 		taskNames.add(new Identifier("*"));
@@ -356,12 +639,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		malMsg.free();
 		
-		leave("testAsyncListTaskDefs");
+		leave("testListTaskDefs");
 	}
 	
 	@Test
-	public void testAsyncAddTaskDefinition() throws MALException, MALInteractionException {
-		enter("testAsyncAddTaskDef");
+	public void testAddTaskDefinition() throws MALException, MALInteractionException {
+		enter("testAddTaskDef");
 		
 		TaskDefinitionDetails taskDef = createTaskDef("async task def", "async pr def");
 		
@@ -402,12 +685,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		malMsg.free();
 		
-		leave("testAsyncAddTaskDef");
+		leave("testAddTaskDef");
 	}
 	
 	@Test
-	public void testAsyncUpdateTaskDefinition() throws MALException, MALInteractionException {
-		enter("testAsyncUpdateTaskDef");
+	public void testUpdateTaskDefinition() throws MALException, MALInteractionException {
+		enter("testUpdateTaskDef");
 		
 		Object[] details = addTaskDef();
 		LongList taskDefIds = (LongList)details[0];
@@ -445,12 +728,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		malMsg.free();
 		
-		leave("testAsyncUpdateTaskDef");
+		leave("testUpdateTaskDef");
 	}
 	
 	@Test
-	public void testAsyncRemoveTaskDefinition() throws MALException, MALInteractionException {
-		enter("testAsyncRemoveTaskDef");
+	public void testRemoveTaskDefinition() throws MALException, MALInteractionException {
+		enter("testRemoveTaskDef");
 		
 		Object[] details = addTaskDef();
 		LongList taskDefIds = (LongList)details[0];
@@ -482,6 +765,6 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		malMsg.free();
 		
-		leave("testAsyncRemoveTaskDef");
+		leave("testRemoveTaskDef");
 	}
 }

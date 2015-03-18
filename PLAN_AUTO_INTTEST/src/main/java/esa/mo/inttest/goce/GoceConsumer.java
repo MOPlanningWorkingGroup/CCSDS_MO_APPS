@@ -22,14 +22,14 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetail
  */
 public class GoceConsumer {
 
-	private PlanningRequestStub stub;
+	private PlanningRequestStub prStub;
 
-	public GoceConsumer(PlanningRequestStub stub) {
-		this.stub = stub;
+	public GoceConsumer(PlanningRequestStub prStub) {
+		this.prStub = prStub;
 	}
-
+	
 	public PlanningRequestStub getStub() {
-		return this.stub;
+		return this.prStub;
 	}
 	
 	protected IdentifierList getTaskNameList(String taskDefName) {
@@ -48,7 +48,7 @@ public class GoceConsumer {
 		TaskDefinitionDetailsList taskDefsList = new TaskDefinitionDetailsList();
 		taskDefsList.add(taskDef);
 		LongList taskIdsList = null;
-		taskIdsList = stub.addDefinition(DefinitionType.TASK_DEF, taskDefsList);
+		taskIdsList = prStub.addDefinition(DefinitionType.TASK_DEF, taskDefsList);
 		return (taskIdsList != null && !taskIdsList.isEmpty()) ? taskIdsList.get(0) : null;
 	}
 	
@@ -56,7 +56,7 @@ public class GoceConsumer {
 		PlanningRequestDefinitionDetailsList prDefsList = new PlanningRequestDefinitionDetailsList();
 		prDefsList.add(prDef);
 		LongList defIdsList = null;
-		defIdsList = stub.addDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefsList);
+		defIdsList = prStub.addDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefsList);
 		return (defIdsList != null && !defIdsList.isEmpty()) ? defIdsList.get(0) : null;
 	}
 	
@@ -76,26 +76,27 @@ public class GoceConsumer {
 		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst = ppf.createTaskInst1();
-		Long taskInstId = 1L; // FIXME store task inst in COM archive?
+		Long taskInstId = 1L;
+		
 		PlanningRequestInstanceDetails prInst = ppf.createPrInst1(getTaskInstList(taskInst));
-		Long prInstId = 2L; // FIXME store pr inst in COM archive?
+		Long prInstId = 2L;
 		
 		LongList taskDefIds = new LongList();
 		taskDefIds.add(taskDefId);
 		LongList taskInstIds = new LongList();
 		taskInstIds.add(taskInstId);
 		
-		stub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		prStub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 		
 		TaskInstanceDetails taskInst2 = ppf.createTaskInst2();
-		Long taskInstId2 = 3L; // FIXME store task instance in COM archive?
+		Long taskInstId2 = 3L;
 		PlanningRequestInstanceDetails prInst2 = ppf.createPrInst2(getTaskInstList(taskInst2));
-		Long prInstId2 = 4L; // FIXME store pr instance in COM archive?
+		Long prInstId2 = 4L;
 		
 		LongList taskInstIds2 = new LongList();
 		taskInstIds2.add(taskInstId2);
 		
-		stub.submitPlanningRequest(prDefId, prInstId2, prInst2, taskDefIds, taskInstIds2);
+		prStub.submitPlanningRequest(prDefId, prInstId2, prInst2, taskDefIds, taskInstIds2);
 	}
 	
 	/**
@@ -111,7 +112,7 @@ public class GoceConsumer {
 		IdentifierList taskNames = new IdentifierList();
 		taskNames.add(new Identifier(ppf.getTaskDefName()));
 		
-		LongList taskIds = stub.listDefinition(DefinitionType.TASK_DEF, taskNames);
+		LongList taskIds = prStub.listDefinition(DefinitionType.TASK_DEF, taskNames);
 		if (taskIds.isEmpty()) {
 			TaskDefinitionDetails taskDef = ppf.createTaskDef();
 			Long taskDefId = submitTaskDef(taskDef);
@@ -137,7 +138,7 @@ public class GoceConsumer {
 		IdentifierList prNames = new IdentifierList();
 		prNames.add(new Identifier(ppf.getPrDefName()));
 		
-		LongList prIds = stub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
+		LongList prIds = prStub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
 		
 		if (prIds.isEmpty()) {
 			PlanningRequestDefinitionDetails prDef = ppf.createPrDef(getTaskNameList(ppf.getTaskDefName()));
@@ -165,7 +166,7 @@ public class GoceConsumer {
 		IdentifierList taskNames = new IdentifierList();
 		taskNames.add(new Identifier(ppf.getTaskDefName()));
 		
-		LongList taskIds = stub.listDefinition(DefinitionType.TASK_DEF, taskNames);
+		LongList taskIds = prStub.listDefinition(DefinitionType.TASK_DEF, taskNames);
 		
 		TaskInstanceDetails taskInst1 = null;
 		Long taskInst1Id = null;
@@ -177,10 +178,10 @@ public class GoceConsumer {
 			throw new MALException("more than one goce ppf task def with same name found");
 		} else {
 			// TODO check if task instances already exist
-			taskInst1 = ppf.createTaskInst1(); // FIXME store task instance in COM archive?
+			taskInst1 = ppf.createTaskInst1();
 			taskInst1Id = new Long(4L);
 			task1Created = (taskInst1 != null);
-			taskInst2 = ppf.createTaskInst2(); // FIXME store task instance in COM archive?
+			taskInst2 = ppf.createTaskInst2();
 			taskInst2Id = new Long(5L);
 			task2Created = (taskInst2 != null);
 		}
@@ -190,7 +191,7 @@ public class GoceConsumer {
 		IdentifierList prNames = new IdentifierList();
 		prNames.add(new Identifier(ppf.getPrDefName()));
 		
-		LongList prIds = stub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
+		LongList prIds = prStub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
 		
 		if (prIds.isEmpty()) {
 			// no pr def - nothing to do
@@ -200,19 +201,19 @@ public class GoceConsumer {
 			// TODO check if pr instances already exist
 			Long prDefId = prIds.get(0);
 			PlanningRequestInstanceDetails prInst = ppf.createPrInst1(getTaskInstList(taskInst1));
-			Long prInstId = 2L; // FIXME store pr instance in COM archive?
+			Long prInstId = 2L;
 			LongList taskDefIds = new LongList();
 			taskDefIds.add(taskIds.get(0));
 			LongList taskInstIds = new LongList();
 			taskInstIds.add(taskInst1Id);
-			stub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+			prStub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 			pr1Created = true;
 			
 			PlanningRequestInstanceDetails prInst2 = ppf.createPrInst2(getTaskInstList(taskInst2));
-			Long prInstId2 = 3L; // FIXME store pr instance in COM archive?
+			Long prInstId2 = 3L;
 			LongList taskInstIds2 = new LongList();
 			taskInstIds2.add(taskInst2Id);
-			stub.submitPlanningRequest(prDefId, prInstId2, prInst2, taskDefIds, taskInstIds2);
+			prStub.submitPlanningRequest(prDefId, prInstId2, prInst2, taskDefIds, taskInstIds2);
 			pr2Created = true;
 		}
 		return task1Created && pr1Created && task2Created && pr2Created;
@@ -235,10 +236,10 @@ public class GoceConsumer {
 		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst = pif.createTaskInst();
-		Long taskInstId = 1L; // FIXME store task instance in COM archive?
+		Long taskInstId = 1L;
 		
 		PlanningRequestInstanceDetails prInst = pif.createPrInst(getTaskInstList(taskInst));
-		Long prInstId = 2L; // FIXME store pr instance in COM archive?
+		Long prInstId = 2L;
 		
 		LongList taskDefIds = new LongList();
 		taskDefIds.add(taskDefId);
@@ -246,7 +247,7 @@ public class GoceConsumer {
 		LongList taskInstIds = new LongList();
 		taskInstIds.add(taskInstId);
 		
-		stub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		prStub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 	}
 	
 	/**
@@ -268,10 +269,10 @@ public class GoceConsumer {
 		
 		for (int i = 0; i < spf.getInstCount(); ++i) {
 			TaskInstanceDetails taskInst = spf.createTaskInst(i);
-			Long taskInstId = ++id; // FIXME store task instance in com arc
+			Long taskInstId = ++id;
 			
 			PlanningRequestInstanceDetails prInst = spf.createPrInst(i, getTaskInstList(taskInst));
-			Long prInstId = ++id; // FIXME store pr instance in com arc
+			Long prInstId = ++id;
 			
 			LongList taskDefIds = new LongList();
 			taskDefIds.add(taskDefId);
@@ -279,7 +280,7 @@ public class GoceConsumer {
 			LongList taskInstIds = new LongList();
 			taskInstIds.add(taskInstId);
 			
-			stub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+			prStub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 		}
 	}
 	
@@ -299,10 +300,10 @@ public class GoceConsumer {
 		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst = opf.createTaskInst();
-		Long taskInstId = 1L; // FIXME store task inst in com arc
+		Long taskInstId = 1L;
 		
 		PlanningRequestInstanceDetails prInst = opf.createPrInst(getTaskInstList(taskInst));
-		Long prInstId = 2L; // FIXME store pr inst in com arc
+		Long prInstId = 2L;
 		
 		LongList taskDefIds = new LongList();
 		taskDefIds.add(taskDefId);
@@ -310,6 +311,6 @@ public class GoceConsumer {
 		LongList taskInstIds = new LongList();
 		taskInstIds.add(taskInstId);
 		
-		stub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		prStub.submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 	}
 }

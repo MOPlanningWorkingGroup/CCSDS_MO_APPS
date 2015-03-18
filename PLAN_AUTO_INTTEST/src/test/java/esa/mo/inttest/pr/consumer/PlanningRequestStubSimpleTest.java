@@ -8,16 +8,11 @@ import java.util.logging.Logger;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
-import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
-import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.junit.Test;
 
 public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
@@ -119,9 +114,9 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
 		enter("testSubmitPlanningRequestWithTask");
 		
-		Long[] ids = createAndSubmitPlanningRequestWithTask();
-		Long prInstId = ids[0];
-		Long taskId = ids[1];
+		Object[] details = createAndSubmitPlanningRequestWithTask();
+		Long prInstId = (Long)details[1];
+		LongList taskInstIds = (LongList)details[3];
 		
 		LongList prIds = new LongList();
 		prIds.add(prInstId);
@@ -132,10 +127,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		assertEquals(1, prStats.size());
 		assertNotNull(prStats.get(0));
 		
-		LongList taskIds = new LongList();
-		taskIds.add(taskId);
-		
-		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskIds);
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
 		
 		assertNotNull(taskStats);
 		assertEquals(1, taskStats.size());
@@ -159,8 +151,8 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testRemovePlanningRequest() throws MALException, MALInteractionException {
 		enter("testRemovePlanningRequest");
 		
-		Long[] ids = createAndSubmitPlanningRequestWithTask();
-		Long prInstId = ids[0];
+		Object[] details = createAndSubmitPlanningRequestWithTask();
+		Long prInstId = (Long)details[1];
 		
 		removePlanningRequest(prInstId);
 		
@@ -212,43 +204,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testSetTaskStatus() throws MALException, MALInteractionException {
-		enter("testSetTaskStatus");
-		
-		Long[] ids = createAndSubmitPlanningRequestWithTask();
-		Long taskInstId = ids[1];
-		
-		LongList taskIds = new LongList();
-		taskIds.add(new Long(taskInstId));
-		
-		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskIds);
-		// assuming there is one task status
-		TaskStatusDetails taskStat = taskStats.get(0);
-		StatusRecordList stats = taskStat.getStatus();
-		if (null == stats) {
-			stats = new StatusRecordList();
-		}
-		StatusRecord rec = null;
-		for (StatusRecord sr: stats) {
-			if (sr.getState() == InstanceState.INVALID) {
-				rec = sr;
-			}
-		}
-		if (null == rec) {
-			rec = new StatusRecord(InstanceState.INVALID, new Time(System.currentTimeMillis()), "invalid");
-			stats.add(rec);
-		} else {
-			rec.setDate(new Time(System.currentTimeMillis()));
-			rec.setComment("invalid");
-		}
-		
-		prCons.setTaskStatus(taskIds, taskStats);
-		
-		leave("testSetTaskStatus");
-	}
-	
-	@Test
-	public void testListDefinition() throws MALException, MALInteractionException {
+	public void testListPrDefinition() throws MALException, MALInteractionException {
 		enter("testListPrDefs");
 		
 		LongList ids = listPrDefs("*");
@@ -260,7 +216,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAddDefinition() throws MALException, MALInteractionException {
+	public void testAddPrDefinition() throws MALException, MALInteractionException {
 		enter("testAddPrDef");
 		
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
@@ -277,7 +233,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testUpdateDefinition() throws MALException, MALInteractionException {
+	public void testUpdatePrDefinition() throws MALException, MALInteractionException {
 		enter("testUpdatePrDef");
 		
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
@@ -294,7 +250,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testRemoveDefinition() throws MALException, MALInteractionException {
+	public void testRemovePrDefinition() throws MALException, MALInteractionException {
 		enter("testRemovePrDef");
 		
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
