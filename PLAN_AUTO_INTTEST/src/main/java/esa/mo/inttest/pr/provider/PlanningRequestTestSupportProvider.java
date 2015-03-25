@@ -48,8 +48,8 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 	public void updatePrStatus(LongList prIds, PlanningRequestStatusDetailsList prStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("updatePrStatus");
-		LOG.log(Level.INFO, "received update pr status: prIds={0}, prStats={1}",
-				new Object[] { prIds, Dumper.prStats(prStats) });
+		LOG.log(Level.INFO, "{2}.updatePrStatus(prIds={0}, prStats={1})",
+				new Object[] { prIds, Dumper.prStats(prStats), Dumper.received(interaction) });
 		
 		for (int i = 0; (null != prIds) && (i < prIds.size()); ++i) {
 			Long id = prIds.get(i);
@@ -59,14 +59,15 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 				prov.publishPr(UpdateType.MODIFICATION, id, stat);
 			}
 		}
+		LOG.log(Level.INFO, "{0}.updatePrStatus() response: returning nothing", Dumper.sending(interaction));
 		leave("updatePrStatus");
 	}
 
 	public void updateTaskStatus(LongList taskIds, TaskStatusDetailsList taskStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("updateTaskStatus");
-		LOG.log(Level.INFO, "received update task status: taskIds={0}, taskStats={1}",
-				new Object[] { taskIds, Dumper.taskStats(taskStats) });
+		LOG.log(Level.INFO, "{2}.updateTaskStatus(taskIds={0}, taskStats={1})",
+				new Object[] { taskIds, Dumper.taskStats(taskStats), Dumper.received(interaction) });
 		
 		for (int i = 0; (null != taskIds) && (i < taskIds.size()); ++i) {
 			Long id = taskIds.get(i);
@@ -76,6 +77,7 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 				prov.publishTask(UpdateType.MODIFICATION, id, stat);
 			}
 		}
+		LOG.log(Level.INFO, "{0}.updateTaskStatus() response: returning nothing", Dumper.sending(interaction));
 		leave("updateTaskStatus");
 	}
 }

@@ -159,6 +159,29 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		leave("testMonitorTasksDeregister");
 	}
 	
+	protected MALMessage asyncSubmitPr(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
+			LongList taskDefIds, LongList taskInstIds, final PlanningRequestResponseInstanceDetailsList[] resp)
+					throws MALException, MALInteractionException {
+		
+		MALMessage malMsg = prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds,
+				new PlanningRequestAdapter() {
+			
+			@SuppressWarnings("rawtypes")
+			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
+					PlanningRequestResponseInstanceDetailsList resp2, Map qosProperties) {
+				LOG.log(Level.INFO, "submit pr resp={0}", resp2);
+				resp[0] = resp2;
+			}
+			
+			@SuppressWarnings("rawtypes")
+			public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+					Map qosProperties) {
+				LOG.log(Level.INFO, "submit pr error={0}", error);
+			}
+		});
+		return malMsg;
+	}
+	
 	@Test
 	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
 		enter("testSubmitPlanningRequest");
@@ -173,20 +196,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		final PlanningRequestResponseInstanceDetailsList[] response = { null };
 		
-		MALMessage malMsg = prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, null, null, new PlanningRequestAdapter() {
-			@SuppressWarnings("rawtypes")
-			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestResponseInstanceDetailsList resp, Map qosProperties) {
-				LOG.log(Level.INFO, "submit pr resp={0}", resp);
-				response[0] = resp;
-			}
-			
-			@SuppressWarnings("rawtypes")
-			public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties) {
-				LOG.log(Level.INFO, "submit pr error={0}", error);
-			}
-		});
+		MALMessage malMsg = asyncSubmitPr(prDefId, prInstId, prInst, null, null, response);
 		
 		sleep(1000);
 		
@@ -239,20 +249,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		final PlanningRequestResponseInstanceDetailsList[] response = { null };
 		
-		MALMessage malMsg = prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds, new PlanningRequestAdapter() {
-			@SuppressWarnings("rawtypes")
-			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestResponseInstanceDetailsList resp, Map qosProperties) {
-				LOG.log(Level.INFO, "submit pr resp={0}", resp);
-				response[0] = resp;
-			}
-			
-			@SuppressWarnings("rawtypes")
-			public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties) {
-				LOG.log(Level.INFO, "submit pr error={0}", error);
-			}
-		});
+		MALMessage malMsg = asyncSubmitPr(prDefId, prInstId, prInst, taskDefIds, taskInstIds, response);
 		
 		sleep(1000);
 		

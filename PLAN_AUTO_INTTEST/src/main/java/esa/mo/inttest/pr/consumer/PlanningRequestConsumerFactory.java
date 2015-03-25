@@ -1,7 +1,6 @@
 package esa.mo.inttest.pr.consumer;
 
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
@@ -40,7 +39,6 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 	 */
 	public void setProviderUri(URI uri) {
 		provUri = uri;
-		LOG.log(Level.CONFIG, "provider uri set: {0}", provUri);
 	}
 
 	/**
@@ -49,7 +47,6 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 	 */
 	public void setBrokerUri(URI uri) {
 		brokerUri = uri;
-		LOG.log(Level.CONFIG, "broker uri set: {0}", brokerUri);
 	}
 
 	/**
@@ -58,13 +55,12 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 	 */
 	public void setTestProviderUri(URI uri) {
 		testProvUri = uri;
-		LOG.log(Level.CONFIG, "testProvider uri set: {0}", testProvUri);
 	}
 
-	private PlanningRequestStub initConsumer() throws MALException {
+	private PlanningRequestStub initConsumer(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initConsumer");
 		
-		String consName = "testPrCons";
+		String consName = (null != name && !name.isEmpty()) ? name : "PrCons";
 		Blob authId = new Blob("".getBytes());
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("desd"));
@@ -83,7 +79,7 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		return cons;
 	}
 
-	public PlanningRequestStub start() throws IOException, MALException {
+	public PlanningRequestStub start(String name) throws IOException, MALException {
 		LOG.entering(getClass().getName(), "start");
 		
 		super.init();
@@ -91,7 +87,7 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		if (malConsMgr == null) {
 			malConsMgr = malCtx.createConsumerManager();
 		}
-		PlanningRequestStub stub = initConsumer();
+		PlanningRequestStub stub = initConsumer(name);
 		
 		LOG.exiting(getClass().getName(), "start");
 		return stub;
@@ -113,10 +109,10 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		LOG.exiting(getClass().getName(), "stop");
 	}
 	
-	private PlanningRequestTestStub initTestConsumer() throws MALException {
+	private PlanningRequestTestStub initTestConsumer(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initTestConsumer");
 		
-		String consName = "testPrTestCons";
+		String consName = (null != name && !name.isEmpty()) ? name : "PrConsTestSupport";
 		Blob authId = new Blob("".getBytes());
 		IdentifierList domain = new IdentifierList();
 		domain.add(new Identifier("desd"));
@@ -135,7 +131,7 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		return cons;
 	}
 	
-	public PlanningRequestTestStub startTest() throws IOException, MALException {
+	public PlanningRequestTestStub startTest(String name) throws IOException, MALException {
 		LOG.entering(getClass().getName(), "startTest");
 		
 		super.init();
@@ -143,7 +139,7 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		if (malConsMgr == null) {
 			malConsMgr = malCtx.createConsumerManager();
 		}
-		PlanningRequestTestStub stub = initTestConsumer();
+		PlanningRequestTestStub stub = initTestConsumer(name);
 		
 		LOG.exiting(getClass().getName(), "startTest");
 		return stub;

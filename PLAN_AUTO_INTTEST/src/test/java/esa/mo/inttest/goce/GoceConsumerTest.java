@@ -29,14 +29,14 @@ public class GoceConsumerTest {
 		
 		provFct = new PlanningRequestProviderFactory();
 		provFct.setPropertyFile(props);
-		provFct.start();
+		provFct.start(null);
 		
 		consFct = new PlanningRequestConsumerFactory();
 		consFct.setPropertyFile(props);
 		consFct.setProviderUri(provFct.getProviderUri());
 		consFct.setBrokerUri(provFct.getBrokerUri());
 		
-		goce = new GoceConsumer(consFct.start());
+		goce = new GoceConsumer(consFct.start("GoceClient"));
 	}
 
 	@After

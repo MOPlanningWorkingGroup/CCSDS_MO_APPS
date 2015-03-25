@@ -21,6 +21,7 @@
     <esa.stubgen.xmlDirectory>src/main/resources</esa.stubgen.xmlDirectory>
     <spring.version>3.1.1.RELEASE</spring.version>
     <junit.version>4.11</junit.version>
+    <log2file.value>false</log2file.value>
   </properties>
   
   <dependencies>
@@ -93,6 +94,15 @@
   	</dependency>
   </dependencies>
   
+  <profiles>
+    <profile>
+      <id>gen-log-files</id>
+      <properties>
+        <log2file.value>true</log2file.value>
+      </properties>
+    </profile>
+  </profiles>
+  
   <build>
     <plugins>
       <plugin>
@@ -103,6 +113,17 @@
         <groupId>int.esa.ccsds.mo</groupId>
         <artifactId>StubGenerator</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.12.4</version>
+        <configuration>
+          <systemPropertyVariables>
+            <log2file>${log2file.value}</log2file>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+  
 </project>

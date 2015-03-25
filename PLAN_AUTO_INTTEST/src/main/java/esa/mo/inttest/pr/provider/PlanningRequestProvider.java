@@ -73,7 +73,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-		LOG.log(Level.FINE, "publisher registration ack received");
+		LOG.log(Level.INFO, "publisher registration ack received");
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	@Override
 	public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
 			throws MALException {
-		LOG.log(Level.FINE, "publisher registration error received={0}", body);
+		LOG.log(Level.WARNING, "publisher registration error received={0}", body);
 	}
 	
 	/**
@@ -94,7 +94,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-		LOG.log(Level.FINE, "publish error received={0}", body);
+		LOG.log(Level.WARNING, "publish error received={0}", body);
 	}
 	
 	/**
@@ -104,7 +104,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-		LOG.log(Level.FINE, "publisher de-registration ack received");
+		LOG.log(Level.INFO, "publisher de-registration ack received");
 	}
 	
 	/**
@@ -129,7 +129,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	 */
 	public void setTaskPub(MonitorTasksPublisher taskPub) {
 		this.taskPub = taskPub;
-		LOG.log(Level.INFO, "tasks publisher {0}", (this.taskPub != null) ? "set" : "unset");
 	}
 	
 	/**
@@ -138,7 +137,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	 */
 	public void setPrPub(MonitorPlanningRequestsPublisher prPub) {
 		this.prPub = prPub;
-		LOG.log(Level.INFO, "pr publisher {0}", (this.prPub != null) ? "set" : "unset");
 	}
 	
 	protected void publishTask(UpdateType updType, Long taskInstId, TaskStatusDetails taskStat)
@@ -262,13 +260,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return taskStat;
 	}
 	
-	public PlanningRequestResponseInstanceDetailsList submitPlanningRequest(Long prDefId, Long prInstId,
-			PlanningRequestInstanceDetails prInst, LongList taskDefIds, LongList taskInstIds,
-			MALInteraction interaction) throws MALInteractionException, MALException {
-		enter("submitPlanningRequest");
-		LOG.log(Level.FINE, "received pr add: prDefId={0}, prInstId={1}, prInst={2}, taskDefIds={3}, taskInstIds={4}",
-				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds });
-		// checks
+	protected void checkNulls(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
+			LongList taskDefIds, LongList taskInstIds) throws MALException {
 		if (null == prDefId) {
 			throw new MALException("pr definition id not given");
 		}
@@ -277,10 +270,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		if (null == prInst) {
 			throw new MALException("pr instance not given");
-		}
-		Object[] old = prInsts.findPr(prInstId);
-		if (null != old) {
-			throw new MALException("pr instance id already exists: " + prInstId);
 		}
 		int tasksCount = (null != prInst.getTasks()) ? prInst.getTasks().size() : 0;
 		int taskDefIdCount = (null != taskDefIds) ? taskDefIds.size() : 0;
@@ -305,6 +294,31 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				throw new MALException("task instance id[" + i + "] is null");
 			}
 		}
+	}
+	
+	protected PlanningRequestResponseInstanceDetails createResponse(PlanningRequestInstanceDetails prInst) {
+		SimpleDateFormat sdf = new SimpleDateFormat("zzz'='yyyy-MM-dd'T'HH:mm:ss.SSS");
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		String timeStamp = sdf.format(new Date(System.currentTimeMillis()));
+		
+		PlanningRequestResponseInstanceDetails prr = new PlanningRequestResponseInstanceDetails(prInst.getName(),
+				timeStamp, prInst.getArgumentValues(), prInst.getArgumentDefNames());
+		return prr;
+	}
+	
+	public PlanningRequestResponseInstanceDetailsList submitPlanningRequest(Long prDefId, Long prInstId,
+			PlanningRequestInstanceDetails prInst, LongList taskDefIds, LongList taskInstIds,
+			MALInteraction interaction) throws MALInteractionException, MALException {
+		enter("submitPlanningRequest");
+		LOG.log(Level.INFO, "{5}.submitPlanningRequest(prDefId={0}, prInstId={1}, prInst, List:taskDefIds, " +
+				"List:taskInstIds)\n  prInst={2}\n  taskDefIds[]={3}\n  taskInstIds[]={4}",
+				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds,
+				Dumper.received(interaction) });
+		checkNulls(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		Object[] old = prInsts.findPr(prInstId);
+		if (null != old) {
+			throw new MALException("pr instance id already exists: " + prInstId);
+		}
 		// checks done, start setting up pr status
 		PlanningRequestStatusDetails prStat = createPrStatus(prInst);
 		// have tasks? will have task statuses..
@@ -320,27 +334,21 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		// statuses created, now store
 		prInsts.addPr(prDefId, prInstId, prInst, taskDefIds, taskInstIds, prStat);
 		// .. and publish
-		LOG.log(Level.INFO, "publishing pr status creation");
 		publishPr(UpdateType.CREATION, prInstId, prStat);
 		
 		for (int i = 0; (null != prStat.getTaskStatuses()) && (i < prStat.getTaskStatuses().size()); ++i) {
 			Long taskInstId = taskInstIds.get(i);
 			TaskStatusDetails taskStat = prStat.getTaskStatuses().get(i);
-			LOG.log(Level.INFO, "publishing task status creation");
 			publishTask(UpdateType.CREATION, taskInstId, taskStat);
 		}
 		// .. and respond
-		SimpleDateFormat sdf = new SimpleDateFormat("zzz'='yyyy-MM-dd'T'HH:mm:ss.SSS");
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String timeStamp = sdf.format(new Date(System.currentTimeMillis()));
-		
-		PlanningRequestResponseInstanceDetails prr = new PlanningRequestResponseInstanceDetails(prInst.getName(),
-				timeStamp, prInst.getArgumentValues(), prInst.getArgumentDefNames());
+		PlanningRequestResponseInstanceDetails prr = createResponse(prInst);
 		
 		PlanningRequestResponseInstanceDetailsList resp = new PlanningRequestResponseInstanceDetailsList();
 		resp.add(prr);
 		
-		LOG.log(Level.FINE, "returning response={0}", Dumper.prResps(resp));
+		LOG.log(Level.INFO, "{1}.submitPlanningRequest() response: returning prResponse={0}",
+				new Object[] { Dumper.prResps(resp), Dumper.sending(interaction) });
 		leave("submitPlanningRequest");
 		return resp;
 	}
@@ -348,42 +356,14 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	public void updatePlanningRequest(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
 			LongList taskDefIds, LongList taskInstIds, MALInteraction interaction) throws MALException, MALInteractionException {
 		enter("updatePlanningRequest");
-		LOG.log(Level.FINE, "received pr update: prDefId={0}, prInstId={1}, prInst={2}, taskDefIds={3}, taskInstIds={4}",
-				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds });
-		if (null == prDefId) {
-			throw new MALException("no pr def id given");
-		}
-		if (null == prInstId) {
-			throw new MALException("no pr instance id given");
-		}
-		if (null == prInst) {
-			throw new MALException("no pr instance given");
-		}
+		LOG.log(Level.INFO, "{5}.updatePlanningRequest(prDefId={0}, prInstId={1}, prInst, List:taskDefIds, " +
+				"List:taskInstIds)\n  prInst={2}\n  taskDefIds[]={3}\n  taskInstIds[]={4}",
+				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds,
+				Dumper.received(interaction) });
+		checkNulls(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
 		Object[] old = prInsts.findPr(prInstId);
 		if (null == old) {
 			throw new MALException("no pr instance with id: " + prInstId);
-		}
-		int taskDefIdCount = (null != taskDefIds) ? taskDefIds.size() : 0;
-		if (prInst.getTasks().size() != taskDefIdCount) {
-			throw new MALException("pr tasks count does not match task def id count");
-		}
-		int taskInstIdCount = (null != taskInstIds) ? taskInstIds.size() : 0;
-		if (taskInstIdCount != taskDefIdCount) {
-			throw new MALException("task def id count does not match task inst id count");
-		}
-		for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
-			TaskInstanceDetails taskInst = prInst.getTasks().get(i);
-			if (null == taskInst) {
-				throw new MALException("task instance[" + i + "] is null");
-			}
-			Long defId = taskDefIds.get(i);
-			if (null == defId) {
-				throw new MALException("task def id[" + i + "] is null");
-			}
-			Long instId = taskInstIds.get(i);
-			if (null == instId) {
-				throw new MALException("task inst id[" + i + "] is null");
-			}
 		}
 		PlanningRequestStatusDetails prStatOld = (PlanningRequestStatusDetails)old[1];
 		LongList taskInstIdsOld = (LongList)old[2];
@@ -406,14 +386,12 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			TaskStatusDetails taskStat = prStatOld.getTaskStatuses().get(i);
 			taskStat.setStatus(addOrUpdateStatus(taskStat.getStatus(), InstanceState.LAST_MODIFIED,
 					new Time(System.currentTimeMillis()), "deleted"));
-			LOG.log(Level.INFO, "publishing task status deletion");
 			publishTask(UpdateType.DELETION, taskInstId, taskStat);
 		}
 		
 		prStatOld.setStatus(addOrUpdateStatus(prStatOld.getStatus(), InstanceState.LAST_MODIFIED,
 				new Time(System.currentTimeMillis()), "deleted"));
 		
-		LOG.log(Level.INFO, "publishing pr status deletion");
 		publishPr(UpdateType.DELETION, prInstId, prStatOld);
 		// store new pr instance (including tasks) + new pr status (including task statuses)
 		prInsts.updatePr(prInstId, prInst, prStatNew);
@@ -421,20 +399,19 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		for (int i = 0; (null != prStatNew.getTaskStatuses()) && (i < prStatNew.getTaskStatuses().size()); ++i) {
 			Long taskInstId = taskInstIds.get(i);
 			TaskStatusDetails taskStat = prStatNew.getTaskStatuses().get(i);
-			LOG.log(Level.INFO, "publishing task status creation");
 			publishTask(UpdateType.CREATION, taskInstId, taskStat);
 		}
-		LOG.log(Level.INFO, "publishing pr status creation");
 		publishPr(UpdateType.CREATION, prInstId, prStatNew);
 		
-		LOG.log(Level.FINE, "returning nothing");
+		LOG.log(Level.INFO, "{0}.updatePlanningRequest() response: returning nothing", Dumper.sending(interaction));
 		leave("updatePlanningRequest");
 	}
 
 	public void removePlanningRequest(Long prInstId, MALInteraction interaction)
 			throws MALException, MALInteractionException {
 		enter("removePlanningRequest");
-		LOG.log(Level.FINE, "received pr remove: prInstId={0}", prInstId);
+		LOG.log(Level.INFO, "{1}.removePlanningRequest(prInstId={0})",
+				new Object[] { prInstId, Dumper.received(interaction) });
 		if (prInstId == null) {
 			throw new MALException("no pr instance id given");
 		}
@@ -450,23 +427,24 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		for (int i = 0; (null != prStatOld.getTaskStatuses()) && (i < prStatOld.getTaskStatuses().size()); ++i) {
 			Long taskInstId = taskInstIdsOld.get(i);
 			TaskStatusDetails taskStat = prStatOld.getTaskStatuses().get(i);
-			taskStat.setStatus(addOrUpdateStatus(taskStat.getStatus(), InstanceState.LAST_MODIFIED, new Time(System.currentTimeMillis()), "deleted"));
-			LOG.log(Level.INFO, "publishing task status deletion");
+			taskStat.setStatus(addOrUpdateStatus(taskStat.getStatus(), InstanceState.LAST_MODIFIED,
+					new Time(System.currentTimeMillis()), "deleted"));
 			publishTask(UpdateType.DELETION, taskInstId, taskStat);
 		}
 		
-		prStatOld.setStatus(addOrUpdateStatus(prStatOld.getStatus(), InstanceState.LAST_MODIFIED, new Time(System.currentTimeMillis()), "deleted"));
+		prStatOld.setStatus(addOrUpdateStatus(prStatOld.getStatus(), InstanceState.LAST_MODIFIED,
+				new Time(System.currentTimeMillis()), "deleted"));
 		
-		LOG.log(Level.INFO, "publishing pr status deletion");
 		publishPr(UpdateType.DELETION, prInstId, prStatOld);
-		LOG.log(Level.FINE, "returning nothing");
+		LOG.log(Level.INFO, "{0}.removePlanningRequest() response: returning nothing", Dumper.sending(interaction));
 		leave("removePlanningRequest");
 	}
 
 	public PlanningRequestStatusDetailsList getPlanningRequestStatus(LongList prIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("getPlanningRequestStatus");
-		LOG.log(Level.FINE, "received get PR status={0}", prIds);
+		LOG.log(Level.INFO, "{1}.getPlanningRequestStatus(List:prInstIds)\n  prInstIds[]={0}",
+				new Object[] { prIds, Dumper.received(interaction) });
 		if (prIds == null) {
 			throw new MALException("no pr instance id list given");
 		}
@@ -486,7 +464,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			}
 			stats.add(prStat);
 		}
-		LOG.log(Level.FINE, "returning PR statuses={0}", Dumper.prStats(stats));
+		LOG.log(Level.INFO, "{1}.getPlanningRequestStatus() response: returning prStatuses={0}",
+				new Object[] { Dumper.prStats(stats), Dumper.sending(interaction) });
 		leave("getPlanningRequestStatus");
 		return stats;
 	}
@@ -494,7 +473,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	public LongList listDefinition(DefinitionType defType, IdentifierList names, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("listDefinition");
-		LOG.log(Level.FINE, "received list defs: defType={0}, names={1}", new Object[] { defType, Dumper.names(names) });
+		LOG.log(Level.INFO, "{2}.listDefinition(defType={0}, List:names)\n  names[]={1}",
+				new Object[] { defType, Dumper.names(names), Dumper.received(interaction) });
 		if (null == defType) {
 			throw new MALException("no definition type given");
 		}
@@ -512,7 +492,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else {
 			throw new MALException("not supported definition type: " + defType);
 		}
-		LOG.log(Level.FINE, "returning defIds={0}", ids);
+		LOG.log(Level.INFO, "{1}.listDefinition() response: returning defIds={0}",
+				new Object[] { ids, Dumper.sending(interaction) });
 		leave("listDefinition");
 		return ids;
 	}
@@ -521,7 +502,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	public LongList addDefinition(DefinitionType defType, BaseDefinitionList defs, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("addDefinition");
-		LOG.log(Level.FINE, "received add defs: defType={0}, defs={1}", new Object[] { defType, Dumper.baseDefs(defs) });
+		LOG.log(Level.INFO, "{2}.addDefinition(defType={0}, List:baseDefs)\n  baseDefs[]={1}",
+				new Object[] { defType, Dumper.baseDefs(defs), Dumper.received(interaction) });
 		if (null == defType) {
 			throw new MALException("no definition type given");
 		}
@@ -541,49 +523,57 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else {
 			throw new MALException("not supported definition type: " + defType);
 		}
-		LOG.log(Level.FINE, "returning defIds={0}", ids);
+		LOG.log(Level.INFO, "{1}.addDefinition() response: returning defIds={0}",
+				new Object[] { ids, Dumper.sending(interaction) });
 		leave("addDefinition");
 		return ids;
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public void updateDefinition(DefinitionType defType, LongList defIds, BaseDefinitionList defs,
+	protected void updateBaseDefs(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs)
+			throws MALException {
+		if (DefinitionType.TASK_DEF == defType) {
+			TaskDefinitionDetailsList defs2 = (TaskDefinitionDetailsList)baseDefs;
+			taskDefs.updateAll(defIds, defs2);
+		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
+			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)baseDefs;
+			prDefs.updateAll(defIds, defs2);
+		} else {
+			throw new MALException("not supported definition type: " + defType);
+		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public void updateDefinition(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs,
 			MALInteraction interaction) throws MALInteractionException, MALException {
 		enter("updateDefinition");
-		LOG.log(Level.FINE, "received update defs: defType={0}, defIds={1}, defs={2}",
-				new Object[] { defType, defIds, Dumper.baseDefs(defs) });
+		LOG.log(Level.INFO, "{3}.updateDefinition(defType={0}, List:defIds, List:baseDefs)\n  defIds[]={1}\n  baseDefs[]={2}",
+				new Object[] { defType, defIds, Dumper.baseDefs(baseDefs), Dumper.received(interaction) });
 		if (null == defType) {
 			throw new MALException("no definition type given");
 		}
 		if (null == defIds) {
 			throw new MALException("no definition ids list given");
 		}
-		if (null == defs) {
+		if (null == baseDefs) {
 			throw new MALException("no definitions list given");
 		}
 		if (defIds.isEmpty()) {
 			throw new MALException("no definition ids in list");
 		}
-		if (defIds.size() != defs.size()) {
+		if (defIds.size() != baseDefs.size()) {
 			throw new MALException("definition ids count does not match definitions count");
 		}
-		if (DefinitionType.TASK_DEF == defType) {
-			TaskDefinitionDetailsList defs2 = (TaskDefinitionDetailsList)defs;
-			taskDefs.updateAll(defIds, defs2);
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
-			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)defs;
-			prDefs.updateAll(defIds, defs2);
-		} else {
-			throw new MALException("not supported definition type: " + defType);
-		}
-		LOG.log(Level.FINE, "returning nothing");
+		updateBaseDefs(defType, defIds, baseDefs);
+		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
 		leave("updateDefinition");
 	}
 
 	public void removeDefinition(DefinitionType defType, LongList defIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("removeDefinition");
-		LOG.log(Level.FINE, "received remove defs: defType={0}, defIds={1}", new Object[] { defType, defIds });
+		LOG.log(Level.INFO, "{2}.removeDefinition(defType={0}, List:defIds)\n  defIds[]={1}",
+				new Object[] { defType, defIds, Dumper.received(interaction) });
 		if (null == defType) {
 			throw new MALException("no def type given");
 		}
@@ -600,14 +590,15 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else {
 			throw new MALException("not supported definition type: " + defType);
 		}
-		LOG.log(Level.FINE, "returning nothing");
+		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
 		leave("removeDefinition");
 	}
 
 	public TaskStatusDetailsList getTaskStatus(LongList taskIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		enter("getTaskStatus");
-		LOG.log(Level.FINE, "received get task status: taskIds={0}", taskIds);
+		LOG.log(Level.INFO, "{1}.getTaskStatus(List:taskIds)\n  taskIds[]={0}",
+				new Object[] { taskIds, Dumper.received(interaction) });
 		if (taskIds == null) {
 			throw new MALException("no task id list given");
 		}
@@ -623,7 +614,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			TaskStatusDetails taskStat = prInsts.findTask(id);
 			stats.add(taskStat);
 		}
-		LOG.log(Level.FINE, "returning task statuses={0}", Dumper.taskStats(stats));
+		LOG.log(Level.INFO, "{1}.getTaskStatus() response: returning taskStatuses={0}",
+				new Object[] { Dumper.taskStats(stats), Dumper.sending(interaction) });
 		leave("getTaskStatus");
 		return stats;
 	}

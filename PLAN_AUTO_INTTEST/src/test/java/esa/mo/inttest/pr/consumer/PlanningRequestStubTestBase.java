@@ -194,7 +194,7 @@ public class PlanningRequestStubTestBase {
 		
 		prProvFct = new PlanningRequestProviderFactory();
 		prProvFct.setPropertyFile(props);
-		prProvFct.start();
+		prProvFct.start(null);
 		
 		URI sharedBrokerUri = prProvFct.getBrokerUri();
 		
@@ -213,7 +213,7 @@ public class PlanningRequestStubTestBase {
 		prConsFct.setPropertyFile(props);
 		prConsFct.setProviderUri(prProvFct.getProviderUri());
 		prConsFct.setBrokerUri(sharedBrokerUri);
-		prCons = prConsFct.start();
+		prCons = prConsFct.start(null);
 		
 		leave("setUp");
 	}

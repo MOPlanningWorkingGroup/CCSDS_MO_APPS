@@ -177,7 +177,7 @@ public class GoceConsumer {
 		} else if (taskIds.size() > 1) {
 			throw new MALException("more than one goce ppf task def with same name found");
 		} else {
-			// TODO check if task instances already exist
+			// TODO check (COM Archive?) if task instances already exist
 			taskInst1 = ppf.createTaskInst1();
 			taskInst1Id = new Long(4L);
 			task1Created = (taskInst1 != null);
@@ -198,7 +198,7 @@ public class GoceConsumer {
 		} else if (prIds.size() > 1) {
 			throw new MALException("more than one goce ppf pr def with same name found");
 		} else {
-			// TODO check if pr instances already exist
+			// TODO check (COM Archive?) if pr instances already exist
 			Long prDefId = prIds.get(0);
 			PlanningRequestInstanceDetails prInst = ppf.createPrInst1(getTaskInstList(taskInst1));
 			Long prInstId = 2L;

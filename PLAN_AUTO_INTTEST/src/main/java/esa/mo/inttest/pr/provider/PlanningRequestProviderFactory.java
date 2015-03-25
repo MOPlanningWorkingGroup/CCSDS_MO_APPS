@@ -55,10 +55,9 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	 */
 	public void setBrokerUri(URI broker) {
 		brokerUri = broker;
-		LOG.log(Level.CONFIG, "broker uri set: {0}", brokerUri);
 	}
 	
-	private void initProvider() throws MALException {
+	private void initProvider(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
 		
 		malProvMgr = malCtx.createProviderManager();
@@ -66,7 +65,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		prov = new PlanningRequestProvider();
 		prov.setDomain(domain);
 		
-		String provName = "testPrProv";
+		String provName = (null != name && !name.isEmpty()) ? name : "PrProv";
 		String proto = "rmi";
 		Blob authId = new Blob("".getBytes());
 		QoSLevel[] expQos = { QoSLevel.ASSURED, };
@@ -80,7 +79,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		testProv = new PlanningRequestTestSupportProvider();
 		testProv.setProvider(prov);
 		
-		String testProvName = "testPrTestProv";
+		String testProvName = provName + "TestSupport";
 		
 		testMalProv = malProvMgr.createProvider(testProvName, proto, PlanningRequestTestHelper.PLANNINGREQUESTTEST_SERVICE,
 				authId, testProv, expQos, priority, System.getProperties(), false, (null==brokerUri)?malProv.getBrokerURI():brokerUri);
@@ -138,12 +137,12 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	 * @throws MALException
 	 * @throws MALInteractionException
 	 */
-	public void start() throws IOException, MALException, MALInteractionException {
+	public void start(String name) throws IOException, MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "start");
 		
 		super.init();
 		
-		initProvider();
+		initProvider(name);
 		initTaskPublisher();
 		initPrPublisher();
 		
@@ -155,9 +154,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	 * @return
 	 */
 	public URI getProviderUri() {
-		URI uri = malProv.getURI();
-		LOG.log(Level.CONFIG, "provider uri: {0}", uri.getValue());
-		return uri;
+		return malProv.getURI();
 	}
 
 	/**
@@ -165,9 +162,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	 * @return
 	 */
 	public URI getBrokerUri() {
-		URI uri = malProv.getBrokerURI();
-		LOG.log(Level.CONFIG, "broker uri: {0}", uri.getValue());
-		return uri;
+		return malProv.getBrokerURI();
 	}
 
 	/**
@@ -175,9 +170,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	 * @return
 	 */
 	public URI getTestProviderUri() {
-		URI uri = testMalProv.getURI();
-		LOG.log(Level.CONFIG, "testProvider uri: {0}", uri.getValue());
-		return uri;
+		return testMalProv.getURI();
 	}
 
 	/**

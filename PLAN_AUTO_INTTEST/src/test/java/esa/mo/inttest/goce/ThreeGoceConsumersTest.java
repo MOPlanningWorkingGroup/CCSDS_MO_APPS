@@ -2,13 +2,18 @@ package esa.mo.inttest.goce;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Filter;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
@@ -41,6 +46,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningprototype.planningrequesttest.consumer.PlanningRequestTestStub;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import esa.mo.inttest.goce.GoceConsumer;
@@ -49,7 +55,7 @@ import esa.mo.inttest.pr.provider.Dumper;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
- * Simultaneous GOCE consumers test. One consumer managing defs, second managing instances, third only monitoring.
+ * Three consumers demo. One consumer managing defs, second managing instances, third only monitoring.
  */
 public class ThreeGoceConsumersTest {
 
@@ -62,26 +68,30 @@ public class ThreeGoceConsumersTest {
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats,
 				Map qosProps) {
-			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
-					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
+			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(subId={0}, List:updateHeaders, " +
+					"List:objectIds, List:prStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  prStatuses[]={3}",
+					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
+					Dumper.fromBroker(msgHdr) });
 			this.prStats = prStats;
 		}
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error,
 				Map qosProps) {
-			LOG.log(Level.INFO, "pr monitor notify error");
+			LOG.log(Level.INFO, "{1}.monitorPlanningRequestsNotifyErrorReceived(error={0})",
+					new Object[] { error, Dumper.fromBroker(msgHdr) });
 		}
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
+		public void notifyReceivedFromOtherService(MALMessageHeader msgHdr, MALNotifyBody body, Map qosProps)
 				throws MALException {
-			LOG.log(Level.INFO, "pr other notify");
+			LOG.log(Level.INFO, "{1}.notifyReceivedFromOtherService(body={0})",
+					new Object[] { body, Dumper.fromBroker(msgHdr) });
 		}
 	}
 
@@ -94,24 +104,28 @@ public class ThreeGoceConsumersTest {
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
+		public void monitorTasksNotifyReceived(MALMessageHeader msgHdr, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "task monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, taskStatuses={3}",
-					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats) });
+			LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(subId={0}, List:updateHeaders, " +
+				"List:objectIds, List:taskStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  taskStatuses[]={3}",
+				new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
+				Dumper.fromBroker(msgHdr) });
 			this.taskStats = taskStats;
 		}
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
-			LOG.log(Level.INFO, "task monitor notify error");
+		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error, Map qosProps) {
+			LOG.log(Level.INFO, "{1}.monitorTasksNotifyErrorReceived(error={0})",
+					new Object[] { error, Dumper.fromBroker(msgHdr) });
 		}
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void notifyReceivedFromOtherService(MALMessageHeader msgHeader, MALNotifyBody body, Map qosProps)
+		public void notifyReceivedFromOtherService(MALMessageHeader msgHdr, MALNotifyBody body, Map qosProps)
 				throws MALException {
-			LOG.log(Level.INFO, "task other notify");
+			LOG.log(Level.INFO, "{1}.notifyReceivedFromOtherService(body={0})",
+					new Object[] { body, Dumper.fromBroker(msgHdr) });
 		}
 	}
 
@@ -139,7 +153,7 @@ public class ThreeGoceConsumersTest {
 						taskDefCreated = cons.createPpfTaskDefIfMissing();
 					} catch (Exception e) {
 						taskDefCreated = false;
-						LOG.log(Level.WARNING, getName() + ": createPpfTaskDef: ", e);
+						LOG.log(Level.WARNING, getName() + ": createPpfTaskDef: {0}", e);
 						throw new RuntimeException(e);
 					}
 				}
@@ -149,7 +163,7 @@ public class ThreeGoceConsumersTest {
 						prDefCreated = cons.createPpfPrDefIfMissing();
 					} catch (Exception e) {
 						prDefCreated = false;
-						LOG.log(Level.WARNING, getName() + ": createPpfPrDef: ", e);
+						LOG.log(Level.WARNING, getName() + ": createPpfPrDef: {0}", e);
 						throw new RuntimeException(e);
 					}
 				}
@@ -180,7 +194,7 @@ public class ThreeGoceConsumersTest {
 					created = cons.createPpfInstsIfMissingAndDefsExist();
 				} catch (Exception e) {
 					created = false;
-					LOG.log(Level.WARNING, getName() + ": createPpfInst", e);
+					LOG.log(Level.WARNING, getName() + ": createPpfInst: {0}", e);
 					throw new RuntimeException(e);
 				}
 			}
@@ -199,25 +213,27 @@ public class ThreeGoceConsumersTest {
 		private List<Long> newTasks = Collections.synchronizedList(new LongList());
 		private List<Long> newPrs = Collections.synchronizedList(new LongList());
 		
+		private String clientName;
+		
 		private Processor(PlanningRequestTestStub testProv, PlanningRequestStub prov) {
 			this.testProv = testProv;
 			this.prov = prov;
+			clientName = prov.getConsumer().getURI().getValue();
+			int i = clientName.indexOf('-');
+			clientName = clientName.substring(i+1);
 		}
 		
 		@SuppressWarnings("rawtypes")
 		@Override
-		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats,
 				Map qosProps) {
-			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
-					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
 			for (int i = 0; i < updHdrs.size(); ++i) {
 				UpdateHeader hdr = updHdrs.get(i);
 				if (UpdateType.CREATION == hdr.getUpdateType()) {
 					ObjectId obj = objIds.get(i);
 					Long id = obj.getKey().getInstId();
 					newPrs.add(id); // got new pr instance id to process later
-					LOG.log(Level.INFO, "added pr \"{0}/{1}\" for processing", new Object[] { id, prStats.get(i).getPrInstName() });
 				}
 			}
 		}
@@ -226,15 +242,12 @@ public class ThreeGoceConsumersTest {
 		@Override
 		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "task monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, taskStatuses={3}",
-					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats) });
 			for (int i = 0; i < updHdrs.size(); ++i) {
 				UpdateHeader hdr = updHdrs.get(i);
 				if (UpdateType.CREATION == hdr.getUpdateType()) {
 					ObjectId obj = objIds.get(i);
 					Long id = obj.getKey().getInstId();
 					newTasks.add(id); // got new task instance id to process later
-					LOG.log(Level.INFO, "added task \"{0}/{1}\" for processing", new Object[] { id ,taskStats.get(i).getTaskInstName() });
 				}
 			}
 		}
@@ -258,7 +271,6 @@ public class ThreeGoceConsumersTest {
 				// wait a sec before accepting
 				StatusRecord csr = findStatus(stat.getStatus(), InstanceState.LAST_MODIFIED);
 				if ((null == csr) || (System.currentTimeMillis() >= (csr.getDate().getValue()+1000L))) {
-					LOG.log(Level.INFO, "ACCEPTing task {0}", id);
 					asr = new StatusRecord(InstanceState.ACCEPTED, new Time(System.currentTimeMillis()), "accepted");
 					if (null == stat.getStatus()) {
 						stat.setStatus(new StatusRecordList());
@@ -271,16 +283,13 @@ public class ThreeGoceConsumersTest {
 					try {
 						testProv.updateTaskStatus(taskIds, taskStats);
 					} catch (MALException e) {
-						LOG.log(Level.INFO, "process: updTaskStatus: err: {0}", e);
+						LOG.log(Level.WARNING, "{1}: process: updateTaskStatus: err: {0}", new Object[] { e, clientName });
 					} catch (MALInteractionException e) {
-						LOG.log(Level.INFO, "process: updTaskStatus: err: {0}", e);
+						LOG.log(Level.WARNING, "{1}: process: updateTaskStatus: err: {0}", new Object[] { e, clientName });
 					}
 				} else {
 					doRemove = false; // wait before removing
-					LOG.log(Level.INFO, "waiting a sec before ACCEPTing task {0}", id);
 				} // csr
-			} else {
-				LOG.log(Level.INFO, "task {0} is already ACCEPTed", id);
 			} // asr
 			return doRemove;
 		}
@@ -288,16 +297,15 @@ public class ThreeGoceConsumersTest {
 		private void processTasks() {
 			for (int i0 = 0; i0 < newTasks.size(); ++i0) {
 				Long id = newTasks.get(i0);
-				LOG.log(Level.INFO, "processing task {0}", id);
 				LongList taskIds = new LongList();
 				taskIds.add(id);
 				TaskStatusDetailsList taskStats = null;
 				try {
 					taskStats = prov.getTaskStatus(taskIds);
 				} catch (MALException e) {
-					LOG.log(Level.INFO, "process: getTaskStatus: err: {0}", e);
+					LOG.log(Level.WARNING, "{1}: process: getTaskStatus: err: {0}", new Object[] { e, clientName });
 				} catch (MALInteractionException e) {
-					LOG.log(Level.INFO, "process: getTaskStats: err: {0}", e);
+					LOG.log(Level.WARNING, "{1}: process: getTaskStats: err: {0}", new Object[] { e, clientName });
 				}
 				boolean doRemove = true;
 				for (int i1 = 0; (null != taskStats) && (i1 < taskStats.size()); ++i1) {
@@ -305,11 +313,11 @@ public class ThreeGoceConsumersTest {
 					if (null != stat) {
 						doRemove = checkTaskAccept(id, stat);
 					} // stat
-				} // for
+				} // for taskStats
 				if (doRemove) {
 					newTasks.remove(i0);
 				}
-			}
+			} // for newTasks
 		}
 		
 		protected boolean areTasksAccepted(PlanningRequestStatusDetails prStat) {
@@ -319,8 +327,6 @@ public class ThreeGoceConsumersTest {
 				StatusRecord asr = findStatus(taskStat.getStatus(), InstanceState.ACCEPTED);
 				if (null == asr) {
 					ok = false;
-					LOG.log(Level.INFO, "task \"{0}\" of pr \"{1}\" is not ACCEPTED",
-							new Object[] { taskStat.getTaskInstName(), prStat.getPrInstName() });
 					break;
 				}
 			}
@@ -336,7 +342,6 @@ public class ThreeGoceConsumersTest {
 				// accept pr only after tasks are accepted
 				boolean tasksAcc = areTasksAccepted(stat);
 				if (tasksAcc && (null == csr || System.currentTimeMillis() >= (csr.getDate().getValue()+1000L))) {
-					LOG.log(Level.INFO, "ACCEPTing pr {0}", id);
 					asr = new StatusRecord(InstanceState.ACCEPTED, new Time(System.currentTimeMillis()), "accepted");
 					if (null == stat.getStatus()) {
 						stat.setStatus(new StatusRecordList());
@@ -349,16 +354,13 @@ public class ThreeGoceConsumersTest {
 					try {
 						testProv.updatePrStatus(prIds, prStats);
 					} catch (MALException e) {
-						LOG.log(Level.INFO, "process: updPrStatus: err: {0}", e);
+						LOG.log(Level.WARNING, "{1}: process: updPrStatus: err: {0}", new Object[] { e, clientName });
 					} catch (MALInteractionException e) {
-						LOG.log(Level.INFO, "process: updPrStatus: err: {0}", e);
+						LOG.log(Level.WARNING, "{1}: process: updPrStatus: err: {0}", new Object[] { e, clientName });
 					}
 				} else {
 					doRemove = false; // wait before removing
-					LOG.log(Level.INFO, "waiting a sec before ACCEPTing pr {0}", id);
 				} // csr
-			} else {
-				LOG.log(Level.INFO, "pr {0} is already ACCEPTed", id);
 			} // asr
 			return doRemove;
 		}
@@ -366,16 +368,15 @@ public class ThreeGoceConsumersTest {
 		private void processPrs() {
 			for (int i0 = 0; i0 < newPrs.size(); ++i0) {
 				Long id = newPrs.get(i0);
-				LOG.log(Level.INFO, "processing pr {0}", id);
 				LongList prIds = new LongList();
 				prIds.add(id);
 				PlanningRequestStatusDetailsList prStats = null;
 				try {
 					prStats = prov.getPlanningRequestStatus(prIds);
 				} catch (MALException e) {
-					LOG.log(Level.INFO, "process: getPrStatus: err: {0}", e);
+					LOG.log(Level.WARNING, "{1}: process: getPrStatus: err: {0}", new Object[] { e, clientName });
 				} catch (MALInteractionException e) {
-					LOG.log(Level.INFO, "process: getPrStatus: err: {0}", e);
+					LOG.log(Level.WARNING, "{1}: process: getPrStatus: err: {0}", new Object[] { e, clientName });
 				}
 				boolean doRemove = true;
 				for (int i1 = 0; (null != prStats) && (i1 < prStats.size()); ++i1) {
@@ -387,11 +388,11 @@ public class ThreeGoceConsumersTest {
 				if (doRemove) {
 					newPrs.remove(i0);
 				}
-			}
+			} // for newPrs
 		}
 		
 		/**
-		 * Processes new Tasks an PRs.
+		 * Processes new Tasks and PRs.
 		 */
 		public void process() {
 			processTasks();
@@ -415,7 +416,7 @@ public class ThreeGoceConsumersTest {
 		public void run() {
 			LOG.entering(getName(), "run");
 			while (!isInterrupted()) {
-				sleeep(100, 0);
+				sleeep(250, 0);
 				proc.process();
 			}
 			LOG.exiting(getName(), "run");
@@ -423,6 +424,12 @@ public class ThreeGoceConsumersTest {
 	}
 	
 	private static final Logger LOG = Logger.getLogger(ThreeGoceConsumersTest.class.getName());
+	
+	private static final String BROKER = "PrProvider"; // label broker as provider since it's part of provider
+	private static final String CLIENT1 = "powerUser";
+	private static final String CLIENT2 = "normalUser";
+	private static final String CLIENT3 = "monitorUser";
+	private static final String PROVIDER = "PrProvider";
 	
 	private PlanningRequestProviderFactory provFct;
 	
@@ -435,6 +442,72 @@ public class ThreeGoceConsumersTest {
 	private PlanningRequestTestStub procTestProv;
 	private PlanningRequestStub procProv;
 	
+	private static SimpleFormatter createFormatter() {
+		// custom formatter to output LogRecord sequence number
+		return new SimpleFormatter() {
+			@Override
+			public synchronized String format(LogRecord lr) {
+				return "[" + lr.getSequenceNumber() + "] " + super.format(lr);
+			}
+		};
+	}
+	
+	private static Filter createFilter(final String n) {
+		// custom filter to log only lines containing given "name"
+		return new Filter() {
+			final String name = n;
+			@Override
+			public boolean isLoggable(LogRecord record) {
+				boolean doLog = false;
+				// "message" is format string with {}
+				for (int j = 0; (null != record.getParameters()) && (j < record.getParameters().length); ++j) {
+					Object o = record.getParameters()[j];
+					String s = (o instanceof String) ? (String)o : null;
+					int i = (null != s) ? s.indexOf(name) : -1;
+					if (-1 != i && name.length() >= s.length()) {
+						i = -2; // matches and not long enough to check suffix
+					}
+					int ch = (0 <= i) ? s.charAt(name.length()) : -1;
+					// include "PrProvider", but exclude "PrProvider0"
+					if (-1 != ch && '0' != ch && '1' != ch) {
+						doLog = true;
+						break;
+					}
+				}
+				return doLog;
+			}
+		};
+	}
+	
+	private static FileHandler createHandler(final String n) throws IOException {
+		FileHandler fh = new FileHandler(n + ".log");
+		fh.setFilter(createFilter(n));
+		fh.setFormatter(createFormatter());
+		return fh;
+	}
+	
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		// use maven profile "gen-log-files" to turn logging to files on
+		String val = System.getProperty("log2file");
+		boolean log2file = (null != val) && "TRUE".equals(val.toUpperCase());
+		System.out.println("writing to log files is turned on: "+log2file);
+		if (log2file) {
+			// trim down log spam
+			Logger.getLogger("org.ccsds.moims.mo.mal.transport.gen").setLevel(Level.WARNING);
+			Logger.getLogger("org.ccsds.moims.mo.mal.transport.rmi").setLevel(Level.WARNING);
+			Logger.getLogger("org.ccsds.moims.mo.mal.impl.broker").setLevel(Level.WARNING);
+			Logger.getLogger("org.ccsds.moims.mo.mal.impl").setLevel(Level.WARNING);
+			// our log format
+			System.setProperty("java.util.logging.SimpleFormatter.format", "%5$s%n");
+			// log each consumer/provider lines to it's own file
+			Logger.getLogger("").addHandler(createHandler(CLIENT1));
+			Logger.getLogger("").addHandler(createHandler(CLIENT2));
+			Logger.getLogger("").addHandler(createHandler(CLIENT3));
+			Logger.getLogger("").addHandler(createHandler(PROVIDER));
+		}
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		LOG.entering(getClass().getName(), "setUp");
@@ -442,7 +515,7 @@ public class ThreeGoceConsumersTest {
 		
 		provFct = new PlanningRequestProviderFactory();
 		provFct.setPropertyFile(props);
-		provFct.start();
+		provFct.start(PROVIDER);
 		
 		consFct = new PlanningRequestConsumerFactory();
 		consFct.setPropertyFile(props);
@@ -450,12 +523,12 @@ public class ThreeGoceConsumersTest {
 		consFct.setBrokerUri(provFct.getBrokerUri());
 		consFct.setTestProviderUri(provFct.getTestProviderUri()); // testSupport connection
 		
-		goce1 = new GoceConsumer(consFct.start()); // start a new instance of consumer
-		goce2 = new GoceConsumer(consFct.start());
-		goce3 = new GoceConsumer(consFct.start());
+		goce1 = new GoceConsumer(consFct.start(CLIENT1)); // start a new instance of consumer
+		goce2 = new GoceConsumer(consFct.start(CLIENT2));
+		goce3 = new GoceConsumer(consFct.start(CLIENT3));
 		
-		procTestProv = consFct.startTest(); // test support for status updates
-		procProv = consFct.start();
+		procTestProv = consFct.startTest(PROVIDER+"0"); // cons/prov names need to be unique within RMI
+		procProv = consFct.start(PROVIDER+"1");
 		
 		LOG.exiting(getClass().getName(), "setUp");
 	}
@@ -523,29 +596,38 @@ public class ThreeGoceConsumersTest {
 		// goce3 just monitors prs and tasks
 		String taskSubId = "prCons3taskSubId";
 		TaskMonitor taskMon = new TaskMonitor();
+		LOG.log(Level.INFO, "{1}.monitorTasksRegister(subId={0})",
+				new Object[] { taskSubId, CLIENT3+" -> "+BROKER });
 		goce3.getStub().monitorTasksRegister(createSub(taskSubId), taskMon);
+		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT3+" <- "+BROKER);
+		
 		String prSubId = "prCons3prSubId";
 		PrMonitor prMon = new PrMonitor();
+		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsRegister(subId={0})",
+				new Object[] { prSubId, CLIENT3+" -> "+BROKER });
 		goce3.getStub().monitorPlanningRequestsRegister(createSub(prSubId), prMon);
+		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing", CLIENT3+" <- "+BROKER);
 		
 		// processor/worker3 monitors and changes task and pr statuses
 		Processor proc = new Processor(procTestProv, procProv);
+		
 		String taskSubId2 = "prCons4TaskSub";
 		procProv.monitorTasksRegister(createSub(taskSubId2), proc);
+		
 		String prSubId2 = "prCons4PrSub";
 		procProv.monitorPlanningRequestsRegister(createSub(prSubId2), proc);
+		
 		Thread worker3 = new Worker3Thread("TestProcessor", proc);
 		
 		worker1.start();
 		worker2.start();
 		worker3.start();
 		
-		LOG.log(Level.INFO, "sleeping..");
 		sleeep(11*1000L, 0); // 10 sec
-		LOG.log(Level.INFO, "waking..");
 		
 		worker1.interrupt();
 		worker2.interrupt();
+		worker3.interrupt();
 		
 		try {
 			worker1.join(4*1000L);
@@ -556,6 +638,11 @@ public class ThreeGoceConsumersTest {
 			worker2.join(4*1000L);
 		} catch (InterruptedException e) {
 			LOG.log(Level.WARNING, "worker2 interrupted: ", e);
+		}
+		try {
+			worker3.join(4*1000L);
+		} catch (InterruptedException e) {
+			LOG.log(Level.WARNING, "worker3 interrupted: ", e);
 		}
 		
 		IdentifierList prSubs = new IdentifierList();
@@ -568,11 +655,18 @@ public class ThreeGoceConsumersTest {
 		
 		prSubs.clear();
 		prSubs.add(new Identifier(prSubId));
+		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsDeregister(subId={0})",
+				new Object[] { prSubId, CLIENT3+" -> "+BROKER });
 		goce3.getStub().monitorPlanningRequestsDeregister(prSubs);
+		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsDeregister() response: returning nothing",
+				CLIENT3+" <- "+BROKER);
 		
 		taskSubs.clear();
 		taskSubs.add(new Identifier(taskSubId));
+		LOG.log(Level.INFO, "{1}.monitorTasksDeregister(subId={0})",
+				new Object[] { taskSubId, CLIENT3+" -> "+BROKER });
 		goce3.getStub().monitorTasksDeregister(taskSubs);
+		LOG.log(Level.INFO, "{0}.monitorTasksDeregister() response: returning nothing", CLIENT3+" <- "+BROKER);
 		
 		assertNotNull(taskMon.taskStats); // assuming 'goce3' received at least one pr and task notification
 		assertNotNull(prMon.prStats);

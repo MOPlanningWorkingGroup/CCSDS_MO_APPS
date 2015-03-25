@@ -6,12 +6,15 @@ import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.com.structures.ObjectType;
+import org.ccsds.moims.mo.mal.MALOperation;
+import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
+import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinition;
 import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
@@ -46,6 +49,7 @@ public final class Dumper {
 
 	private static final String STEP = "  ";
 	private static final String NULL = "null";
+	private static final String BROKER = "PrProvider";
 	
 	private Dumper() {
 	}
@@ -163,7 +167,7 @@ public final class Dumper {
 	}
 	
 	public static String names(IdentifierList il) {
-		return dumpNames(il, "");
+		return dumpNames(il, STEP);
 	}
 	
 	private static String dumpPrDef(PlanningRequestDefinitionDetails prd, String ind) {
@@ -301,21 +305,25 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	public static String prInst(PlanningRequestInstanceDetails pri) {
+	private static String dumpPrInst(PlanningRequestInstanceDetails pri, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != pri) {
 			s.append("{\n");
-			s.append(STEP).append("name=").append(dumpId(pri.getName())).append(",\n");
-			s.append(STEP).append("description=").append(quote(pri.getDescription())).append(",\n");
-			s.append(STEP).append("argDefNames=").append(dumpNames(pri.getArgumentDefNames(), STEP)).append(",\n");
-			s.append(STEP).append("argValues=").append(dumpAttrVals(pri.getArgumentValues(), STEP)).append(",\n");
-			s.append(STEP).append("timingConstraints=").append(dumpTriggers(pri.getTimingConstraints(), STEP)).append(",\n");
-			s.append(STEP).append("tasks=").append(dumpTaskInsts(pri.getTasks(), STEP)).append("\n");
-			s.append("}");
+			s.append(ind).append(STEP).append("name=").append(dumpId(pri.getName())).append(",\n");
+			s.append(ind).append(STEP).append("description=").append(quote(pri.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(pri.getArgumentDefNames(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(pri.getArgumentValues(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(pri.getTimingConstraints(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("tasks=").append(dumpTaskInsts(pri.getTasks(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
 		} else {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	public static String prInst(PlanningRequestInstanceDetails pri) {
+		return dumpPrInst(pri, STEP);
 	}
 	
 	private static String dumpEntKey(EntityKey ek) {
@@ -338,18 +346,22 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	public static String updHdrs(UpdateHeaderList uhl) {
+	private static String dumpUpdHdrs(UpdateHeaderList uhl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != uhl) {
 			openList(s, uhl);
 			for (int i = 0; i < uhl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpUpdHdr(uhl.get(i), STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpUpdHdr(uhl.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, uhl, "");
+			closeList(s, uhl, ind);
 		} else {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	public static String updHdrs(UpdateHeaderList uhl) {
+		return dumpUpdHdrs(uhl, STEP);
 	}
 	
 	private static String dumpObjKey(ObjectKey ok, String ind) {
@@ -382,18 +394,22 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	public static String objIds(ObjectIdList oil) {
+	private static String dumpObjIds(ObjectIdList oil, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != oil) {
 			openList(s, oil);
 			for (int i = 0; i < oil.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpObjId(oil.get(i), STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpObjId(oil.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, oil, "");
+			closeList(s, oil, ind);
 		} else {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	public static String objIds(ObjectIdList oil) {
+		return dumpObjIds(oil, STEP);
 	}
 	
 	private static String dumpStat(StatusRecord sr) {
@@ -460,22 +476,26 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	public static String prStats(PlanningRequestStatusDetailsList prsl) {
+	private static String dumpPrStats(PlanningRequestStatusDetailsList prsl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != prsl) {
 			openList(s, prsl);
 			for (int i = 0; i < prsl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, prsl, "");
+			closeList(s, prsl, ind);
 		} else {
 			s.append(NULL);
 		}
 		return s.toString();
 	}
 	
+	public static String prStats(PlanningRequestStatusDetailsList prsl) {
+		return dumpPrStats(prsl, STEP);
+	}
+	
 	public static String taskStats(TaskStatusDetailsList tsl) {
-		return dumpTaskStats(tsl, "");
+		return dumpTaskStats(tsl, STEP);
 	}
 	
 	private static String dumpBaseDef(BaseDefinition bd, String ind) {
@@ -497,18 +517,23 @@ public final class Dumper {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static String baseDefs(BaseDefinitionList bdl) {
+	private static String dumpBaseDefs(BaseDefinitionList bdl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != bdl) {
 			openList(s, bdl);
 			for (int i = 0; i < bdl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpBaseDef((BaseDefinition)bdl.get(i), STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpBaseDef((BaseDefinition)bdl.get(i), ind+STEP)).append("\n");
 			}
-			closeList(s, bdl, "");
+			closeList(s, bdl, ind);
 		} else {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static String baseDefs(BaseDefinitionList bdl) {
+		return dumpBaseDefs(bdl, STEP);
 	}
 	
 	private static String dumpPrResp(PlanningRequestResponseInstanceDetails prr, String ind) {
@@ -538,5 +563,60 @@ public final class Dumper {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	private static String dumpMalOp(MALOperation mo) {
+		StringBuilder s = new StringBuilder();
+		if (null != mo) {
+			s.append("{ caps=").append(mo.getCapabilitySet());
+			s.append(" interaction=").append(mo.getInteractionType());
+			s.append(" name=").append(mo.getName());
+			s.append(" number=").append(mo.getNumber());
+			s.append(" service=").append(mo.getService());
+			s.append(" }");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String malInt(MALInteraction mi) {
+		StringBuilder s = new StringBuilder();
+		if (null != mi) {
+			s.append("{ msgHdr=").append(mi.getMessageHeader());
+			s.append(" op=").append(dumpMalOp(mi.getOperation()));
+			s.append(" }");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String msgFrom(MALMessageHeader mmg) {
+		String f = mmg.getURIFrom().getValue();
+		int i = f.indexOf('-');
+		return f.substring(i+1);
+	}
+	
+	public static String msgTo(MALMessageHeader mmh) {
+		String t = mmh.getURITo().getValue();
+		int i = t.indexOf('-'); // works for RMI
+		return t.substring(i+1);
+	}
+	
+	public static String received(MALInteraction mi) {
+		return msgFrom(mi.getMessageHeader()) + " -> " + msgTo(mi.getMessageHeader());
+	}
+	
+	public static String sending(MALInteraction mi) {
+		return msgFrom(mi.getMessageHeader()) + " <- " + msgTo(mi.getMessageHeader());
+	}
+	
+	public static String toBroker(MALInteraction mi) {
+		return BROKER + " <- " + msgTo(mi.getMessageHeader());
+	}
+	
+	public static String fromBroker(MALMessageHeader mmh) {
+		return BROKER + " -> " + msgTo(mmh);
 	}
 }
