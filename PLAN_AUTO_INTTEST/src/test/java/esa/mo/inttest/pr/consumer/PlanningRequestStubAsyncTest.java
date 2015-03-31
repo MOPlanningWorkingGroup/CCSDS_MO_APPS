@@ -3,6 +3,7 @@ package esa.mo.inttest.pr.consumer;
 import static org.junit.Assert.*;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,16 +58,32 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		return new Object[] { malMsg, prMon };
 	}
 	
+	protected void waitFor(Object o, long ms, Callable<Boolean> c) throws InterruptedException, Exception {
+		synchronized (o) {
+			long before = System.currentTimeMillis();
+			long d = ms;
+			do {
+				o.wait(d);
+				d = ms - (System.currentTimeMillis() - before);
+			} while (!c.call() && (0 < d)); // cond failed and didnt wait long enough
+		}
+	}
+	
 	@Test
-	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException {
+	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testMonitorPrReg");
 		
 		String subId = "subId";
 		Object[] details = asyncRegisterPrMonitor(subId);
 		MALMessage malMsg = (MALMessage)details[0];
-		PrMonitor prMon = (PrMonitor)details[1];
+		final PrMonitor prMon = (PrMonitor)details[1];
 		
-		sleep(1000); // give broker a second to fire callback
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return prMon.registered;
+			}
+		});
 		
 		assertTrue(prMon.registered);
 		
@@ -82,17 +99,22 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException {
+	public void testMonitorPlanningRequestsDeregister() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testMonitorPrDeReg");
 		
 		String subId = "subId2";
 		Object[] details = asyncRegisterPrMonitor(subId);
 		MALMessage malMsg = (MALMessage)details[0];
-		PrMonitor prMon = (PrMonitor)details[1];
+		final PrMonitor prMon = (PrMonitor)details[1];
 		
 		MALMessage malMsg2 = asyncDeRegisterPrMonitor(subId, prMon);
 		
-		sleep(1000); // give broker a sec to fire callback
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return prMon.deRegistered;
+			}
+		});
 		
 		assertTrue(prMon.deRegistered);
 		
@@ -115,15 +137,20 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
+	public void testMonitorTasksRegister() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testMonitorTasksRegister");
 		
 		String subId = "subId";
 		Object[] details = asyncRegisterTaskMonitor(subId);
 		MALMessage malMsg = (MALMessage)details[0];
-		TaskMonitor taskMon = (TaskMonitor)details[1];
+		final TaskMonitor taskMon = (TaskMonitor)details[1];
 		
-		sleep(1000); // give broker a second to fire callback
+		waitFor(taskMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return taskMon.registered;
+			}
+		});
 		
 		assertTrue(taskMon.registered);
 		
@@ -139,17 +166,22 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
+	public void testMonitorTasksDeregister() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testMonitorTasksDeregister");
 		
 		String subId = "subId2";
 		Object[] details = asyncRegisterTaskMonitor(subId);
 		MALMessage malMsg = (MALMessage)details[0];
-		TaskMonitor taskMon = (TaskMonitor)details[1];
+		final TaskMonitor taskMon = (TaskMonitor)details[1];
 		
 		MALMessage malMsg2 = asyncDeRegisterTaskMonitor(subId, taskMon);
 		
-		sleep(1000); // give broker a sec to fire callback
+		waitFor(taskMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return taskMon.deRegistered;
+			}
+		});
 		
 		assertTrue(taskMon.deRegistered);
 		
@@ -171,6 +203,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					PlanningRequestResponseInstanceDetailsList resp2, Map qosProperties) {
 				LOG.log(Level.INFO, "submit pr resp={0}", resp2);
 				resp[0] = resp2;
+				synchronized (resp) {
+					resp.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -183,7 +218,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
+	public void testSubmitPlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testSubmitPlanningRequest");
 		
 		PlanningRequestDefinitionDetails prDef = createPrDef("async pr def");
@@ -198,7 +233,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		MALMessage malMsg = asyncSubmitPr(prDefId, prInstId, prInst, null, null, response);
 		
-		sleep(1000);
+		waitFor(response, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != response[0];
+			}
+		});
 		
 		assertNotNull(response[0]);
 		assertEquals(1, response[0].size());
@@ -219,7 +259,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 
 	@Test
-	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
+	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testSubmitPlanningRequestWithTask");
 		
 		TaskDefinitionDetails taskDef = createTaskDef("async task def", "async pr def");
@@ -251,7 +291,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		MALMessage malMsg = asyncSubmitPr(prDefId, prInstId, prInst, taskDefIds, taskInstIds, response);
 		
-		sleep(1000);
+		waitFor(response, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != response[0];
+			}
+		});
 		
 		assertNotNull(response[0]);
 		assertEquals(1, response[0].size());
@@ -281,7 +326,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 
 	@Test
-	public void testUpdatePlanningRequest() throws MALException, MALInteractionException {
+	public void testUpdatePlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testUpdatePlanningRequest");
 		
 		Object[] details = createAndSubmitPlanningRequestWithTask();
@@ -301,6 +346,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			public void updatePlanningRequestAckReceived(MALMessageHeader msgHeader, Map qosProps) {
 				LOG.log(Level.INFO, "update pr ack");
 				updated[0] = true;
+				synchronized (updated) {
+					updated.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -310,7 +358,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(updated, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return updated[0];
+			}
+		});
 		
 		assertTrue(updated[0]);
 		
@@ -335,7 +388,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 
 	@Test
-	public void testRemovePlanningRequest() throws MALException, MALInteractionException {
+	public void testRemovePlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testRemovePlanningRequest");
 		
 		Object[] details = createAndSubmitPlanningRequestWithTask();
@@ -350,6 +403,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			public void removePlanningRequestAckReceived(MALMessageHeader msgHeader, Map qosProps) {
 				LOG.log(Level.INFO, "remove pr ack");
 				removed[0] = true;
+				synchronized (removed) {
+					removed.notifyAll();
+				}
 			}
 
 			@SuppressWarnings("rawtypes")
@@ -359,7 +415,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(removed, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return removed[0];
+			}
+		});
 		
 		assertTrue(removed[0]);
 		
@@ -384,7 +445,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 
 	@Test
-	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException {
+	public void testGetPlanningRequestStatus() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testGetPlanningRequestStatus");
 		
 		LongList prInstIds = new LongList();
@@ -399,6 +460,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					PlanningRequestStatusDetailsList prStats, Map qosProps) {
 				LOG.log(Level.INFO, "get pr status resp={0}", prStats);
 				stats[0] = prStats;
+				synchronized (stats) {
+					stats.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -408,7 +472,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(stats, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != stats[0];
+			}
+		});
 		// should get null
 		assertNotNull(stats[0]);
 		assertEquals(1, stats[0].size());
@@ -420,7 +489,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testGetTaskStatus() throws MALException, MALInteractionException {
+	public void testGetTaskStatus() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testGetTaskStatus");
 		
 		LongList taskInstIds = new LongList();
@@ -435,6 +504,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					Map qosProps) {
 				LOG.log(Level.INFO, "get task status resp={0}", taskStats);
 				stats[0] = taskStats;
+				synchronized (stats) {
+					stats.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -443,7 +515,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(stats, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != stats;
+			}
+		});
 		
 		assertNotNull(stats[0]);
 		assertEquals(1, stats[0].size());
@@ -455,7 +532,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testListPrDefinition() throws MALException, MALInteractionException {
+	public void testListPrDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testListPrDefs");
 		
 		IdentifierList names = new IdentifierList();
@@ -470,6 +547,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					Map qosProps) {
 				LOG.log(Level.INFO, "list pr defs resp={0}", prDefIds);
 				ids[0] = prDefIds;
+				synchronized (ids) {
+					ids.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -479,7 +559,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(ids, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != ids[0];
+			}
+		});
 		
 		assertNotNull(ids[0]);
 		assertEquals(0, ids[0].size());
@@ -490,7 +575,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAddPrDefinition() throws MALException, MALInteractionException {
+	public void testAddPrDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testAddPrDef");
 		
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
@@ -505,6 +590,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					Map qosProps) {
 				LOG.log(Level.INFO, "add pr defs resp={0}", prDefIds);
 				ids[0] = prDefIds;
+				synchronized (ids) {
+					ids.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -514,7 +602,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(ids, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != ids[0];
+			}
+		});
 		
 		assertNotNull(ids[0]);
 		assertEquals(1, ids[0].size());
@@ -530,7 +623,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testUpdatePrDefinition() throws MALException, MALInteractionException {
+	public void testUpdatePrDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testUpdatePrDef");
 		
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
@@ -545,6 +638,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
 				LOG.log(Level.INFO, "update pr def ack");
 				updated[0] = true;
+				synchronized (updated) {
+					updated.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -554,7 +650,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(updated, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return updated[0];
+			}
+		});
 		
 		assertTrue(updated[0]);
 		
@@ -569,7 +670,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testRemovePrDefinition() throws MALException, MALInteractionException {
+	public void testRemovePrDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testRemovePrDef");
 		
 		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
@@ -581,6 +682,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			public void removeDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
 				LOG.log(Level.INFO, "remove pr def ack");
 				removed[0] = true;
+				synchronized (removed) {
+					removed.notifyAll();
+				}
 			}
 			
 			@SuppressWarnings("rawtypes")
@@ -590,7 +694,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(removed, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return removed[0];
+			}
+		});
 		
 		assertTrue(removed[0]);
 		
@@ -605,7 +714,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testListTaskDefinition() throws MALException, MALInteractionException {
+	public void testListTaskDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testListTaskDefs");
 		
 		IdentifierList taskNames = new IdentifierList();
@@ -620,6 +729,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					Map qosProperties) {
 				LOG.log(Level.INFO, "list task defs resp={0}", taskDefIds1);
 				taskDefIds[0] = taskDefIds1;
+				synchronized (taskDefIds) {
+					taskDefIds.notifyAll();
+				}
 			}
 
 			@SuppressWarnings("rawtypes")
@@ -629,7 +741,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(taskDefIds, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != taskDefIds[0];
+			}
+		});
 		
 		assertNotNull(taskDefIds[0]);
 		assertEquals(0, taskDefIds[0].size());
@@ -640,7 +757,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testAddTaskDefinition() throws MALException, MALInteractionException {
+	public void testAddTaskDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testAddTaskDef");
 		
 		TaskDefinitionDetails taskDef = createTaskDef("async task def", "async pr def");
@@ -657,6 +774,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 					Map qosProperties) {
 				LOG.log(Level.INFO, "add task def ack={0}", taskDefIds1);
 				taskDefIds[0] = taskDefIds1;
+				synchronized (taskDefIds) {
+					taskDefIds.notifyAll();
+				}
 			}
 
 			@SuppressWarnings("rawtypes")
@@ -666,7 +786,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(taskDefIds, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return null != taskDefIds[0];
+			}
+		});
 		
 		assertNotNull(taskDefIds[0]);
 		assertEquals(1, taskDefIds[0].size());
@@ -686,7 +811,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testUpdateTaskDefinition() throws MALException, MALInteractionException {
+	public void testUpdateTaskDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testUpdateTaskDef");
 		
 		Object[] details = addTaskDef();
@@ -703,6 +828,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
 				LOG.log(Level.INFO, "update task def ack");
 				updated[0] = true;
+				synchronized (updated) {
+					updated.notifyAll();
+				}
 			}
 
 			@SuppressWarnings("rawtypes")
@@ -712,7 +840,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(updated, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return updated[0];
+			}
+		});
 		
 		assertTrue(updated[0]);
 		
@@ -729,7 +862,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testRemoveTaskDefinition() throws MALException, MALInteractionException {
+	public void testRemoveTaskDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testRemoveTaskDef");
 		
 		Object[] details = addTaskDef();
@@ -743,6 +876,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			public void removeDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
 				LOG.log(Level.INFO, "remove task def ack");
 				removed[0] = true;
+				synchronized (removed) {
+					removed.notifyAll();
+				}
 			}
 
 			@SuppressWarnings("rawtypes")
@@ -752,7 +888,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		sleep(1000);
+		waitFor(removed, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				return removed[0];
+			}
+		});
 		
 		assertTrue(removed[0]);
 		

@@ -49,9 +49,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import esa.mo.inttest.Dumper;
 import esa.mo.inttest.goce.GoceConsumer;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
-import esa.mo.inttest.pr.provider.Dumper;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
@@ -423,6 +423,46 @@ public class ThreeGoceConsumersTest {
 		}
 	}
 	
+	private static final class PrFilter implements Filter {
+		
+		private final String name;
+		
+		public PrFilter(String n) {
+			name = n;
+		}
+		
+		protected boolean hasPr(String s) {
+			boolean doLog = false;
+			int i = (null != s) ? s.indexOf(name) : -1;
+			if (-1 != i && name.length() >= s.length()) {
+				i = -2; // matches and not long enough to check suffix
+			}
+			int ch = (0 <= i) ? s.charAt(name.length()) : -1;
+			// include "PrProvider", but exclude "PrProvider0"
+			if (-1 != ch && '0' != ch && '1' != ch) {
+				doLog = true;
+			}
+			return doLog;
+		}
+		
+		@Override
+		public boolean isLoggable(LogRecord record) {
+			boolean doLog = false;
+			// "message" is format string with {}
+			for (int j = 0; (null != record.getParameters()) && (j < record.getParameters().length); ++j) {
+				Object o = record.getParameters()[j];
+				if (o instanceof String) {
+					String s = (String)o;
+					if (hasPr(s)) {
+						doLog = true;
+						break;
+					}
+				}
+			}
+			return doLog;
+		}
+	}
+	
 	private static final Logger LOG = Logger.getLogger(ThreeGoceConsumersTest.class.getName());
 	
 	private static final String BROKER = "PrProvider"; // label broker as provider since it's part of provider
@@ -452,36 +492,9 @@ public class ThreeGoceConsumersTest {
 		};
 	}
 	
-	private static Filter createFilter(final String n) {
-		// custom filter to log only lines containing given "name"
-		return new Filter() {
-			final String name = n;
-			@Override
-			public boolean isLoggable(LogRecord record) {
-				boolean doLog = false;
-				// "message" is format string with {}
-				for (int j = 0; (null != record.getParameters()) && (j < record.getParameters().length); ++j) {
-					Object o = record.getParameters()[j];
-					String s = (o instanceof String) ? (String)o : null;
-					int i = (null != s) ? s.indexOf(name) : -1;
-					if (-1 != i && name.length() >= s.length()) {
-						i = -2; // matches and not long enough to check suffix
-					}
-					int ch = (0 <= i) ? s.charAt(name.length()) : -1;
-					// include "PrProvider", but exclude "PrProvider0"
-					if (-1 != ch && '0' != ch && '1' != ch) {
-						doLog = true;
-						break;
-					}
-				}
-				return doLog;
-			}
-		};
-	}
-	
 	private static FileHandler createHandler(final String n) throws IOException {
 		FileHandler fh = new FileHandler(n + ".log");
-		fh.setFilter(createFilter(n));
+		fh.setFilter(new PrFilter(n)); // custom filter
 		fh.setFormatter(createFormatter());
 		return fh;
 	}
@@ -490,7 +503,7 @@ public class ThreeGoceConsumersTest {
 	public static void setUpClass() throws Exception {
 		// use maven profile "gen-log-files" to turn logging to files on
 		String val = System.getProperty("log2file");
-		boolean log2file = (null != val) && "TRUE".equals(val.toUpperCase());
+		boolean log2file = (null != val) && "true".equalsIgnoreCase(val);
 		System.out.println("writing to log files is turned on: "+log2file);
 		if (log2file) {
 			// trim down log spam

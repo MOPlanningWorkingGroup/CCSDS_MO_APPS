@@ -1,5 +1,6 @@
 package esa.mo.inttest.pr.consumer;
 
+import org.ccsds.moims.mo.com.archive.consumer.ArchiveStub;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetails;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectDetails;
@@ -44,17 +45,15 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import esa.mo.inttest.Dumper;
 import esa.mo.inttest.ca.consumer.ComArchiveConsumerFactory;
 import esa.mo.inttest.ca.provider.ComArchiveProviderFactory;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
-import esa.mo.inttest.pr.provider.Dumper;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 
 /**
  * Planning request stub test. Invokes provider methods using generated 'stub' class which includes MAL layer.
  */
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration("classpath*:**/testIntContext.xml")
 public class PlanningRequestStubTestBase {
 	
 	protected final class TaskMonitor extends PlanningRequestAdapter {
@@ -69,6 +68,9 @@ public class PlanningRequestStubTestBase {
 		{
 			LOG.log(Level.INFO, "task monitor registration ack");
 			registered = true;
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 		
 		@SuppressWarnings("rawtypes")
@@ -83,9 +85,12 @@ public class PlanningRequestStubTestBase {
 		@Override
 		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId, UpdateHeaderList updHdrs,
 				ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "task monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, taskStatuses={3}",
+			LOG.log(Level.INFO, "task monitor notify: subId={0},\n  updateHeaders={1},\n  objectIds={2},\n  taskStatuses={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats) });
 			this.taskStats = taskStats;
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -108,6 +113,9 @@ public class PlanningRequestStubTestBase {
 		{
 			LOG.log(Level.INFO, "task monitor de-registration ack");
 			deRegistered = true;
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 	}
 
@@ -123,6 +131,9 @@ public class PlanningRequestStubTestBase {
 		{
 			LOG.log(Level.INFO, "pr monitor registration ack");
 			registered = true;
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 		
 		@SuppressWarnings("rawtypes")
@@ -140,6 +151,9 @@ public class PlanningRequestStubTestBase {
 			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
 			this.prStats = prStats;
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -162,6 +176,9 @@ public class PlanningRequestStubTestBase {
 		{
 			LOG.log(Level.INFO, "pr monitor de-registration ack");
 			deRegistered = true;
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 	}
 
@@ -169,14 +186,13 @@ public class PlanningRequestStubTestBase {
 	
 	private ComArchiveProviderFactory caProvFct;
 	
-//	@Autowired
 	private PlanningRequestProviderFactory prProvFct;
 	
-//	@Autowired
 	private PlanningRequestConsumerFactory prConsFct;
 	protected PlanningRequestStub prCons;
 	
 	private ComArchiveConsumerFactory caConsFct;
+	private ArchiveStub caCons;
 	
 	private void enter(String msg) {
 		LOG.entering(getClass().getName(), msg);
@@ -200,14 +216,14 @@ public class PlanningRequestStubTestBase {
 		
 		caProvFct = new ComArchiveProviderFactory();
 		caProvFct.setPropertyFile(props);
-		caProvFct.setSharedBrokerUri(sharedBrokerUri);
-		caProvFct.start();
+		caProvFct.setBrokerUri(sharedBrokerUri);
+		caProvFct.start(null);
 		
 		caConsFct = new ComArchiveConsumerFactory();
 		caConsFct.setPropertyFile(props);
 		caConsFct.setProviderUri(caProvFct.getProviderUri());
 		caConsFct.setBrokerUri(sharedBrokerUri);
-		caConsFct.start();
+		caCons = caConsFct.start(null);
 		
 		prConsFct = new PlanningRequestConsumerFactory();
 		prConsFct.setPropertyFile(props);
@@ -228,7 +244,7 @@ public class PlanningRequestStubTestBase {
 		prConsFct = null;
 		
 		if (caConsFct != null) {
-			caConsFct.stop();
+			caConsFct.stop(caCons);
 		}
 		caConsFct = null;
 		
@@ -294,7 +310,7 @@ public class PlanningRequestStubTestBase {
 		PlanningRequestInstanceDetailsList elements = new PlanningRequestInstanceDetailsList();
 		elements.add(prInst);
 		
-		caConsFct.getConsumer().store(false, objType, domain, arcDetails, elements);
+		caCons.store(false, objType, domain, arcDetails, elements);
 	}
 	
 	protected Object[] createAndSubmitPlanningRequest() throws MALException,
@@ -356,7 +372,7 @@ public class PlanningRequestStubTestBase {
 		TaskInstanceDetailsList elements = new TaskInstanceDetailsList();
 		elements.add(taskInst);
 		
-		caConsFct.getConsumer().store(false, objType, domain, arcDetails, elements);
+		caCons.store(false, objType, domain, arcDetails, elements);
 	}
 	
 	protected Object[] createAndSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
@@ -473,14 +489,6 @@ public class PlanningRequestStubTestBase {
 		TaskMonitor taskMon = new TaskMonitor();
 		prCons.monitorTasksRegister(sub, taskMon);
 		return taskMon;
-	}
-	
-	protected void sleep(long ms) {
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			// ignore
-		}
 	}
 	
 	protected void deRegisterTaskMonitor(String subId) throws MALException, MALInteractionException {

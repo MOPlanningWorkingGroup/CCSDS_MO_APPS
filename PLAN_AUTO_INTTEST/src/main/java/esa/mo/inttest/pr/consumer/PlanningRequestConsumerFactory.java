@@ -8,7 +8,6 @@ import org.ccsds.moims.mo.mal.consumer.MALConsumer;
 import org.ccsds.moims.mo.mal.consumer.MALConsumerManager;
 import org.ccsds.moims.mo.mal.structures.Blob;
 import org.ccsds.moims.mo.mal.structures.Identifier;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
@@ -62,16 +61,15 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		
 		String consName = (null != name && !name.isEmpty()) ? name : "PrCons";
 		Blob authId = new Blob("".getBytes());
-		IdentifierList domain = new IdentifierList();
-		domain.add(new Identifier("desd"));
 		Identifier network = new Identifier("junit");
 		SessionType sessionType = SessionType.LIVE;
 		Identifier sessionName = new Identifier("test");
 		QoSLevel qos = QoSLevel.ASSURED;
 		UInteger priority = new UInteger(0L);
 		
-		MALConsumer malCons = malConsMgr.createConsumer(consName, provUri, brokerUri, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
-				authId, domain, network, sessionType, sessionName, qos, System.getProperties(), priority);
+		MALConsumer malCons = malConsMgr.createConsumer(consName, provUri, brokerUri,
+				PlanningRequestHelper.PLANNINGREQUEST_SERVICE, authId, domain, network, sessionType, sessionName,
+				qos, System.getProperties(), priority);
 		
 		PlanningRequestStub cons = new PlanningRequestStub(malCons);
 		
@@ -114,16 +112,15 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		
 		String consName = (null != name && !name.isEmpty()) ? name : "PrConsTestSupport";
 		Blob authId = new Blob("".getBytes());
-		IdentifierList domain = new IdentifierList();
-		domain.add(new Identifier("desd"));
 		Identifier network = new Identifier("junit");
 		SessionType sessionType = SessionType.LIVE;
 		Identifier sessionName = new Identifier("test");
 		QoSLevel qos = QoSLevel.ASSURED;
 		UInteger priority = new UInteger(0L);
 		
-		MALConsumer malCons = malConsMgr.createConsumer(consName, testProvUri, brokerUri, PlanningRequestTestHelper.PLANNINGREQUESTTEST_SERVICE,
-				authId, domain, network, sessionType, sessionName, qos, System.getProperties(), priority);
+		MALConsumer malCons = malConsMgr.createConsumer(consName, testProvUri, brokerUri,
+				PlanningRequestTestHelper.PLANNINGREQUESTTEST_SERVICE, authId, domain, network, sessionType,
+				sessionName, qos, System.getProperties(), priority);
 		
 		PlanningRequestTestStub cons = new PlanningRequestTestStub(malCons);
 		

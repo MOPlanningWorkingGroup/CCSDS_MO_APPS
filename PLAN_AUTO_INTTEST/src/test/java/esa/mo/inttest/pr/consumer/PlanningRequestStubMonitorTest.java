@@ -2,6 +2,7 @@ package esa.mo.inttest.pr.consumer;
 
 import static org.junit.Assert.*;
 
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
@@ -19,17 +20,33 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 	private void leave(String msg) {
 		LOG.exiting(getClass().getName(), msg);
 	}
-
+	
+	private void waitFor(Object o, long ms, Callable<Boolean> c) throws InterruptedException, Exception {
+		synchronized (o) {
+			long before = System.currentTimeMillis();
+			long d = ms;
+			do {
+				o.wait(d);
+				d = ms - (System.currentTimeMillis() - before);
+			} while (!c.call() && (0 < d));
+		}
+	}
+	
 	@Test
-	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
+	public void testSubmitPlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testSubmitPlanningRequest");
 		
 		String subId = "subId1";
-		PrMonitor prMon = registerPrMonitor(subId);
+		final PrMonitor prMon = registerPrMonitor(subId);
 		
 		createAndSubmitPlanningRequest();
 		
-		sleep(3000); // give broker a sec to respond
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != prMon.prStats;
+			}
+		});
 		
 		// verify that we got pr notification
 		assertNotNull(prMon.prStats);
@@ -42,18 +59,30 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 	}
 
 	@Test
-	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
+	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testSubmitPlanningRequestWithTask");
 		
 		String prSubId = "subId2";
-		PrMonitor prMon = registerPrMonitor(prSubId);
+		final PrMonitor prMon = registerPrMonitor(prSubId);
 		
 		String taskSubId = "subId3";
-		TaskMonitor taskMon = registerTaskMonitor(taskSubId);
+		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
 		
 		createAndSubmitPlanningRequestWithTask();
 		
-		sleep(3000); // give broker a sec to respond
+		waitFor(taskMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != taskMon.taskStats;
+			}
+		});
+		
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != prMon.prStats;
+			}
+		});
 		
 		// verify that we got pr notification
 		assertNotNull(prMon.prStats);
@@ -72,18 +101,30 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 	}
 
 	@Test
-	public void testUpdatePlanningRequest() throws MALException, MALInteractionException {
+	public void testUpdatePlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testUpdatePlanningRequest");
 		
 		String prSubId = "subId4";
-		PrMonitor prMon = registerPrMonitor(prSubId);
+		final PrMonitor prMon = registerPrMonitor(prSubId);
 		
 		String taskSubId = "subId5";
-		TaskMonitor taskMon = registerTaskMonitor(taskSubId);
+		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
 		
 		Object[] details = createAndSubmitPlanningRequest();
 		
-		sleep(2000);
+		waitFor(taskMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != taskMon.taskStats;
+			}
+		});
+		
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != prMon.prStats;
+			}
+		});
 		
 		// reset notify helpers
 		prMon.prStats = null;
@@ -91,7 +132,19 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		updatePlanningRequestWithTask(details);
 		
-		sleep(2000);
+		waitFor(taskMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != taskMon.taskStats;
+			}
+		});
+		
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != prMon.prStats;
+			}
+		});
 		
 		// verify that we got pr notification
 		assertNotNull(prMon.prStats);
@@ -123,15 +176,11 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		Object[] details = createAndSubmitPlanningRequestWithTask();
 		Long prInstId = (Long)details[1];
 		
-		sleep(2000);
-		
 		// reset notify helpers
 		prMon.prStats = null;
 		taskMon.taskStats = null;
 		
 		removePlanningRequest(prInstId);
-		
-		sleep(2000);
 		
 		// verify that we got pr notification
 		assertNotNull(prMon.prStats);

@@ -1,11 +1,26 @@
-package esa.mo.inttest.pr.provider;
+package esa.mo.inttest;
 
 import java.util.List;
 
+import org.ccsds.moims.mo.automation.schedule.structures.PatchOperation;
+import org.ccsds.moims.mo.automation.schedule.structures.PatchOperationList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemPatchOperations;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemPatchOperationsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.com.structures.ObjectType;
+import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALOperation;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.Attribute;
@@ -101,7 +116,7 @@ public final class Dumper {
 	
 	@SuppressWarnings("rawtypes")
 	private static void openList(StringBuilder s, List list) {
-		s.append("list (size=").append(list.size()).append(") [").append(list.isEmpty() ? "]" : "").append("\n");
+		s.append("list (size=").append(list.size()).append(") [").append(list.isEmpty() ? "]" : "\n");
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -114,7 +129,7 @@ public final class Dumper {
 		if (null != args) {
 			openList(s, args);
 			for (int i = 0; i < args.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpArg(args.get(i))).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpArg(args.get(i))).append(",\n");
 			}
 			closeList(s, args, ind);
 		} else {
@@ -143,7 +158,7 @@ public final class Dumper {
 		if (null != tdl) {
 			openList(s, tdl);
 			for (int i = 0; i < tdl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpTaskDef(tdl.get(i), STEP)).append("\n");
+				s.append(STEP).append(i).append(": ").append(dumpTaskDef(tdl.get(i), STEP)).append(",\n");
 			}
 			closeList(s, tdl, "");
 		} else {
@@ -157,7 +172,7 @@ public final class Dumper {
 		if (null != il) {
 			openList(s, il);
 			for (int i = 0; i < il.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": \"").append(il.get(i)).append("\"\n");
+				s.append(ind).append(STEP).append(i).append(": \"").append(il.get(i)).append("\",\n");
 			}
 			closeList(s, il, ind);
 		} else {
@@ -190,7 +205,7 @@ public final class Dumper {
 		if (null != prdl) {
 			openList(s, prdl);
 			for (int i = 0; i < prdl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpPrDef(prdl.get(i), STEP)).append("\n");
+				s.append(STEP).append(i).append(": ").append(dumpPrDef(prdl.get(i), STEP)).append(",\n");
 			}
 			closeList(s, prdl, "");
 		} else {
@@ -216,7 +231,7 @@ public final class Dumper {
 		if (null != avl) {
 			openList(s, avl);
 			for (int i = 0; i < avl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpAttrVal(avl.get(i))).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpAttrVal(avl.get(i))).append(",\n");
 			}
 			closeList(s, avl, ind);
 		} else {
@@ -265,7 +280,7 @@ public final class Dumper {
 		if (null != tl) {
 			openList(s, tl);
 			for (int i = 0; i < tl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpTrigger(tl.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpTrigger(tl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, tl, ind);
 		} else {
@@ -296,7 +311,7 @@ public final class Dumper {
 		if (null != til) {
 			openList(s, til);
 			for (int i = 0; i < til.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskInst(til.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskInst(til.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, til, ind);
 		} else {
@@ -342,7 +357,7 @@ public final class Dumper {
 		s.append(ind).append(STEP).append("sourceUri=").append(uh.getSourceURI()).append(",\n");
 		s.append(ind).append(STEP).append("timeStamp=").append(uh.getTimestamp()).append(",\n");
 		s.append(ind).append(STEP).append("updateType=").append(uh.getUpdateType()).append("\n");
-		s.append(STEP).append("}");
+		s.append(ind).append("}");
 		return s.toString();
 	}
 	
@@ -351,7 +366,7 @@ public final class Dumper {
 		if (null != uhl) {
 			openList(s, uhl);
 			for (int i = 0; i < uhl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpUpdHdr(uhl.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpUpdHdr(uhl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, uhl, ind);
 		} else {
@@ -399,7 +414,7 @@ public final class Dumper {
 		if (null != oil) {
 			openList(s, oil);
 			for (int i = 0; i < oil.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpObjId(oil.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpObjId(oil.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, oil, ind);
 		} else {
@@ -426,7 +441,7 @@ public final class Dumper {
 		if (null != srl) {
 			openList(s, srl);
 			for (int i = 0; i < srl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpStat(srl.get(i))).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpStat(srl.get(i))).append(",\n");
 			}
 			closeList(s, srl, ind);
 		} else {
@@ -453,7 +468,7 @@ public final class Dumper {
 		if (null != tsl) {
 			openList(s, tsl);
 			for (int i = 0; i < tsl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskStat(tsl.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpTaskStat(tsl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, tsl, ind);
 		} else {
@@ -481,7 +496,7 @@ public final class Dumper {
 		if (null != prsl) {
 			openList(s, prsl);
 			for (int i = 0; i < prsl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpPrStat(prsl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, prsl, ind);
 		} else {
@@ -522,7 +537,7 @@ public final class Dumper {
 		if (null != bdl) {
 			openList(s, bdl);
 			for (int i = 0; i < bdl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpBaseDef((BaseDefinition)bdl.get(i), ind+STEP)).append("\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpBaseDef((BaseDefinition)bdl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, bdl, ind);
 		} else {
@@ -556,7 +571,7 @@ public final class Dumper {
 		if (null != prrl) {
 			openList(s, prrl);
 			for (int i = 0; i < prrl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpPrResp(prrl.get(i), STEP)).append("\n");
+				s.append(STEP).append(i).append(": ").append(dumpPrResp(prrl.get(i), STEP)).append(",\n");
 			}
 			closeList(s, prrl, "");
 		} else {
@@ -618,5 +633,235 @@ public final class Dumper {
 	
 	public static String fromBroker(MALMessageHeader mmh) {
 		return BROKER + " -> " + msgTo(mmh);
+	}
+	
+	private static String dumpEventTypes(ObjectTypeList otl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != otl) {
+			openList(s, otl);
+			for (int i = 0; i < otl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(objType(otl.get(i))).append(",\n");
+			}
+			closeList(s, otl, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchDef(ScheduleDefinitionDetails sd, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != sd) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("name=").append(dumpId(sd.getName())).append(",\n");
+			s.append(ind).append(STEP).append("description=").append(quote(sd.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("eventTypes=").append(dumpEventTypes(sd.getEventTypes(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("argDefs=").append(sd.getArgumentDefs()).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchDefs(ScheduleDefinitionDetailsList sdl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != sdl) {
+			openList(s, sdl);
+			for (int i = 0; i < sdl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchDef(sdl.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, sdl, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String schDefs(ScheduleDefinitionDetailsList sdl) {
+		return dumpSchDefs(sdl, STEP);
+	}
+	
+	private static String dumpSchItem(ScheduleItemInstanceDetails sii, String ind) {
+		StringBuilder s = new StringBuilder();
+		s.append("{\n");
+		s.append(ind).append(STEP).append("scheduleItemName=").append(dumpId(sii.getScheduleItemInstName())).append(",\n");
+		s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(sii.getScheduleInstName())).append(",\n");
+		s.append(ind).append(STEP).append("delegateItem=").append(dumpObjId(sii.getDelegateItem(), ind+STEP)).append(",\n");
+		s.append(ind).append(STEP).append("argTypes=").append(dumpArgDefs(sii.getArgumentTypes(), ind+STEP)).append(",\n");
+		s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(sii.getArgumentValues(), ind+STEP)).append(",\n");
+		s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(sii.getTimingConstraints(), ind+STEP)).append("\n");
+		s.append(ind).append("}");
+		return s.toString();
+	}
+	
+	private static String dumpSchItems(ScheduleItemInstanceDetailsList siil, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != siil) {
+			openList(s, siil);
+			for (int i = 0; i < siil.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchItem(siil.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, siil, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchInst(ScheduleInstanceDetails si, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != si) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("name=").append(dumpId(si.getName())).append(",\n");
+			s.append(ind).append(STEP).append("description=").append(quote(si.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(si.getArgumentDefNames(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(si.getArgumentValues(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("scheduleItems=").append(dumpSchItems(si.getScheduleItems(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(si.getTimingConstraints(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String schInst(ScheduleInstanceDetails si) {
+		return dumpSchInst(si, STEP);
+	}
+	
+	private static String dumpSchItemStat(ScheduleItemStatusDetails sis, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != sis) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("scheduleItemName=").append(dumpId(sis.getScheduleItemInstName())).append(",\n");
+			s.append(ind).append(STEP).append("status=").append(dumpStats(sis.getStatus(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchItemStats(ScheduleItemStatusDetailsList sisl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != sisl) {
+			openList(s, sisl);
+			for (int i = 0; i < sisl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchItemStat(sisl.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, sisl, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchStat(ScheduleStatusDetails ss, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != ss) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(ss.getScheduleInstName())).append(",\n");
+			s.append(ind).append(STEP).append("status=").append(dumpStats(ss.getStatus(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("scheduleItemStatuses=").append(dumpSchItemStats(ss.getScheduleItemStatuses(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchStats(ScheduleStatusDetailsList ssl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != ssl) {
+			openList(s, ssl);
+			for (int i = 0; i < ssl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchStat(ssl.get(i), ind)).append(",\n");
+			}
+			closeList(s, ssl, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String schStats(ScheduleStatusDetailsList ssl) {
+		return dumpSchStats(ssl, STEP);
+	}
+	
+	private static String dumpPatchOp(PatchOperation po) {
+		StringBuilder s = new StringBuilder();
+		if (null != po) {
+			s.append("{ enum=").append(po);
+			s.append(", ordinal=").append(po.getOrdinal());
+			s.append(", numbericValue=").append(po.getNumericValue());
+			s.append(" }");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpPatchOps(PatchOperationList pol, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != pol) {
+			openList(s, pol);
+			for (int i = 0; i < pol.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpPatchOp(pol.get(i))).append(",\n");
+			}
+			closeList(s, pol, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchItemPatchOp(ScheduleItemPatchOperations sipo, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != sipo) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("scheduleItemName=").append(dumpId(sipo.getScheduleItemInstName())).append(",\n");
+			s.append(ind).append(STEP).append("delegateItem=").append(dumpPatchOp(sipo.getDelegateItem())).append(",\n");
+			s.append(ind).append(STEP).append("argTypes=").append(dumpPatchOps(sipo.getArgumentTypes(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("argValues=").append(dumpPatchOps(sipo.getArgumentValues(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpPatchOps(sipo.getTimingConstraints(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchItemPatchOps(ScheduleItemPatchOperationsList sipol, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != sipol) {
+			openList(s, sipol);
+			for (int i = 0; i < sipol.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchItemPatchOp(sipol.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, sipol, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	private static String dumpSchPatchOp(SchedulePatchOperations spo, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != spo) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(spo.getScheduleInstName())).append(",\n");
+			s.append(ind).append(STEP).append("argValues=").append(dumpPatchOps(spo.getArgumentValues(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpPatchOps(spo.getTimingConstraints(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("scheduleItems=").append(dumpSchItemPatchOps(spo.getScheduleItems(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String schPatchOp(SchedulePatchOperations spo) {
+		return dumpSchPatchOp(spo, STEP);
 	}
 }

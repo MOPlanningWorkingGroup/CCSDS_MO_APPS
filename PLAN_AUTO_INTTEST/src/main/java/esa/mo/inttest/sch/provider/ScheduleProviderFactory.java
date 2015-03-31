@@ -1,31 +1,38 @@
-package esa.mo.inttest.ca.provider;
+package esa.mo.inttest.sch.provider;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.com.archive.ArchiveHelper;
+import org.ccsds.moims.mo.automation.schedule.ScheduleHelper;
+import org.ccsds.moims.mo.automation.schedule.provider.MonitorSchedulesPublisher;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALProvider;
 import org.ccsds.moims.mo.mal.provider.MALProviderManager;
 import org.ccsds.moims.mo.mal.structures.Blob;
+import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.EntityKeyList;
+import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
+import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
 
-import esa.mo.inttest.ca.ComArchiveFactory;
+import esa.mo.inttest.sch.ScheduleFactory;
 
 /**
- * COM Archive provider factory.
+ * Schedule provider factory. Produces single provider with Schedule publishing.
  */
-public class ComArchiveProviderFactory extends ComArchiveFactory {
+public class ScheduleProviderFactory extends ScheduleFactory {
 
-	private static final Logger LOG = Logger.getLogger(ComArchiveProviderFactory.class.getName());
+	private static final Logger LOG = Logger.getLogger(ScheduleProviderFactory.class.getName());
 	
-	private ComArchiveProvider prov = null;
+	private ScheduleProvider prov = null;
 	private URI brokerUri = null;
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
+	private MonitorSchedulesPublisher schPub = null;
 	
 	/**
 	 * Set broker to use. If null, provider will create one itself.
@@ -40,20 +47,42 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 		
 		malProvMgr = malCtx.createProviderManager();
 		
-		prov = new ComArchiveProvider();
+		prov = new ScheduleProvider();
 		prov.setDomain(domain);
 		
-		String provName = (null != name && !name.isEmpty()) ? name : "CaProv";
+		String provName = (null != name && !name.isEmpty()) ? name : "SchProv";
 		String proto = "rmi";
 		Blob authId = new Blob("".getBytes());
 		QoSLevel[] expQos = { QoSLevel.ASSURED, };
 		UInteger priority = new UInteger(1L);
 		boolean isPublisher = true;
 		
-		malProv = malProvMgr.createProvider(provName, proto, ArchiveHelper.ARCHIVE_SERVICE,
+		malProv = malProvMgr.createProvider(provName, proto, ScheduleHelper.SCHEDULE_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
 		
 		LOG.exiting(getClass().getName(), "initProvider");
+	}
+
+	private void initSchedulesPublisher() throws MALException, MALInteractionException {
+		LOG.entering(getClass().getName(), "initSChedulePublicher");
+		
+		Identifier network = new Identifier("junit");
+		SessionType sessionType = SessionType.LIVE;
+		Identifier sessionName = new Identifier("test");
+		QoSLevel qos = QoSLevel.BESTEFFORT;
+		UInteger priority = new UInteger(0L);
+		
+		schPub = prov.createMonitorSchedulesPublisher(domain, network, sessionType, sessionName, qos,
+				System.getProperties(), priority);
+		
+		EntityKeyList keyList = new EntityKeyList();
+		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		
+		schPub.register(keyList, prov);
+		
+		prov.setSchPub(schPub);
+		
+		LOG.exiting(getClass().getName(), "initTaskPublisher");
 	}
 
 	/**
@@ -68,10 +97,11 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 		super.init();
 		
 		initProvider(name);
+		initSchedulesPublisher();
 		
 		LOG.exiting(getClass().getName(), "start");
 	}
-	
+
 	/**
 	 * Returns provider URI for consumer to connect to.
 	 * @return
@@ -79,7 +109,7 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 	public URI getProviderUri() {
 		return malProv.getURI();
 	}
-	
+
 	/**
 	 * Returns used broker URI.
 	 * @return
@@ -87,7 +117,7 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 	public URI getBrokerUri() {
 		return malProv.getBrokerURI();
 	}
-	
+
 	/**
 	 * Stops provider.
 	 * @throws MALException
@@ -96,6 +126,16 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 	public void stop() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "stop");
 		
+		if (schPub != null) {
+			try {
+				schPub.deregister();
+			} catch (MALInteractionException e) { // ignore
+				LOG.log(Level.WARNING, "schedules pub de-reg: {0}", e.getStandardError());
+			}
+			schPub.close();
+		}
+		schPub = null;
+
 		if (malProv != null) {
 			malProv.close();
 		}

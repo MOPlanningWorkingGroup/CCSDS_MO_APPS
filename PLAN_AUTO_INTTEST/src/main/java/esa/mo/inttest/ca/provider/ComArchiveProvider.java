@@ -16,10 +16,11 @@ import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.ElementList;
+import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 
-import esa.mo.inttest.pr.provider.Dumper;
+import esa.mo.inttest.Dumper;
 
 /**
  * COM Archive provider for testing. Implemented as little as necessary.
@@ -27,6 +28,15 @@ import esa.mo.inttest.pr.provider.Dumper;
 public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 
 	private static final Logger LOG = Logger.getLogger(ComArchiveProvider.class.getName());
+	private IdentifierList domain = new IdentifierList();
+	
+	public ComArchiveProvider() {
+		domain.add(new Identifier("desd"));
+	}
+	
+	public void setDomain(IdentifierList domain) {
+		this.domain = domain;
+	}
 	
 	@Override
 	public void retrieve(ObjectType objType, IdentifierList domain, LongList objIds, RetrieveInteraction interaction)

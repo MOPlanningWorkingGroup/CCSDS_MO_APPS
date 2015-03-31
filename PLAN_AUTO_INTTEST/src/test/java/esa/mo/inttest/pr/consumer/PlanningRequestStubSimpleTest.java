@@ -34,8 +34,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		String subId = "subId";
 		registerPrMonitor(subId);
 		
-		sleep(1000); // give broker a second to fire callback
-		
 		assertTrue(true);
 		
 		leave("testMonitorPrReg");
@@ -48,11 +46,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		String subId = "subId2";
 		registerPrMonitor(subId);
 		
-		sleep(1000); // wait a sec before de-registering
-		
 		deRegisterPrMonitor(subId);
-		
-		sleep(1000); // give broker a sec to fire callback
 		
 		assertTrue(true);
 		
@@ -66,8 +60,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		String subId = "subId";
 		registerTaskMonitor(subId);
 		
-		sleep(1000); // give broker a second to fire callback
-		
 		assertTrue(true);
 		
 		leave("testMonitorTasksRegister");
@@ -80,11 +72,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		String subId = "subId2";
 		registerTaskMonitor(subId);
 		
-		sleep(1000); // wait a sec before de-registering
-		
 		deRegisterTaskMonitor(subId);
-		
-		sleep(1000); // give broker a sec to fire callback
 		
 		assertTrue(true);
 		

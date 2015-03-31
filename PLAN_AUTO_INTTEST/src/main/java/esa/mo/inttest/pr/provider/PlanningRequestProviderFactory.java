@@ -12,7 +12,6 @@ import org.ccsds.moims.mo.mal.structures.Blob;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.QoSLevel;
 import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
@@ -37,17 +36,8 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	private MonitorPlanningRequestsPublisher prPub = null;
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
-	private IdentifierList domain = new IdentifierList();
-	
 	private PlanningRequestTestSupportProvider testProv = null;
 	private MALProvider testMalProv = null;
-	
-	/**
-	 * Ctor.
-	 */
-	public PlanningRequestProviderFactory() {
-		domain.add(new Identifier("desd"));
-	}
 	
 	/**
 	 * Set broker to use. If null, provider will create one itself.
@@ -81,8 +71,9 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		
 		String testProvName = provName + "TestSupport";
 		
-		testMalProv = malProvMgr.createProvider(testProvName, proto, PlanningRequestTestHelper.PLANNINGREQUESTTEST_SERVICE,
-				authId, testProv, expQos, priority, System.getProperties(), false, (null==brokerUri)?malProv.getBrokerURI():brokerUri);
+		testMalProv = malProvMgr.createProvider(testProvName, proto,
+				PlanningRequestTestHelper.PLANNINGREQUESTTEST_SERVICE, authId, testProv, expQos, priority,
+				System.getProperties(), false, (null==brokerUri) ? malProv.getBrokerURI() : brokerUri);
 		
 		LOG.exiting(getClass().getName(), "initProvider");
 	}

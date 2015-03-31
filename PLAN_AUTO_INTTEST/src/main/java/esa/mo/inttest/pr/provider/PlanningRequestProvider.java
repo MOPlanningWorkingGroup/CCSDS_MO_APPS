@@ -46,6 +46,8 @@ import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 
+import esa.mo.inttest.Dumper;
+
 /**
  * Planning request provider for testing. Implemented as little as necessary.
  */
@@ -280,9 +282,13 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		if (taskDefIdCount != taskInstIdCount) {
 			throw new MALException("task definition id count does not match task instance id count");
 		}
+	}
+	
+	protected void checkListNulls(PlanningRequestInstanceDetails prInst, LongList taskDefIds, LongList taskInstIds)
+			throws MALException {
 		for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
 			TaskInstanceDetails taskInst = prInst.getTasks().get(i);
-			if (taskInst == null) {
+			if (null == taskInst) {
 				throw new MALException("task instance[" + i + "] is null");
 			}
 			Long defId = taskDefIds.get(i);
@@ -315,6 +321,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds,
 				Dumper.received(interaction) });
 		checkNulls(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		checkListNulls(prInst, taskDefIds, taskInstIds);
 		Object[] old = prInsts.findPr(prInstId);
 		if (null != old) {
 			throw new MALException("pr instance id already exists: " + prInstId);
@@ -361,6 +368,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds,
 				Dumper.received(interaction) });
 		checkNulls(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		checkListNulls(prInst, taskDefIds, taskInstIds);
 		Object[] old = prInsts.findPr(prInstId);
 		if (null == old) {
 			throw new MALException("no pr instance with id: " + prInstId);

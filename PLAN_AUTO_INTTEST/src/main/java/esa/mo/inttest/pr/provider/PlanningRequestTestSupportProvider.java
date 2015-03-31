@@ -14,6 +14,8 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningprototype.planningrequesttest.provider.PlanningRequestTestInheritanceSkeleton;
 
+import esa.mo.inttest.Dumper;
+
 /**
  * Planning request test support provider. Implemented as little as necessary.
  */
