@@ -11,7 +11,7 @@ import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 
 /**
- * Common factory for PR. Initializes same Helpers on consumer and provider side.
+ * Basic factory. Loads properties and initializes MAL context.
  */
 public abstract class FactoryBase {
 
@@ -35,6 +35,14 @@ public abstract class FactoryBase {
 	}
 	
 	/**
+	 * Returns used domain.
+	 * @return
+	 */
+	public IdentifierList getDomain() {
+		return this.domain;
+	}
+	
+	/**
 	 * Set proprty file to load properties from.
 	 * @param fn
 	 */
@@ -42,6 +50,10 @@ public abstract class FactoryBase {
 		propertyFile = fn;
 	}
 	
+	/**
+	 * Loads properties from file to System.properties.
+	 * @throws IOException
+	 */
 	protected void initProperties() throws IOException {
 		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(propertyFile);
 		Properties props = new Properties();
@@ -50,6 +62,10 @@ public abstract class FactoryBase {
 		System.getProperties().putAll(props);
 	}
 	
+	/**
+	 * Initializes MAL context.
+	 * @throws MALException
+	 */
 	protected void initContext() throws MALException {
 		if (null == malCtx) {
 			malCtx = MALContextFactory.newFactory().createMALContext(System.getProperties());
@@ -62,12 +78,21 @@ public abstract class FactoryBase {
 	 */
 	protected abstract void initHelpers() throws MALException;
 	
+	/**
+	 * Initializes.
+	 * @throws IOException
+	 * @throws MALException
+	 */
 	protected void init() throws IOException, MALException {
 		initProperties();
 		initContext();
 		initHelpers();
 	}
 	
+	/**
+	 * Closes MAL context.
+	 * @throws MALException
+	 */
 	protected void close() throws MALException {
 		if (malCtx != null) {
 			malCtx.close();

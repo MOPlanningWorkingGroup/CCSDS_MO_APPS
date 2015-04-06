@@ -93,7 +93,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		
-		taskPub.register(keyList, prov);
+		taskPub.register(keyList, null); // no async calls - no listener needed
 		
 		prov.setTaskPub(taskPub);
 		
@@ -115,7 +115,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		
-		prPub.register(keyList, prov);
+		prPub.register(keyList, null); // no async calls - no listener needed
 		
 		prov.setPrPub(prPub);
 		

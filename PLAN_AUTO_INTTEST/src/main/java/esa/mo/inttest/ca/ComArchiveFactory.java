@@ -10,7 +10,7 @@ import org.ccsds.moims.mo.mal.MALService;
 import esa.mo.inttest.FactoryBase;
 
 /**
- * Common factory for PR. Initializes same Helpers on consumer and provider side.
+ * Common factory for COM Archive. Initializes same Herlpers on provider and consumer side.
  */
 public abstract class ComArchiveFactory extends FactoryBase {
 

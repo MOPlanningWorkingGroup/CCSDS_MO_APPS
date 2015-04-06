@@ -58,7 +58,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
 /**
- * Pretty printing for planning request data structures.
+ * Pretty printing for planning request, schedule, etc data structures.
  */
 public final class Dumper {
 
@@ -656,7 +656,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("name=").append(dumpId(sd.getName())).append(",\n");
 			s.append(ind).append(STEP).append("description=").append(quote(sd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("eventTypes=").append(dumpEventTypes(sd.getEventTypes(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("argDefs=").append(sd.getArgumentDefs()).append("\n");
+			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(sd.getArgumentDefs(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);
@@ -776,7 +776,7 @@ public final class Dumper {
 		if (null != ssl) {
 			openList(s, ssl);
 			for (int i = 0; i < ssl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchStat(ssl.get(i), ind)).append(",\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchStat(ssl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, ssl, ind);
 		} else {

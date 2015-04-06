@@ -244,14 +244,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		assertEquals(1, response[0].size());
 		assertNotNull(response[0].get(0));
 		
-		LongList prIds = new LongList();
-		prIds.add(prInstId);
-		
-		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-		
-		assertNotNull(prStats);
-		assertEquals(1, prStats.size());
-		assertNotNull(prStats.get(0));
+		verifyPrStat(prInstId);
 		
 		malMsg.free();
 		
@@ -302,14 +295,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		assertEquals(1, response[0].size());
 		assertNotNull(response[0].get(0));
 		
-		LongList prIds = new LongList();
-		prIds.add(prInstId);
-		
-		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-		
-		assertNotNull(prStats);
-		assertEquals(1, prStats.size());
-		assertNotNull(prStats.get(0));
+		verifyPrStat(prInstId);
 		
 		LongList taskIds = new LongList();
 		taskIds.add(taskInstId);
@@ -367,14 +353,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		assertTrue(updated[0]);
 		
-		LongList prIds = new LongList();
-		prIds.add(prInstId);
-		
-		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-		
-		assertNotNull(prStats);
-		assertEquals(1, prStats.size());
-		assertNotNull(prStats.get(0));
+		verifyPrStat(prInstId);
 		
 		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
 		

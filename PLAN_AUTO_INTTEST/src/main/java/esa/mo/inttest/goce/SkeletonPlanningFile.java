@@ -21,9 +21,6 @@ public class SkeletonPlanningFile extends CommonFile {
 	private static final String PR_NAME_PRFX = "goce spf pr ";
 	private static final String[] PR_DATES = { "UTC=2008-06-02T00:56:57", "UTC=2008-06-02T00:56:58", "UTC=2008-06-02T00:56:59" };
 
-	public SkeletonPlanningFile() {
-	}
-
 	protected ArgumentDefinitionDetailsList createSpfTaskDefArgs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
 		argDefs.add(createArgDef("EV_Parameters_count", Attribute.OCTET_TYPE_SHORT_FORM, null));

@@ -36,6 +36,7 @@ public class ScheduleStubTestBase {
 	@After
 	public void tearDown() throws Exception {
 		schConsFct.stop(schCons);
+		schCons = null;
 		schProvFct.stop();
 	}
 

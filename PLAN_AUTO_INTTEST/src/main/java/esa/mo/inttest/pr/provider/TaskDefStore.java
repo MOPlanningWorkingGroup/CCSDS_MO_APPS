@@ -10,6 +10,9 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 
+/**
+ * Task definitions storage.
+ */
 public class TaskDefStore {
 
 	private long lastTaskId = 0L;

@@ -18,9 +18,6 @@ public class OperationsPlanningFile extends CommonFile {
 	private static final String PR_DEF_NAME = "goce opf pr def";
 	private static final String PR_NAME = "goce opf pr";
 	
-	public OperationsPlanningFile() {
-	}
-
 	public TaskDefinitionDetails createTaskDef() {
 		TaskDefinitionDetails taskDef = createTaskDef("goce opf task", "operations task 4", PR_DEF_NAME);
 		ArgumentDefinitionDetailsList argDefs = createTaskDefArgDefs();

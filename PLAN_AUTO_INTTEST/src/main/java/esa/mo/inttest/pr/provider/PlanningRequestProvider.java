@@ -2,7 +2,6 @@ package esa.mo.inttest.pr.provider;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +13,6 @@ import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
-import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
@@ -25,8 +23,6 @@ import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
-import org.ccsds.moims.mo.mal.transport.MALErrorBody;
-import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
@@ -51,7 +47,7 @@ import esa.mo.inttest.Dumper;
 /**
  * Planning request provider for testing. Implemented as little as necessary.
  */
-public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton implements MALPublishInteractionListener {
+public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton {
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestProvider.class.getName());
 	
@@ -66,47 +62,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	 * Default ctor.
 	 */
 	public PlanningRequestProvider() {
-	}
-	
-	/**
-	 * Callback for async register success.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishRegisterAckReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-		LOG.log(Level.INFO, "publisher registration ack received");
-	}
-	
-	/**
-	 * Callback for async register error.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishRegisterErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.transport.MALErrorBody, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
-			throws MALException {
-		LOG.log(Level.WARNING, "publisher registration error received={0}", body);
-	}
-	
-	/**
-	 * Callback for async publish error.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.transport.MALErrorBody, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-		LOG.log(Level.WARNING, "publish error received={0}", body);
-	}
-	
-	/**
-	 * Callback for async de-register success.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishDeregisterAckReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-		LOG.log(Level.INFO, "publisher de-registration ack received");
 	}
 	
 	/**
@@ -175,14 +130,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else {
 			LOG.log(Level.INFO, "no pr publisher set");
 		}
-	}
-	
-	private void enter(String msg) {
-		LOG.entering(getClass().getName(), msg);
-	}
-	
-	private void leave(String msg) {
-		LOG.exiting(getClass().getName(), msg);
 	}
 	
 	protected UpdateHeader createPrUpdateHeader(UpdateType updType) {
@@ -315,7 +262,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	public PlanningRequestResponseInstanceDetailsList submitPlanningRequest(Long prDefId, Long prInstId,
 			PlanningRequestInstanceDetails prInst, LongList taskDefIds, LongList taskInstIds,
 			MALInteraction interaction) throws MALInteractionException, MALException {
-		enter("submitPlanningRequest");
 		LOG.log(Level.INFO, "{5}.submitPlanningRequest(prDefId={0}, prInstId={1}, prInst, List:taskDefIds, " +
 				"List:taskInstIds)\n  prInst={2}\n  taskDefIds[]={3}\n  taskInstIds[]={4}",
 				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds,
@@ -356,13 +302,11 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		
 		LOG.log(Level.INFO, "{1}.submitPlanningRequest() response: returning prResponse={0}",
 				new Object[] { Dumper.prResps(resp), Dumper.sending(interaction) });
-		leave("submitPlanningRequest");
 		return resp;
 	}
 	
 	public void updatePlanningRequest(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst,
 			LongList taskDefIds, LongList taskInstIds, MALInteraction interaction) throws MALException, MALInteractionException {
-		enter("updatePlanningRequest");
 		LOG.log(Level.INFO, "{5}.updatePlanningRequest(prDefId={0}, prInstId={1}, prInst, List:taskDefIds, " +
 				"List:taskInstIds)\n  prInst={2}\n  taskDefIds[]={3}\n  taskInstIds[]={4}",
 				new Object[] { prDefId, prInstId, Dumper.prInst(prInst), taskDefIds, taskInstIds,
@@ -412,12 +356,10 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		publishPr(UpdateType.CREATION, prInstId, prStatNew);
 		
 		LOG.log(Level.INFO, "{0}.updatePlanningRequest() response: returning nothing", Dumper.sending(interaction));
-		leave("updatePlanningRequest");
 	}
 
 	public void removePlanningRequest(Long prInstId, MALInteraction interaction)
 			throws MALException, MALInteractionException {
-		enter("removePlanningRequest");
 		LOG.log(Level.INFO, "{1}.removePlanningRequest(prInstId={0})",
 				new Object[] { prInstId, Dumper.received(interaction) });
 		if (prInstId == null) {
@@ -445,12 +387,10 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		
 		publishPr(UpdateType.DELETION, prInstId, prStatOld);
 		LOG.log(Level.INFO, "{0}.removePlanningRequest() response: returning nothing", Dumper.sending(interaction));
-		leave("removePlanningRequest");
 	}
 
 	public PlanningRequestStatusDetailsList getPlanningRequestStatus(LongList prIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		enter("getPlanningRequestStatus");
 		LOG.log(Level.INFO, "{1}.getPlanningRequestStatus(List:prInstIds)\n  prInstIds[]={0}",
 				new Object[] { prIds, Dumper.received(interaction) });
 		if (prIds == null) {
@@ -474,13 +414,11 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		LOG.log(Level.INFO, "{1}.getPlanningRequestStatus() response: returning prStatuses={0}",
 				new Object[] { Dumper.prStats(stats), Dumper.sending(interaction) });
-		leave("getPlanningRequestStatus");
 		return stats;
 	}
 	
 	public LongList listDefinition(DefinitionType defType, IdentifierList names, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		enter("listDefinition");
 		LOG.log(Level.INFO, "{2}.listDefinition(defType={0}, List:names)\n  names[]={1}",
 				new Object[] { defType, Dumper.names(names), Dumper.received(interaction) });
 		if (null == defType) {
@@ -502,14 +440,12 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		LOG.log(Level.INFO, "{1}.listDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
-		leave("listDefinition");
 		return ids;
 	}
 	
 	@SuppressWarnings("rawtypes")
 	public LongList addDefinition(DefinitionType defType, BaseDefinitionList defs, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		enter("addDefinition");
 		LOG.log(Level.INFO, "{2}.addDefinition(defType={0}, List:baseDefs)\n  baseDefs[]={1}",
 				new Object[] { defType, Dumper.baseDefs(defs), Dumper.received(interaction) });
 		if (null == defType) {
@@ -533,7 +469,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
-		leave("addDefinition");
 		return ids;
 	}
 	
@@ -554,7 +489,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	@SuppressWarnings("rawtypes")
 	public void updateDefinition(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs,
 			MALInteraction interaction) throws MALInteractionException, MALException {
-		enter("updateDefinition");
 		LOG.log(Level.INFO, "{3}.updateDefinition(defType={0}, List:defIds, List:baseDefs)\n  defIds[]={1}\n  baseDefs[]={2}",
 				new Object[] { defType, defIds, Dumper.baseDefs(baseDefs), Dumper.received(interaction) });
 		if (null == defType) {
@@ -574,12 +508,10 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		updateBaseDefs(defType, defIds, baseDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
-		leave("updateDefinition");
 	}
 
 	public void removeDefinition(DefinitionType defType, LongList defIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		enter("removeDefinition");
 		LOG.log(Level.INFO, "{2}.removeDefinition(defType={0}, List:defIds)\n  defIds[]={1}",
 				new Object[] { defType, defIds, Dumper.received(interaction) });
 		if (null == defType) {
@@ -599,12 +531,10 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			throw new MALException("not supported definition type: " + defType);
 		}
 		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
-		leave("removeDefinition");
 	}
 
 	public TaskStatusDetailsList getTaskStatus(LongList taskIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		enter("getTaskStatus");
 		LOG.log(Level.INFO, "{1}.getTaskStatus(List:taskIds)\n  taskIds[]={0}",
 				new Object[] { taskIds, Dumper.received(interaction) });
 		if (taskIds == null) {
@@ -624,7 +554,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		LOG.log(Level.INFO, "{1}.getTaskStatus() response: returning taskStatuses={0}",
 				new Object[] { Dumper.taskStats(stats), Dumper.sending(interaction) });
-		leave("getTaskStatus");
 		return stats;
 	}
 }

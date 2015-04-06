@@ -9,6 +9,9 @@ import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 
+/**
+ * Schedule definitions storage.
+ */
 public class DefStore {
 
 	private long lastId = 0;

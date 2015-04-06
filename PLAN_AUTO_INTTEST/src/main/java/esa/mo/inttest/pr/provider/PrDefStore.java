@@ -10,6 +10,9 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 
+/**
+ * PR definitions storage.
+ */
 public class PrDefStore {
 
 	private long lastPrId = 0L;

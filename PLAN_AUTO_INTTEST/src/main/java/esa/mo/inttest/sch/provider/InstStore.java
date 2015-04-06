@@ -3,7 +3,6 @@ package esa.mo.inttest.sch.provider;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ccsds.moims.mo.automation.schedule.structures.PatchOperation;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
@@ -12,8 +11,14 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsLi
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.structures.LongList;
 
+/**
+ * Schedule instances storage for testing.
+ */
 public class InstStore {
 
+	/**
+	 * Schedule instance + definition + status info.
+	 */
 	protected static class Item {
 		protected Long defId;
 		protected Long instId;
@@ -34,6 +39,12 @@ public class InstStore {
 		return it;
 	}
 	
+	/**
+	 * List instance statuses by id.
+	 * @param ids
+	 * @return
+	 * @throws MALException
+	 */
 	public ScheduleStatusDetailsList list(LongList ids) throws MALException {
 		ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
 		for (int i = 0; i < ids.size(); ++i) {
@@ -48,6 +59,14 @@ public class InstStore {
 		return stats;
 	}
 	
+	/**
+	 * Add schedule instance.
+	 * @param defId
+	 * @param instId
+	 * @param inst
+	 * @param stat
+	 * @throws MALException
+	 */
 	public void add(Long defId, Long instId, ScheduleInstanceDetails inst, ScheduleStatusDetails stat)
 			throws MALException {
 		Item it = findItem(instId);
@@ -62,6 +81,13 @@ public class InstStore {
 		items.add(it);
 	}
 	
+	/**
+	 * Update (replace) schedule instance.
+	 * @param instId
+	 * @param inst
+	 * @return
+	 * @throws MALException
+	 */
 	public ScheduleStatusDetails update(Long instId, ScheduleInstanceDetails inst) throws MALException {
 		Item it = findItem(instId);
 		if (null == it) {
@@ -71,6 +97,12 @@ public class InstStore {
 		return it.stat;
 	}
 	
+	/**
+	 * Remove schedule instance.
+	 * @param instId
+	 * @return
+	 * @throws MALException
+	 */
 	public ScheduleStatusDetails remove(Long instId) throws MALException {
 		Item it = findItem(instId);
 		if (null == it) {
@@ -80,6 +112,16 @@ public class InstStore {
 		return it.stat;
 	}
 	
+	/**
+	 * Patch schedule instance (whatever that means).
+	 * @param defId
+	 * @param instId
+	 * @param schInst
+	 * @param patchOp
+	 * @param targetId
+	 * @return
+	 * @throws MALException
+	 */
 	public ScheduleStatusDetails patch(Long defId, Long instId, ScheduleInstanceDetails schInst,
 			SchedulePatchOperations patchOp, Long targetId) throws MALException {
 		Item it = findItem(instId);
@@ -103,5 +145,13 @@ public class InstStore {
 			}
 		} // else keep old
 		return it.stat;
+	}
+	
+	// test support
+	protected void setStatus(Long id, ScheduleStatusDetails stat) {
+		Item it = findItem(id);
+		if (null != it) {
+			it.stat = stat;
+		}
 	}
 }

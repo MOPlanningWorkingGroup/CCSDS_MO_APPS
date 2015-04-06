@@ -32,6 +32,19 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		}
 	}
 	
+	private void waitAndVerifyPr(final PrMonitor prMon) throws InterruptedException, Exception {
+		waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != prMon.prStats;
+			}
+		});
+		// verify that we got pr notification
+		assertNotNull(prMon.prStats);
+		assertEquals(1, prMon.prStats.size());
+		assertNotNull(prMon.prStats.get(0));
+	}
+	
 	@Test
 	public void testSubmitPlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testSubmitPlanningRequest");
@@ -41,17 +54,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		createAndSubmitPlanningRequest();
 		
-		waitFor(prMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != prMon.prStats;
-			}
-		});
-		
-		// verify that we got pr notification
-		assertNotNull(prMon.prStats);
-		assertEquals(1, prMon.prStats.size());
-		assertNotNull(prMon.prStats.get(0));
+		waitAndVerifyPr(prMon);
 		
 		deRegisterPrMonitor(subId);
 		
@@ -77,17 +80,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 			}
 		});
 		
-		waitFor(prMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != prMon.prStats;
-			}
-		});
-		
-		// verify that we got pr notification
-		assertNotNull(prMon.prStats);
-		assertEquals(1, prMon.prStats.size());
-		assertNotNull(prMon.prStats.get(0));
+		waitAndVerifyPr(prMon);
 		
 		// verify that we got task notification
 		assertNotNull(taskMon.taskStats);
@@ -139,17 +132,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 			}
 		});
 		
-		waitFor(prMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != prMon.prStats;
-			}
-		});
-		
-		// verify that we got pr notification
-		assertNotNull(prMon.prStats);
-		assertEquals(1, prMon.prStats.size());
-		assertNotNull(prMon.prStats.get(0));
+		waitAndVerifyPr(prMon);
 		
 		// verify that we got task notification
 		assertNotNull(taskMon.taskStats);

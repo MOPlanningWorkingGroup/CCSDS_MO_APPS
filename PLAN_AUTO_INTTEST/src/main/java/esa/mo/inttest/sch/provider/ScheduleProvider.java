@@ -1,6 +1,5 @@
 package esa.mo.inttest.sch.provider;
 
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,7 +20,6 @@ import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
-import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
@@ -32,8 +30,6 @@ import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
-import org.ccsds.moims.mo.mal.transport.MALErrorBody;
-import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
@@ -41,7 +37,10 @@ import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import esa.mo.inttest.Dumper;
 import esa.mo.inttest.sch.provider.InstStore.Item;
 
-public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MALPublishInteractionListener {
+/**
+ * Schedule service implementation for testing.
+ */
+public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 
 	private static final Logger LOG = Logger.getLogger(ScheduleProvider.class.getName());
 	
@@ -50,53 +49,31 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 	private InstStore schInsts = new InstStore();
 	private MonitorSchedulesPublisher schPub = null;
 	
+	/**
+	 * Default ctor.
+	 */
 	public ScheduleProvider() {
 		domain.add(new Identifier("desd"));
 	}
 	
+	/**
+	 * Set domain to use.
+	 * @param domain
+	 */
 	public void setDomain(IdentifierList domain) {
 		this.domain = domain;
 	}
 	
+	/**
+	 * Set Schedules publisher to use.
+	 * @param pub
+	 */
 	public void setSchPub(MonitorSchedulesPublisher pub) {
 		schPub = pub;
 	}
 	
-	/**
-	 * Implements publish registration ack handling.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishRegisterAckReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void publishRegisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-		LOG.log(Level.INFO, "publisher registration ack");
-	}
-
-	/**
-	 * Implements publish registration error handling.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishRegisterErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.transport.MALErrorBody, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void publishRegisterErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties)
-			throws MALException {
-		LOG.log(Level.WARNING, "publisher registration error={0}", body);
-	}
-
-	/**
-	 * Implements publishing error handling.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.transport.MALErrorBody, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void publishErrorReceived(MALMessageHeader header, MALErrorBody body, Map qosProperties) throws MALException {
-		LOG.log(Level.WARNING, "publishing error={0}", body);
-	}
-
-	/**
-	 * Implements publish de-registration ack handling.
-	 * @see org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener#publishDeregisterAckReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void publishDeregisterAckReceived(MALMessageHeader header, Map qosProperties) throws MALException {
-		LOG.log(Level.WARNING, "publisher de-registration ack");
+	protected InstStore getInstStore() {
+		return schInsts;
 	}
 	
 	private StatusRecordList addOrUpdate(StatusRecordList srl, InstanceState state, Time time, String comm) {
@@ -164,7 +141,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 		return oi;
 	}
 	
-	private void publish(UpdateType ut, Long instId, ScheduleStatusDetails stat) throws MALException, MALInteractionException {
+	protected void publish(UpdateType ut, Long instId, ScheduleStatusDetails stat) throws MALException, MALInteractionException {
 		if (null != schPub) {
 			UpdateHeaderList updHdrs = new UpdateHeaderList();
 			updHdrs.add(createUpdateHeader(ut));
@@ -184,7 +161,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 	@Override
 	public void submitSchedule(Long schDefId, Long schInstId, ScheduleInstanceDetails schInst,
 			MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{3}.submitSchedule(schDefId={0}, schInstId={1}, schDef)\n  schDef={2}",
+		LOG.log(Level.INFO, "{3}.submitSchedule(schDefId={0}, schInstId={1}, schInst)\n  schInst={2}",
 				new Object[] { schDefId, schInstId, Dumper.schInst(schInst), Dumper.received(interaction) });
 		// for nullpointers check we will
 		if (null == schDefId) {
@@ -270,7 +247,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 	public void patchSchedule(Long schDefId, Long schInstId, ScheduleInstanceDetails schInst,
 			SchedulePatchOperations patchOp, Long targetSchInstId, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{5}.patchSchedule(schDefId={0}, schInstId={1}, schInst, patchOp, targetSchInstId={2}\n  schInst={3}\n  patchOp={4}",
+		LOG.log(Level.INFO, "{5}.patchSchedule(schDefId={0}, schInstId={1}, schInst, patchOp, targetSchInstId={2})\n  schInst={3}\n  patchOp={4}",
 				new Object[] { schDefId, schInstId, targetSchInstId, Dumper.schInst(schInst), Dumper.schPatchOp(patchOp), Dumper.received(interaction) });
 		if (null == schDefId) {
 			throw new MALException("schedule definition id is null");
@@ -308,7 +285,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 			throw new MALException("schedule instance ids list is empty");
 		}
 		ScheduleStatusDetailsList schStats = schInsts.list(schIds);
-		LOG.log(Level.INFO, "{1}.getScheduleStatus() response: schStats={0}",
+		LOG.log(Level.INFO, "{1}.getScheduleStatus() response: schStats[]={0}",
 				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
 		return schStats;
 	}
@@ -401,7 +378,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 	 */
 	@Override
 	public void resume(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{1}.resume(schInstIds={0}", new Object[] { schInstIds, Dumper.received(interaction) });
+		LOG.log(Level.INFO, "{1}.resume(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
 		if (null == schInstIds) {
 			throw new MALException("schedule instance ids list is null");
 		}
@@ -473,7 +450,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton implements MAL
 	@Override
 	public LongList addDefinition(ScheduleDefinitionDetailsList schDefs, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{1}.addDefinition(List:schDefs)\n  schDefs={0}",
+		LOG.log(Level.INFO, "{1}.addDefinition(List:schDefs)\n  schDefs[]={0}",
 				new Object[] { Dumper.schDefs(schDefs), Dumper.received(interaction) });
 		if (null == schDefs) {
 			throw new MALException("schedule definitions list is null");

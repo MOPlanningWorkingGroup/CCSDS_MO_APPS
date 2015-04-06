@@ -1,0 +1,277 @@
+package esa.mo.inttest.sch.consumer;
+
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter;
+import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleStub;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.com.structures.ObjectId;
+import org.ccsds.moims.mo.com.structures.ObjectIdList;
+import org.ccsds.moims.mo.com.structures.ObjectKey;
+import org.ccsds.moims.mo.com.structures.ObjectType;
+import org.ccsds.moims.mo.com.structures.ObjectTypeList;
+import org.ccsds.moims.mo.mal.MALStandardError;
+import org.ccsds.moims.mo.mal.structures.Attribute;
+import org.ccsds.moims.mo.mal.structures.Element;
+import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.EntityKeyList;
+import org.ccsds.moims.mo.mal.structures.EntityRequest;
+import org.ccsds.moims.mo.mal.structures.EntityRequestList;
+import org.ccsds.moims.mo.mal.structures.Identifier;
+import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.Subscription;
+import org.ccsds.moims.mo.mal.structures.Time;
+import org.ccsds.moims.mo.mal.structures.UShort;
+import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
+import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+
+import esa.mo.inttest.Dumper;
+
+/**
+ * Schedule consumer for testing.
+ */
+public class ScheduleConsumer extends ScheduleAdapter {
+
+	private static final Logger LOG = Logger.getLogger(ScheduleConsumer.class.getName());
+	
+	private ScheduleStub stub;
+	
+	/**
+	 * Ctor.
+	 * @param stub
+	 */
+	public ScheduleConsumer(ScheduleStub stub) {
+		this.stub = stub;
+	}
+	
+	/**
+	 * Returns stub for provider access.
+	 * @return
+	 */
+	public ScheduleStub getStub() {
+		return this.stub;
+	}
+	
+	/**
+	 * Implements notification callback.
+	 * @see org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter#monitorSchedulesNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList, java.util.Map)
+	 */
+	@SuppressWarnings("rawtypes")
+	public void monitorSchedulesNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
+			ObjectIdList objIds, ScheduleStatusDetailsList schStats, Map qosProps) {
+		LOG.log(Level.INFO, "{4}.monitorSchedulesNotifyReceived(id={0}, List:updHdrs, List:objIds, List:schStats)\n  updHdrs[]={1}\n  objIds[]={2}\n  schStats[]={3}",
+				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats), Dumper.fromBroker(msgHdr) });
+	}
+	
+	/**
+	 * Implements notification error callback.
+	 * @see org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter#monitorSchedulesNotifyErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.MALStandardError, java.util.Map)
+	 */
+	@SuppressWarnings("rawtypes")
+	public void monitorSchedulesNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError err, Map qosProps) {
+		LOG.log(Level.INFO, "{1}.monitorSchedulesNotifyErrorReceived(error)\n  error={0}",
+				new Object[] { err, Dumper.fromBroker(msgHdr) });
+	}
+	
+	/**
+	 * Creates schedule deifinition.
+	 * @param name
+	 * @param desc
+	 * @param args
+	 * @param etypes
+	 * @return
+	 */
+	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList args,
+			ObjectTypeList etypes) {
+		ScheduleDefinitionDetails schDef = new ScheduleDefinitionDetails();
+		schDef.setName(new Identifier(name));
+		schDef.setDescription(desc);
+		schDef.setArgumentDefs(args);
+		schDef.setEventTypes(etypes);
+		return schDef;
+	}
+	
+	/**
+	 * Adds argument definition to list.
+	 * @param defs
+	 * @param name
+	 * @param attrType
+	 * @param area
+	 * @return
+	 */
+	public ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs, String name, Byte attrType,
+			UShort area) {
+		ArgumentDefinitionDetailsList list = (null != defs) ? defs : new ArgumentDefinitionDetailsList();
+		list.add(new ArgumentDefinitionDetails(new Identifier(name), attrType, area));
+		return list;
+	}
+	
+	/**
+	 * Create ObjectType instance from given Element.
+	 * @param e
+	 * @return
+	 */
+	protected ObjectType createObjType(Element e) {
+		return new ObjectType(e.getAreaNumber(), e.getServiceNumber(), e.getAreaVersion(),
+				new UShort(e.getTypeShortForm()));
+	}
+	
+	/**
+	 * Adds objType to list.
+	 * @param types
+	 * @param e
+	 * @return
+	 */
+	public ObjectTypeList addObjType(ObjectTypeList types, Element e) {
+		ObjectTypeList list = (null != types) ? types : new ObjectTypeList();
+		list.add(createObjType(e));
+		return list;
+	}
+	
+	/**
+	 * Creates subscription with given id.
+	 * @param subId
+	 * @return
+	 */
+	public Subscription createSub(String subId) {
+		EntityKeyList entKeys = new EntityKeyList();
+		entKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		EntityRequestList entReqs = new EntityRequestList();
+		entReqs.add(new EntityRequest(null, true, true, true, false, entKeys));
+		return new Subscription(new Identifier(subId), entReqs);
+	}
+	
+	/**
+	 * Creates schedule instance.
+	 * @param name
+	 * @param desc
+	 * @param argNames
+	 * @param argVals
+	 * @param items
+	 * @param trigs
+	 * @return
+	 */
+	public ScheduleInstanceDetails createInst(String name, String desc, IdentifierList argNames,
+			AttributeValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
+		ScheduleInstanceDetails inst = new ScheduleInstanceDetails();
+		inst.setName(new Identifier(name));
+		inst.setDescription(desc);
+		inst.setArgumentDefNames(argNames);
+		inst.setArgumentValues(argVals);
+		inst.setScheduleItems(items);
+		inst.setTimingConstraints(trigs);
+		return inst;
+	}
+	
+	/**
+	 * Adds argment name to list.
+	 * @param names
+	 * @param name
+	 * @return
+	 */
+	public IdentifierList addArgName(IdentifierList names, String name) {
+		IdentifierList list = (null != names) ? names : new IdentifierList();
+		list.add(new Identifier(name));
+		return list;
+	}
+	
+	/**
+	 * Adds argument value to list.
+	 * @param vals
+	 * @param val
+	 * @return
+	 */
+	public AttributeValueList addArgValue(AttributeValueList vals, Attribute val) {
+		AttributeValueList list = (null != vals) ? vals : new AttributeValueList();
+		list.add(new AttributeValue(val));
+		return list;
+	}
+	
+	/**
+	 * Adds schedule item to schedule.
+	 * @param items
+	 * @param name
+	 * @param schName
+	 * @param argTypes
+	 * @param argVals
+	 * @param trigs
+	 * @param del
+	 * @return
+	 */
+	public ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items, String name, String schName,
+			ArgumentDefinitionDetailsList argTypes, AttributeValueList argVals, TriggerDetailsList trigs, ObjectId del) {
+		ScheduleItemInstanceDetailsList list = (null != items) ? items : new ScheduleItemInstanceDetailsList();
+		list.add(new ScheduleItemInstanceDetails(new Identifier(name), new Identifier(schName), argTypes, argVals,
+				trigs, del)); // trigs - mandatory, delegate - mandatory
+		return list;
+	}
+	
+	/**
+	 * Creates ObjectId for given element and id.
+	 * @param e
+	 * @param domain
+	 * @param id
+	 * @return
+	 */
+	public ObjectId createObjId(Element e, IdentifierList domain, Long id) {
+		ObjectKey objKey = new ObjectKey(domain, id);
+		return new ObjectId(createObjType(e), objKey);
+	}
+	
+	/**
+	 * Finds given status from list.
+	 * @param srl
+	 * @param is
+	 * @return
+	 */
+	public StatusRecord findStatus(StatusRecordList srl, InstanceState is) {
+		StatusRecord sr = null;
+		for (int i = 0; (null != srl) && (i < srl.size()); ++i) {
+			StatusRecord r = srl.get(i);
+			if ((null != r) && (is == r.getState())) {
+				sr = r;
+				break;
+			}
+		}
+		return sr;
+	}
+	
+	/**
+	 * Adds given status to list if missing or updates existing one.
+	 * @param srl
+	 * @param is
+	 * @param t
+	 * @param comm
+	 * @return
+	 */
+	public StatusRecordList addOrUpdate(StatusRecordList srl, InstanceState is, Time t, String comm) {
+		StatusRecordList list = (null != srl) ? srl : new StatusRecordList();
+		boolean found = false;
+		for (int i = 0; !found && (null != list) && (i < list.size()); ++i) {
+			StatusRecord r = list.get(i);
+			found = (is == r.getState());
+			if (found) {
+				r.setDate(t);
+				r.setComment(comm);
+			}
+		}
+		if (!found) {
+			list.add(new StatusRecord(is, t, comm));
+		}
+		return list;
+	}
+}

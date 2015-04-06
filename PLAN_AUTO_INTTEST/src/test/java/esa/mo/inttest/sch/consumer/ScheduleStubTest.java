@@ -2,10 +2,6 @@ package esa.mo.inttest.sch.consumer;
 
 import static org.junit.Assert.*;
 
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
@@ -15,18 +11,14 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsLi
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.mal.MALStandardError;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
-import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.junit.Test;
 
 public class ScheduleStubTest extends ScheduleStubTestBase {
 
-	private static final Logger LOG = Logger.getLogger(ScheduleStubTest.class.getName());
-	
 	@Test
 	public void testScheduleStub() {
 		assertNotNull(schCons);
@@ -160,26 +152,8 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Subscription sub = createSub(subId);
 		
 		schCons.monitorSchedulesRegister(sub, new ScheduleAdapter() {
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorSchedulesRegisterAckReceived(MALMessageHeader msgHdr, Map qosProps) {
-				LOG.log(Level.INFO, "async register schedule monitor: ack received");
-			}
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorSchedulesRegisterErrorReceived(MALMessageHeader msgHdr, MALStandardError error,
-					Map qosProps) {
-				LOG.log(Level.INFO, "async register schedule monitor: register error: " + error);
-				assertTrue(false);
-			}
-			
-			@SuppressWarnings("rawtypes")
-			@Override
-			public void monitorSchedulesDeregisterAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
-				LOG.log(Level.INFO, "async de-register schedule monitor: ack received");
-			}
+			// we wont be receiving any register callbacks since this is sync call
+			// and we arent testing notify
 		});
 	}
 

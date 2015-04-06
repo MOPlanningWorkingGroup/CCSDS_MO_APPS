@@ -2,18 +2,13 @@ package esa.mo.inttest.goce;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
-import java.util.logging.FileHandler;
-import java.util.logging.Filter;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
@@ -49,6 +44,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import esa.mo.inttest.DemoUtils;
 import esa.mo.inttest.Dumper;
 import esa.mo.inttest.goce.GoceConsumer;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
@@ -423,53 +419,13 @@ public class ThreeGoceConsumersTest {
 		}
 	}
 	
-	private static final class PrFilter implements Filter {
-		
-		private final String name;
-		
-		public PrFilter(String n) {
-			name = n;
-		}
-		
-		protected boolean hasPr(String s) {
-			boolean doLog = false;
-			int i = (null != s) ? s.indexOf(name) : -1;
-			if (-1 != i && name.length() >= s.length()) {
-				i = -2; // matches and not long enough to check suffix
-			}
-			int ch = (0 <= i) ? s.charAt(name.length()) : -1;
-			// include "PrProvider", but exclude "PrProvider0"
-			if (-1 != ch && '0' != ch && '1' != ch) {
-				doLog = true;
-			}
-			return doLog;
-		}
-		
-		@Override
-		public boolean isLoggable(LogRecord record) {
-			boolean doLog = false;
-			// "message" is format string with {}
-			for (int j = 0; (null != record.getParameters()) && (j < record.getParameters().length); ++j) {
-				Object o = record.getParameters()[j];
-				if (o instanceof String) {
-					String s = (String)o;
-					if (hasPr(s)) {
-						doLog = true;
-						break;
-					}
-				}
-			}
-			return doLog;
-		}
-	}
-	
 	private static final Logger LOG = Logger.getLogger(ThreeGoceConsumersTest.class.getName());
 	
-	private static final String BROKER = "PrProvider"; // label broker as provider since it's part of provider
-	private static final String CLIENT1 = "powerUser";
-	private static final String CLIENT2 = "normalUser";
-	private static final String CLIENT3 = "monitorUser";
 	private static final String PROVIDER = "PrProvider";
+	private static final String BROKER = PROVIDER; // label broker as provider since it's part of provider
+	private static final String CLIENT1 = "PrPowerUser";
+	private static final String CLIENT2 = "PrNormalUser";
+	private static final String CLIENT3 = "PrMonitorUser";
 	
 	private PlanningRequestProviderFactory provFct;
 	
@@ -482,23 +438,6 @@ public class ThreeGoceConsumersTest {
 	private PlanningRequestTestStub procTestProv;
 	private PlanningRequestStub procProv;
 	
-	private static SimpleFormatter createFormatter() {
-		// custom formatter to output LogRecord sequence number
-		return new SimpleFormatter() {
-			@Override
-			public synchronized String format(LogRecord lr) {
-				return "[" + lr.getSequenceNumber() + "] " + super.format(lr);
-			}
-		};
-	}
-	
-	private static FileHandler createHandler(final String n) throws IOException {
-		FileHandler fh = new FileHandler(n + ".log");
-		fh.setFilter(new PrFilter(n)); // custom filter
-		fh.setFormatter(createFormatter());
-		return fh;
-	}
-	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		// use maven profile "gen-log-files" to turn logging to files on
@@ -507,17 +446,12 @@ public class ThreeGoceConsumersTest {
 		System.out.println("writing to log files is turned on: "+log2file);
 		if (log2file) {
 			// trim down log spam
-			Logger.getLogger("org.ccsds.moims.mo.mal.transport.gen").setLevel(Level.WARNING);
-			Logger.getLogger("org.ccsds.moims.mo.mal.transport.rmi").setLevel(Level.WARNING);
-			Logger.getLogger("org.ccsds.moims.mo.mal.impl.broker").setLevel(Level.WARNING);
-			Logger.getLogger("org.ccsds.moims.mo.mal.impl").setLevel(Level.WARNING);
-			// our log format
-			System.setProperty("java.util.logging.SimpleFormatter.format", "%5$s%n");
+			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
-			Logger.getLogger("").addHandler(createHandler(CLIENT1));
-			Logger.getLogger("").addHandler(createHandler(CLIENT2));
-			Logger.getLogger("").addHandler(createHandler(CLIENT3));
-			Logger.getLogger("").addHandler(createHandler(PROVIDER));
+			Logger.getLogger("").addHandler(DemoUtils.createHandler(CLIENT1));
+			Logger.getLogger("").addHandler(DemoUtils.createHandler(CLIENT2));
+			Logger.getLogger("").addHandler(DemoUtils.createHandler(CLIENT3));
+			Logger.getLogger("").addHandler(DemoUtils.createHandler(PROVIDER));
 		}
 	}
 	

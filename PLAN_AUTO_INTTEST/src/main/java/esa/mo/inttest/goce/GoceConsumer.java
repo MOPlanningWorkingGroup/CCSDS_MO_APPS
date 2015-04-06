@@ -24,10 +24,18 @@ public class GoceConsumer {
 
 	private PlanningRequestStub prStub;
 
+	/**
+	 * Ctor.
+	 * @param prStub
+	 */
 	public GoceConsumer(PlanningRequestStub prStub) {
 		this.prStub = prStub;
 	}
 	
+	/**
+	 * Returns stub for provider access.
+	 * @return
+	 */
 	public PlanningRequestStub getStub() {
 		return this.prStub;
 	}

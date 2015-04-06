@@ -37,11 +37,11 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		protected List<ObjectIdList> objIds = new ArrayList<ObjectIdList>();
 		protected List<ScheduleStatusDetailsList> schStats = new ArrayList<ScheduleStatusDetailsList>();
 		
-		public void reset() {
-			ids = new ArrayList<Identifier>();
-			updHdrs = new ArrayList<UpdateHeaderList>();
-			objIds = new ArrayList<ObjectIdList>();
-			schStats = new ArrayList<ScheduleStatusDetailsList>();
+		public void clear() {
+			ids.clear();
+			updHdrs.clear();
+			objIds.clear();
+			schStats.clear();
 		}
 		
 		@SuppressWarnings("rawtypes")
@@ -137,14 +137,10 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		}
 	}
 	
-	@Test
-	public void testSubmitSchedule() throws MALException, MALInteractionException, InterruptedException, Exception {
-		String subId = "schSubId";
-		final SchMonitor schMon = new SchMonitor();
-		schCons.monitorSchedulesRegister(createSub(subId), schMon);
+	private Long submitSchedule(final SchMonitor schMon) throws MALException, MALInteractionException,
+			InterruptedException, Exception {
 		
 		Long schDefId = createAndAddDef("test schedule def");
-		
 		Long schInstId = 1L;
 		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
 		
@@ -154,6 +150,16 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 				return !schMon.schStats.isEmpty();
 			}
 		});
+		return schInstId;
+	}
+	
+	@Test
+	public void testSubmitSchedule() throws MALException, MALInteractionException, InterruptedException, Exception {
+		String subId = "schSubId";
+		final SchMonitor schMon = new SchMonitor();
+		schCons.monitorSchedulesRegister(createSub(subId), schMon);
+		
+		submitSchedule(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -182,7 +188,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schInst.setDescription("updated description");
 		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.updateSchedule(schInstId, schInst);
 		
@@ -206,19 +212,9 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		final SchMonitor schMon = new SchMonitor();
 		schCons.monitorSchedulesRegister(createSub(subId), schMon);
 		
-		Long schDefId = createAndAddDef("test schedule def");
+		Long schInstId = submitSchedule(schMon);
 		
-		Long schInstId = 1L;
-		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
-		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
-		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.removeSchedule(schInstId);
 		
@@ -259,7 +255,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		Long targetSchInstId = 2L;
 		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.patchSchedule(schDefId, schInstId, schInst, patchOp, targetSchInstId);
 		
@@ -283,22 +279,12 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		final SchMonitor schMon = new SchMonitor();
 		schCons.monitorSchedulesRegister(createSub(subId), schMon);
 		
-		Long schDefId = createAndAddDef("test schedule def");
-		
-		Long schInstId = 1L;
-		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
-		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		Long schInstId = submitSchedule(schMon);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.start(schInstIds);
 		
@@ -322,22 +308,12 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		final SchMonitor schMon = new SchMonitor();
 		schCons.monitorSchedulesRegister(createSub(subId), schMon);
 		
-		Long schDefId = createAndAddDef("test schedule def");
-		
-		Long schInstId = 1L;
-		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
-		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		Long schInstId = submitSchedule(schMon);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.pause(schInstIds);
 		
@@ -361,22 +337,12 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		final SchMonitor schMon = new SchMonitor();
 		schCons.monitorSchedulesRegister(createSub(subId), schMon);
 		
-		Long schDefId = createAndAddDef("test schedule def");
-		
-		Long schInstId = 1L;
-		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
-		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		Long schInstId = submitSchedule(schMon);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.resume(schInstIds);
 		
@@ -400,22 +366,12 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		final SchMonitor schMon = new SchMonitor();
 		schCons.monitorSchedulesRegister(createSub(subId), schMon);
 		
-		Long schDefId = createAndAddDef("test schedule def");
-		
-		Long schInstId = 1L;
-		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
-		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		Long schInstId = submitSchedule(schMon);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schMon.reset(); // clear submit info
+		schMon.clear(); // clear submit info
 		
 		schCons.terminate(schInstIds);
 		

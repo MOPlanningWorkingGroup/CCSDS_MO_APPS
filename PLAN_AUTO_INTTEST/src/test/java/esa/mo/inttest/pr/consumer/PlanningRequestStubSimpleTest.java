@@ -86,14 +86,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		Object[] details = createAndSubmitPlanningRequest();
 		Long prInstId = (Long)details[2];
 		
-		LongList prIds = new LongList();
-		prIds.add(prInstId);
-		
-		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-		
-		assertNotNull(prStats);
-		assertEquals(1, prStats.size());
-		assertNotNull(prStats.get(0));
+		verifyPrStat(prInstId);
 		
 		leave("testSubmitPlanningRequest");
 	}
@@ -106,14 +99,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		Long prInstId = (Long)details[1];
 		LongList taskInstIds = (LongList)details[3];
 		
-		LongList prIds = new LongList();
-		prIds.add(prInstId);
-		
-		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
-		
-		assertNotNull(prStats);
-		assertEquals(1, prStats.size());
-		assertNotNull(prStats.get(0));
+		verifyPrStat(prInstId);
 		
 		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
 		
@@ -131,6 +117,10 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		Object[] details = createAndSubmitPlanningRequest();
 		
 		updatePlanningRequestWithTask(details);
+		
+		Long prInstId = (Long)details[2];
+		
+		verifyPrStat(prInstId);
 		
 		leave("testUpdatePlanningRequest");
 	}

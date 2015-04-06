@@ -30,9 +30,6 @@ public class StationScheduleIncrementFile extends CommonFile {
 
 	private static final String SCH_NAME = "SIST";
 	
-	public StationScheduleIncrementFile() {
-	}
-	
 	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList argDefs,
 			ObjectTypeList eventTypes) {
 		ScheduleDefinitionDetails schDef = new ScheduleDefinitionDetails();

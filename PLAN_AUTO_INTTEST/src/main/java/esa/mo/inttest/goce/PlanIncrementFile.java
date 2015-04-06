@@ -27,9 +27,6 @@ public class PlanIncrementFile extends CommonFile {
 	private static final String PR_DEF_NAME = "goce pif pr def";
 	private static final String PR_NAME = "goce pif pr";
 	
-	public PlanIncrementFile() {
-	}
-	
 	/**
 	 * Defines some additional <RQ> fields and some <EV> fields.
 	 * @param argDefs

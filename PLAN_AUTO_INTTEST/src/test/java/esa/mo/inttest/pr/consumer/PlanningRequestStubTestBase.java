@@ -1,5 +1,7 @@
 package esa.mo.inttest.pr.consumer;
 
+import static org.junit.Assert.*;
+
 import org.ccsds.moims.mo.com.archive.consumer.ArchiveStub;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetails;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList;
@@ -79,6 +81,7 @@ public class PlanningRequestStubTestBase {
 				Map qosProperties)
 		{
 			LOG.log(Level.INFO, "task monitor registration err");
+			assertTrue(false);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -98,6 +101,7 @@ public class PlanningRequestStubTestBase {
 		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 				Map qosProps) {
 			LOG.log(Level.INFO, "task monitor notify error: {0}", error);
+			assertTrue(false);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -142,6 +146,7 @@ public class PlanningRequestStubTestBase {
 				Map qosProperties)
 		{
 			LOG.log(Level.INFO, "pr monitor registration err");
+			assertTrue(false);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -161,6 +166,7 @@ public class PlanningRequestStubTestBase {
 		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
 				Map qosProps) {
 			LOG.log(Level.INFO, "pr monitor notify error: {0}", error);
+			assertTrue(false);
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -515,5 +521,16 @@ public class PlanningRequestStubTestBase {
 		taskDefList.add(taskDef);
 		LongList taskDefIdList = prCons.addDefinition(DefinitionType.TASK_DEF, taskDefList);
 		return new Object[] { taskDefIdList, taskDefList };
+	}
+
+	protected void verifyPrStat(Long id) throws MALException, MALInteractionException {
+		LongList prIds = new LongList();
+		prIds.add(id);
+		
+		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
+		
+		assertNotNull(prStats);
+		assertEquals(1, prStats.size());
+		assertNotNull(prStats.get(0));
 	}
 }

@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.automation.schedule.ScheduleHelper;
 import org.ccsds.moims.mo.automation.schedule.provider.MonitorSchedulesPublisher;
+import org.ccsds.moims.mo.automationprototype.scheduletest.ScheduleTestHelper;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALProvider;
@@ -33,7 +34,10 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
 	private MonitorSchedulesPublisher schPub = null;
-	
+	// test support
+	private ScheduleTestSupportProvider testProv = null;
+	private MALProvider testMalProv = null;
+
 	/**
 	 * Set broker to use. If null, provider will create one itself.
 	 * @param broker
@@ -60,11 +64,21 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 		malProv = malProvMgr.createProvider(provName, proto, ScheduleHelper.SCHEDULE_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
 		
+		// testing support
+		testProv = new ScheduleTestSupportProvider();
+		testProv.setProvider(prov);
+		
+		String testProvName = provName + "TestSupport";
+		
+		testMalProv = malProvMgr.createProvider(testProvName, proto,
+				ScheduleTestHelper.SCHEDULETEST_SERVICE, authId, testProv, expQos, priority,
+				System.getProperties(), false, (null==brokerUri) ? malProv.getBrokerURI() : brokerUri);
+		
 		LOG.exiting(getClass().getName(), "initProvider");
 	}
 
 	private void initSchedulesPublisher() throws MALException, MALInteractionException {
-		LOG.entering(getClass().getName(), "initSChedulePublicher");
+		LOG.entering(getClass().getName(), "initSchedulesPublicher");
 		
 		Identifier network = new Identifier("junit");
 		SessionType sessionType = SessionType.LIVE;
@@ -78,11 +92,11 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 		EntityKeyList keyList = new EntityKeyList();
 		keyList.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
 		
-		schPub.register(keyList, prov);
+		schPub.register(keyList, null); // no async calls - no listener needed
 		
 		prov.setSchPub(schPub);
 		
-		LOG.exiting(getClass().getName(), "initTaskPublisher");
+		LOG.exiting(getClass().getName(), "initSchedulesPublisher");
 	}
 
 	/**
@@ -119,6 +133,14 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 	}
 
 	/**
+	 * Returns testing support provider URI for consumer to connect to.
+	 * @return
+	 */
+	public URI getTestProviderUri() {
+		return testMalProv.getURI();
+	}
+
+	/**
 	 * Stops provider.
 	 * @throws MALException
 	 * @throws MALInteractionException
@@ -135,7 +157,12 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 			schPub.close();
 		}
 		schPub = null;
-
+		// test support
+		if (testMalProv != null) {
+			testMalProv.close();
+		}
+		testMalProv = null;
+		
 		if (malProv != null) {
 			malProv.close();
 		}
@@ -144,6 +171,8 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 			malProvMgr.close();
 		}
 		malProvMgr = null;
+		// test support
+		testProv = null;
 		prov = null;
 		
 		super.close();

@@ -22,9 +22,6 @@ public class PayloadPlanningFile extends CommonFile {
 	protected static final String PR_NAME_1 = "goce ppf pr inst 1";
 	protected static final String PR_NAME_2 = "goce ppf pr inst 2";
 	
-	public PayloadPlanningFile() {
-	}
-	
 	public String getTaskDefName() {
 		return TASK_DEF_NAME;
 	}
