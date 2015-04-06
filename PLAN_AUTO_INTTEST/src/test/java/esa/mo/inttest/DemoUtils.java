@@ -122,13 +122,6 @@ public class DemoUtils {
 	private DemoUtils() {
 	}
 
-	// /**
-	// * Set logfiles format.
-	// */
-	// public static void setFormat() {
-	// System.setProperty("java.util.logging.SimpleFormatter.format", "%5$s%n");
-	// }
-
 	/**
 	 * Set less spammy Logger levels for MAL classes.
 	 */

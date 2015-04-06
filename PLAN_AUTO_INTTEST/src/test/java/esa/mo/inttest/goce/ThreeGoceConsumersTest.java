@@ -3,10 +3,12 @@ package esa.mo.inttest.goce;
 import static org.junit.Assert.*;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +42,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningprototype.planningrequesttest.consumer.PlanningRequestTestStub;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -438,20 +441,38 @@ public class ThreeGoceConsumersTest {
 	private PlanningRequestTestStub procTestProv;
 	private PlanningRequestStub procProv;
 	
+	private static boolean log2file = false;
+	private static List<Handler> files = null;
+	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		// use maven profile "gen-log-files" to turn logging to files on
 		String val = System.getProperty("log2file");
-		boolean log2file = (null != val) && "true".equalsIgnoreCase(val);
+		log2file = (null != val) && "true".equalsIgnoreCase(val);
 		System.out.println("writing to log files is turned on: "+log2file);
 		if (log2file) {
+			Dumper.setBroker(BROKER);
 			// trim down log spam
 			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
-			Logger.getLogger("").addHandler(DemoUtils.createHandler(CLIENT1));
-			Logger.getLogger("").addHandler(DemoUtils.createHandler(CLIENT2));
-			Logger.getLogger("").addHandler(DemoUtils.createHandler(CLIENT3));
-			Logger.getLogger("").addHandler(DemoUtils.createHandler(PROVIDER));
+			files = new ArrayList<Handler>();
+			files.add(DemoUtils.createHandler(CLIENT1));
+			files.add(DemoUtils.createHandler(CLIENT2));
+			files.add(DemoUtils.createHandler(CLIENT3));
+			files.add(DemoUtils.createHandler(PROVIDER));
+			for (Handler h: files) {
+				Logger.getLogger("").addHandler(h);
+			}
+		}
+	}
+	
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		if (log2file) {
+			for (Handler h: files) {
+				Logger.getLogger("").removeHandler(h);
+			}
+			Dumper.setBroker("Broker");
 		}
 	}
 	

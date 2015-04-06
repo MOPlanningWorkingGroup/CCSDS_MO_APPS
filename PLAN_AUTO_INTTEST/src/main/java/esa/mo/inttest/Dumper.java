@@ -64,9 +64,13 @@ public final class Dumper {
 
 	private static final String STEP = "  ";
 	private static final String NULL = "null";
-	private static final String BROKER = "PrProvider";
+	private static String BROKER = "Broker";
 	
 	private Dumper() {
+	}
+	
+	public static void setBroker(String broker) {
+		BROKER = broker;
 	}
 	
 	private static String dumpAttr(Byte attr) {

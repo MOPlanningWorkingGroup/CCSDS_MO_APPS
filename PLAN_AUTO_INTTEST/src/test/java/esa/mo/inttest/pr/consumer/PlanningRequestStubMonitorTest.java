@@ -147,14 +147,14 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 	}
 
 	@Test
-	public void testRemovePlanningRequest() throws MALException, MALInteractionException {
+	public void testRemovePlanningRequest() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testRemovePlanningRequest");
 		
 		String prSubId = "subId6";
 		PrMonitor prMon = registerPrMonitor(prSubId);
 		
 		String taskSubId = "subId7";
-		TaskMonitor taskMon = registerTaskMonitor(taskSubId);
+		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
 		
 		Object[] details = createAndSubmitPlanningRequestWithTask();
 		Long prInstId = (Long)details[1];
@@ -165,10 +165,14 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		removePlanningRequest(prInstId);
 		
-		// verify that we got pr notification
-		assertNotNull(prMon.prStats);
-		assertEquals(1, prMon.prStats.size());
-		assertNotNull(prMon.prStats.get(0));
+		waitFor(taskMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return null != taskMon.taskStats;
+			}
+		});
+		
+		waitAndVerifyPr(prMon);
 		
 		// verify that we got task notification
 		assertNotNull(taskMon.taskStats);
