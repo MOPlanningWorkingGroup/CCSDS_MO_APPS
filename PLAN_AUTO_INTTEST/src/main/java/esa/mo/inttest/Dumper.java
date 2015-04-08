@@ -55,7 +55,6 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
 /**
  * Pretty printing for planning request, schedule, etc data structures.
@@ -74,17 +73,17 @@ public final class Dumper {
 	}
 	
 	private static String dumpAttr(Byte attr) {
-		String s = attr.toString();
+		StringBuilder s = new StringBuilder(attr.toString());
 		if (Attribute.STRING_TYPE_SHORT_FORM == (short)attr) {
-			s = "String";
+			s.append("/String");
 		} else if (Attribute.TIME_TYPE_SHORT_FORM == (short)attr) {
-			s = "Time";
+			s.append("/Time");
 		} else if (Attribute.OCTET_TYPE_SHORT_FORM == (short)attr) {
-			s = "Octet";
+			s.append("/Octet");
 		} else if (Attribute.UOCTET_TYPE_SHORT_FORM == (short)attr) {
-			s = "UOctet";
+			s.append("/UOctet");
 		}
-		return s;
+		return s.toString();
 	}
 	
 	private static String quote(String s) {
@@ -109,8 +108,11 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != arg) {
 			s.append("{ name=").append(dumpId(arg.getName()));
+			s.append(", desc=").append(quote(arg.getDescription()));
 			s.append(", attrType=").append(dumpAttr(arg.getAttributeType()));
-			s.append(", attrArea=").append(arg.getArea());
+			s.append(", representation=").append(arg.getRepresentation());
+			s.append(", radix=").append(arg.getRadix());
+			s.append(", unit=").append(arg.getUnit());
 			s.append(" }");
 		} else {
 			s.append(NULL);
@@ -260,18 +262,15 @@ public final class Dumper {
 		return (null != tn) ? quote(tn.toString()) : NULL;
 	}
 	
-	private static String dumpTrigType(TriggerType tt) {
-		return (null != tt) ? quote(tt.toString()) : NULL;
-	}
-	
 	private static String dumpTrigger(TriggerDetails t, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("triggerName=").append(dumpTrigName(t.getTriggerName())).append(",\n");
-			s.append(ind).append(STEP).append("triggerType=").append(dumpTrigType(t.getTriggerType())).append(",\n");
 			s.append(ind).append(STEP).append("timeTrigger=").append(dumpTimeTrig(t.getTimeTrigger())).append(",\n");
-			s.append(ind).append(STEP).append("eventTrigger=").append(t.getEventTrigger()).append("\n");
+			s.append(ind).append(STEP).append("eventTrigger=").append(t.getEventTrigger()).append(",\n");
+			s.append(ind).append(STEP).append("repeat=").append(t.getRepeat()).append(",\n");
+			s.append(ind).append(STEP).append("separation=").append(t.getSeparation()).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);
@@ -433,7 +432,7 @@ public final class Dumper {
 	
 	private static String dumpStat(StatusRecord sr) {
 		StringBuilder s = new StringBuilder();
-		s.append("{ date=").append(sr.getDate());
+		s.append("{ timeStamp=").append(sr.getTimeStamp());
 		s.append(", state=").append(sr.getState());
 		s.append(", comment=").append(quote(sr.getComment()));
 		s.append(" }");

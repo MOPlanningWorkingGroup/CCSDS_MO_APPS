@@ -21,6 +21,10 @@ public class PrDefStore {
 	public PrDefStore() {
 	}
 	
+	public PlanningRequestDefinitionDetails find(Long id) {
+		return prDefs.get(id);
+	}
+	
 	public LongList list(Identifier id) {
 		LongList list = new LongList();
 		list.addAll(prDefs.keySet()); // TODO filtering

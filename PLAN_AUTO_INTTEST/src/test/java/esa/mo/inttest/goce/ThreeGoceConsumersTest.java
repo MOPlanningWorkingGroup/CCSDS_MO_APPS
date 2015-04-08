@@ -269,7 +269,7 @@ public class ThreeGoceConsumersTest {
 			if (null == asr) {
 				// wait a sec before accepting
 				StatusRecord csr = findStatus(stat.getStatus(), InstanceState.LAST_MODIFIED);
-				if ((null == csr) || (System.currentTimeMillis() >= (csr.getDate().getValue()+1000L))) {
+				if ((null == csr) || (System.currentTimeMillis() >= (csr.getTimeStamp().getValue()+1000L))) {
 					asr = new StatusRecord(InstanceState.ACCEPTED, new Time(System.currentTimeMillis()), "accepted");
 					if (null == stat.getStatus()) {
 						stat.setStatus(new StatusRecordList());
@@ -340,7 +340,7 @@ public class ThreeGoceConsumersTest {
 				StatusRecord csr = findStatus(stat.getStatus(), InstanceState.LAST_MODIFIED);
 				// accept pr only after tasks are accepted
 				boolean tasksAcc = areTasksAccepted(stat);
-				if (tasksAcc && (null == csr || System.currentTimeMillis() >= (csr.getDate().getValue()+1000L))) {
+				if (tasksAcc && (null == csr || System.currentTimeMillis() >= (csr.getTimeStamp().getValue()+1000L))) {
 					asr = new StatusRecord(InstanceState.ACCEPTED, new Time(System.currentTimeMillis()), "accepted");
 					if (null == stat.getStatus()) {
 						stat.setStatus(new StatusRecordList());

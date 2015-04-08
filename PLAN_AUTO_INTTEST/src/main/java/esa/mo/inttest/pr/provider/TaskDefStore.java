@@ -21,6 +21,10 @@ public class TaskDefStore {
 	public TaskDefStore() {
 	}
 	
+	public TaskDefinitionDetails find(Long id) {
+		return map.get(id);
+	}
+	
 	public LongList list(Identifier id) {
 		LongList list = new LongList();
 		list.addAll(map.keySet()); // TODO filtering

@@ -4,12 +4,14 @@ import java.text.ParseException;
 
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
 
 /**
@@ -23,13 +25,8 @@ public class SkeletonPlanningFile extends CommonFile {
 
 	protected ArgumentDefinitionDetailsList createSpfTaskDefArgs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("EV_Parameters_count", Attribute.OCTET_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Name", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Description", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Representation", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Radix", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Unit", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EV_Parameter_Value", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EV_Parameters_count", null, Attribute.USHORT_TYPE_SHORT_FORM, null, null, null));
+		argDefs.add(createArgDef("EID", "Event ID", Attribute.INTEGER_TYPE_SHORT_FORM, null, "Raw", "Decimal"));
 		return argDefs;
 	}
 	
@@ -54,7 +51,7 @@ public class SkeletonPlanningFile extends CommonFile {
 		TaskInstanceDetails taskInst = createTaskInst("NODE", "goce_task_" + (3+idx), getPrName(idx), null);
 		taskInst.setArgumentDefNames(new IdentifierList());
 		taskInst.setArgumentValues(new AttributeValueList());
-		setTaskParamsCount(taskInst, (short)0);
+		setTaskParam(taskInst, "EV_Parameters_count", new AttributeValue(new UShort(0)));
 		return taskInst;
 	}
 	

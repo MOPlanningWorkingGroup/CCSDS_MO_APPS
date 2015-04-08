@@ -88,7 +88,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			sr = new StatusRecord(state, time, comm);
 			list.add(sr);
 		} else {
-			sr.setDate(time);
+			sr.setTimeStamp(time);
 			sr.setComment(comm);
 		}
 		return list;

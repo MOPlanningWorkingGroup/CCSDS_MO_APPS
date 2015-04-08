@@ -17,14 +17,14 @@ public class PrInstStore {
 	/**
 	 * Structure to hold PR def Id, PR inst Id, PR instance, PR status, task def Ids, task inst Ids.
 	 */
-	private final class Item {
+	public final class Item {
 		
-		private Long defId;
-		private Long instId;
-		private PlanningRequestInstanceDetails pr;
-		private LongList taskDefIds;
-		private LongList taskInstIds;
-		private PlanningRequestStatusDetails stat;
+		public Long defId;
+		public Long instId;
+		public PlanningRequestInstanceDetails pr;
+		public LongList taskDefIds;
+		public LongList taskInstIds;
+		public PlanningRequestStatusDetails stat;
 		
 		public Item(Long defId, Long instId, PlanningRequestInstanceDetails pr, LongList taskDefIds,
 				LongList taskInstIds, PlanningRequestStatusDetails stat) {
@@ -47,13 +47,13 @@ public class PrInstStore {
 		prs.add(new Item(prDefId, prInstId, prInst, taskDefIds, taskInstIds, prStat));
 	}
 	
-	public Object[] findPr(Long prInstId) {
-		Object[] rval = null;
+	public Item findPr(Long prInstId) {
+		Item rval = null;
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
 			Item item = it.next();
 			if (prInstId == item.instId) {
-				rval = new Object[] { item.pr, item.stat, item.taskInstIds };
+				rval = item;
 				break;
 			}
 		}

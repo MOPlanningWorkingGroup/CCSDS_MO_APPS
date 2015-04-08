@@ -1,7 +1,6 @@
 package esa.mo.inttest.pr;
 
 import org.ccsds.moims.mo.com.COMHelper;
-import org.ccsds.moims.mo.goce.GOCEHelper;
 import org.ccsds.moims.mo.mal.MALContextFactory;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALHelper;
@@ -27,7 +26,6 @@ public abstract class PlanningRequestFactory extends FactoryBase {
 			PlanningHelper.init(MALContextFactory.getElementFactoryRegistry());
 			PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-			GOCEHelper.init(MALContextFactory.getElementFactoryRegistry());
 			PlanningPrototypeHelper.init(MALContextFactory.getElementFactoryRegistry()); // testing support
 			PlanningRequestTestHelper.init(MALContextFactory.getElementFactoryRegistry()); // testing support
 		} // else already initialized

@@ -4,14 +4,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.ccsds.moims.mo.goce.GOCEHelper;
-import org.ccsds.moims.mo.goce.structures.RQ_ParameterList;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Time;
-import org.ccsds.moims.mo.mal.structures.UOctet;
-import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
@@ -25,7 +21,6 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
 /**
  * Frequently used methods that may be of use to any file.
@@ -39,9 +34,9 @@ public class CommonFile {
 	 * @param type
 	 * @return argDef
 	 */
-	protected ArgumentDefinitionDetails createArgDef(String id, int type, UShort area) {
-		byte attr = (byte)(0xff & type);
-		return new ArgumentDefinitionDetails(new Identifier(id), new Byte(attr), area);
+	protected ArgumentDefinitionDetails createArgDef(String id, String desc, int type, String unit, String repr, String radix) {
+		byte attr = (byte)(type & 0xff);
+		return new ArgumentDefinitionDetails(new Identifier(id), desc, new Byte(attr), unit, repr, radix);
 	}
 	
 	/**
@@ -65,18 +60,18 @@ public class CommonFile {
 	 */
 	protected ArgumentDefinitionDetailsList createTaskDefArgDefs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("RQ_Source", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Destination", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("RQ_Type", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("RQ_Source", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null));
+		argDefs.add(createArgDef("RQ_Destination", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
+		argDefs.add(createArgDef("RQ_Type", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
 		return argDefs;
 	}
 	
 	/**
-	 * Defines <RQ_Parameter> fields.
+	 * Defines <RQ_Parameter> count fields.
 	 * @param argDefs
 	 */
 	protected ArgumentDefinitionDetailsList setTaskDefParamDefs(ArgumentDefinitionDetailsList argDefs) {
-		argDefs.add(createArgDef("List_of_RQ_Parameters", RQ_ParameterList.TYPE_SHORT_FORM, GOCEHelper.GOCE_AREA_NUMBER));
+		argDefs.add(createArgDef("RQ_Parameters_count", null, Attribute.USHORT_TYPE_SHORT_FORM, null, null, null));
 		return argDefs;
 	}
 	
@@ -99,9 +94,9 @@ public class CommonFile {
 	 */
 	protected ArgumentDefinitionDetailsList createPrDefArgDefs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("EVRQ_Time", Attribute.TIME_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EVRQ_Type", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("EVRQ_Description", Attribute.STRING_TYPE_SHORT_FORM, null));
+		argDefs.add(createArgDef("EVRQ_Time", "", Attribute.TIME_TYPE_SHORT_FORM, "", "", ""));
+		argDefs.add(createArgDef("EVRQ_Type", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null));
+		argDefs.add(createArgDef("EVRQ_Description", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
 		return argDefs;
 	}
 	
@@ -141,16 +136,6 @@ public class CommonFile {
 	}
 	
 	/**
-	 * Sets task parameters count.
-	 * @param taskInst
-	 * @param count
-	 */
-	protected void setTaskParamsCount(TaskInstanceDetails taskInst, short count) {
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameters_count"));
-		taskInst.getArgumentValues().add(new AttributeValue(new UOctet(count)));
-	}
-	
-	/**
 	 * Sets task <RQ_Parameter> fields.
 	 * @param taskInst
 	 * @param name
@@ -160,25 +145,9 @@ public class CommonFile {
 	 * @param unit
 	 * @param value
 	 */
-	protected void setTaskParam(TaskInstanceDetails taskInst, String name, String desc, String repr, String radix,
-			String unit, String value) {
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Name"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(name)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Description"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(desc)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Representation"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(repr)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Radix"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(radix)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Unit"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(unit)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Parameter_Value"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(value)));
+	protected void setTaskParam(TaskInstanceDetails taskInst, String name, AttributeValue val) {
+		taskInst.getArgumentDefNames().add(new Identifier(name));
+		taskInst.getArgumentValues().add(val);
 	}
 	
 	/**
@@ -202,7 +171,6 @@ public class CommonFile {
 	protected TriggerDetails createTaskTrigger(TriggerName name, Time value) {
 		TriggerDetails trig = new TriggerDetails();
 		trig.setTriggerName(name);
-		trig.setTriggerType(TriggerType.TIME);
 		trig.setTimeTrigger(createTaskTime(value));
 		trig.setEventTrigger(null);
 		return trig;

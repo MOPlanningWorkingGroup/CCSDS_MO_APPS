@@ -11,16 +11,25 @@ import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.MALStandardError;
+import org.ccsds.moims.mo.mal.structures.Attribute;
+import org.ccsds.moims.mo.mal.structures.Blob;
+import org.ccsds.moims.mo.mal.structures.Duration;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.EntityKeyList;
 import org.ccsds.moims.mo.mal.structures.EntityRequest;
 import org.ccsds.moims.mo.mal.structures.EntityRequestList;
+import org.ccsds.moims.mo.mal.structures.FineTime;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
+import org.ccsds.moims.mo.mal.structures.Time;
+import org.ccsds.moims.mo.mal.structures.UInteger;
+import org.ccsds.moims.mo.mal.structures.ULong;
+import org.ccsds.moims.mo.mal.structures.UOctet;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UShort;
+import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
@@ -39,9 +48,14 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
 import org.junit.After;
 import org.junit.Before;
 
+import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -266,9 +280,37 @@ public class PlanningRequestStubTestBase {
 		leave("tearDown");
 	}
 
+	protected ArgumentDefinitionDetails createArgDef(String id, int i) {
+		return new ArgumentDefinitionDetails(new Identifier(id), null, (byte)(i & 0xff), null, null, null);
+	}
+	
+	protected ArgumentDefinitionDetailsList allAttrDefs() {
+		ArgumentDefinitionDetailsList args = new ArgumentDefinitionDetailsList();
+		args.add(createArgDef("first", Attribute.BLOB_TYPE_SHORT_FORM));
+		args.add(createArgDef("second", Attribute.BOOLEAN_TYPE_SHORT_FORM));
+		args.add(createArgDef("third", Attribute.DOUBLE_TYPE_SHORT_FORM));
+		args.add(createArgDef("fourth", Attribute.DURATION_TYPE_SHORT_FORM));
+		args.add(createArgDef("fifth", Attribute.FINETIME_TYPE_SHORT_FORM));//5
+		args.add(createArgDef("sixth", Attribute.FLOAT_TYPE_SHORT_FORM));
+		args.add(createArgDef("seventh", Attribute.IDENTIFIER_TYPE_SHORT_FORM));
+		args.add(createArgDef("eighth", Attribute.INTEGER_TYPE_SHORT_FORM));
+		args.add(createArgDef("ninth", Attribute.LONG_TYPE_SHORT_FORM));
+		args.add(createArgDef("tenth", Attribute.OCTET_TYPE_SHORT_FORM));//10
+		args.add(createArgDef("eleventh", Attribute.SHORT_TYPE_SHORT_FORM));
+		args.add(createArgDef("twelvth", Attribute.STRING_TYPE_SHORT_FORM));
+		args.add(createArgDef("thirteenth", Attribute.TIME_TYPE_SHORT_FORM));
+		args.add(createArgDef("fourteenth", Attribute.UINTEGER_TYPE_SHORT_FORM));
+		args.add(createArgDef("fifteenth", Attribute.ULONG_TYPE_SHORT_FORM));//15
+		args.add(createArgDef("sixteenth", Attribute.UOCTET_TYPE_SHORT_FORM));
+		args.add(createArgDef("seventeenth", Attribute.URI_TYPE_SHORT_FORM));
+		args.add(createArgDef("eigthteenth", Attribute.USHORT_TYPE_SHORT_FORM));
+		return args;
+	}
+	
 	protected PlanningRequestDefinitionDetails createPrDef(String id) {
 		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
 		prDef.setName(new Identifier(id)); // mandatory - encoding exception if missing/null
+		prDef.setArgumentDefs(allAttrDefs());
 		return prDef;
 	}
 	
@@ -279,12 +321,57 @@ public class PlanningRequestStubTestBase {
 		return prDefIdList.get(0);
 	}
 	
+	protected Map.Entry<IdentifierList, AttributeValueList> allAttrVals() {
+		IdentifierList names = new IdentifierList();
+		AttributeValueList vals = new AttributeValueList();
+		names.add(new Identifier("first"));
+		vals.add(new AttributeValue(new Blob(new byte[] { 1, 2, 3 })));
+		names.add(new Identifier("second"));
+		vals.add(new AttributeValue(new Union(true)));
+		names.add(new Identifier("third"));
+		vals.add(new AttributeValue(new Union((double)2.5)));
+		names.add(new Identifier("fourth"));
+		vals.add(new AttributeValue(new Duration(100)));
+		names.add(new Identifier("fifth"));
+		vals.add(new AttributeValue(new FineTime(500)));//5
+		names.add(new Identifier("sixth"));
+		vals.add(new AttributeValue(new Union(1.5f)));
+		names.add(new Identifier("seventh"));
+		vals.add(new AttributeValue(new Identifier("id")));
+		names.add(new Identifier("eighth"));
+		vals.add(new AttributeValue(new Union(1)));
+		names.add(new Identifier("ninth"));
+		vals.add(new AttributeValue(new Union(2L)));
+		names.add(new Identifier("tenth"));
+		vals.add(new AttributeValue(new Union((byte)3)));//10
+		names.add(new Identifier("eleventh"));
+		vals.add(new AttributeValue(new Union((short)4)));
+		names.add(new Identifier("twelvth"));
+		vals.add(new AttributeValue(new Union("text")));
+		names.add(new Identifier("thirteenth"));
+		vals.add(new AttributeValue(new Time(15000000)));
+		names.add(new Identifier("fourteenth"));
+		vals.add(new AttributeValue(new UInteger(15)));
+		names.add(new Identifier("fifteenth"));
+		vals.add(new AttributeValue(new ULong(new BigInteger("54325432"))));//15
+		names.add(new Identifier("sixteenth"));
+		vals.add(new AttributeValue(new UOctet((short)35)));
+		names.add(new Identifier("seventeenth"));
+		vals.add(new AttributeValue(new URI("uri")));
+		names.add(new Identifier("eigthteenth"));
+		vals.add(new AttributeValue(new UShort(75)));
+		return new AbstractMap.SimpleEntry<IdentifierList, AttributeValueList>(names, vals);
+	}
+	
 	protected PlanningRequestInstanceDetails createPrInst(PlanningRequestDefinitionDetails prDef,
 			TaskInstanceDetailsList taskInsts) {
 		
 		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
 		prInst.setName(prDef.getName()); // mandatory
 		prInst.setTasks(taskInsts);
+		Map.Entry<IdentifierList, AttributeValueList> pair = allAttrVals();
+		prInst.setArgumentDefNames(pair.getKey());
+		prInst.setArgumentValues(pair.getValue());
 		return prInst;
 	}
 	
@@ -339,6 +426,7 @@ public class PlanningRequestStubTestBase {
 		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
 		taskDef.setName(new Identifier(id)); // mandatory
 		taskDef.setPrDefName(new Identifier(prDefName)); // mandatory
+		taskDef.setArgumentDefs(allAttrDefs());
 		return taskDef;
 	}
 	
@@ -353,6 +441,9 @@ public class PlanningRequestStubTestBase {
 		TaskInstanceDetails taskInst = new TaskInstanceDetails();
 		taskInst.setName(taskDef.getName()); // mandatory
 		taskInst.setPrName(taskDef.getPrDefName()); // mandatory
+		Map.Entry<IdentifierList, AttributeValueList> pair = allAttrVals();
+		taskInst.setArgumentDefNames(pair.getKey());
+		taskInst.setArgumentValues(pair.getValue());
 		return taskInst;
 	}
 	

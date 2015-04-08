@@ -3,12 +3,14 @@ package esa.mo.inttest.goce;
 import java.text.ParseException;
 
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 
 /**
  * OPF - Operations Planning File.
@@ -37,7 +39,7 @@ public class OperationsPlanningFile extends CommonFile {
 		TaskInstanceDetails taskInst = createTaskInst("MCDD10HZ", "DIS_DFACS_10_HZ v01", PR_NAME,
 				createPpfTaskTriggers(null, parseTime("UTC=2007-01-02T12:10:00")));
 		setTaskArgs(taskInst, "FCT", "MPS", "Time-tagged sequence");
-		setTaskParamsCount(taskInst, (short)0);
+		setTaskParam(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(0)));
 		return taskInst;
 	}
 	

@@ -21,7 +21,6 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerType;
 
 /**
  * SIST - Station Schedule Increment File.
@@ -65,7 +64,7 @@ public class StationScheduleIncrementFile extends CommonFile {
 	
 	protected ArgumentDefinitionDetailsList createItemArgDefs() {
 		ArgumentDefinitionDetailsList args = new ArgumentDefinitionDetailsList();
-		args.add(createArgDef("template", Attribute.STRING_TYPE_SHORT_FORM, null));
+		args.add(createArgDef("template", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
 		return args;
 	}
 	
@@ -77,8 +76,8 @@ public class StationScheduleIncrementFile extends CommonFile {
 	
 	protected TriggerDetailsList createItemTriggers(Time startTime, Time endTime) {
 		TriggerDetailsList trigs = new TriggerDetailsList();
-		trigs.add(new TriggerDetails(TriggerName.START, TriggerType.TIME, new TimeTrigger(startTime, true), null));
-		trigs.add(new TriggerDetails(TriggerName.END, TriggerType.TIME, new TimeTrigger(endTime, false), null));
+		trigs.add(new TriggerDetails(TriggerName.START, new TimeTrigger(startTime, true), null, null, null));
+		trigs.add(new TriggerDetails(TriggerName.END, new TimeTrigger(endTime, false), null, null, null));
 		return trigs;
 	}
 	

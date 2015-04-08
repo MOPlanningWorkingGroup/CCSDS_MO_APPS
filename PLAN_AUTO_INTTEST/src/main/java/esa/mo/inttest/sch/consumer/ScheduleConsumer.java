@@ -116,7 +116,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	public ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs, String name, Byte attrType,
 			UShort area) {
 		ArgumentDefinitionDetailsList list = (null != defs) ? defs : new ArgumentDefinitionDetailsList();
-		list.add(new ArgumentDefinitionDetails(new Identifier(name), attrType, area));
+		list.add(new ArgumentDefinitionDetails(new Identifier(name), "", attrType, "", "", ""));
 		return list;
 	}
 	
@@ -265,7 +265,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 			StatusRecord r = list.get(i);
 			found = (is == r.getState());
 			if (found) {
-				r.setDate(t);
+				r.setTimeStamp(t);
 				r.setComment(comm);
 			}
 		}
