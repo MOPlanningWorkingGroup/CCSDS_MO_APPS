@@ -9,6 +9,8 @@ import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.junit.Test;
 
+import esa.mo.inttest.Util;
+
 public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase {
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestStubMonitorTest.class.getName());
@@ -21,19 +23,8 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		LOG.exiting(getClass().getName(), msg);
 	}
 	
-	private void waitFor(Object o, long ms, Callable<Boolean> c) throws InterruptedException, Exception {
-		synchronized (o) {
-			long before = System.currentTimeMillis();
-			long d = ms;
-			do {
-				o.wait(d);
-				d = ms - (System.currentTimeMillis() - before);
-			} while (!c.call() && (0 < d));
-		}
-	}
-	
 	private void waitAndVerifyPr(final PrMonitor prMon) throws InterruptedException, Exception {
-		waitFor(prMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
 				return null != prMon.prStats;
@@ -73,7 +64,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		createAndSubmitPlanningRequestWithTask();
 		
-		waitFor(taskMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
 				return null != taskMon.taskStats;
@@ -105,14 +96,14 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		Object[] details = createAndSubmitPlanningRequest();
 		
-		waitFor(taskMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
 				return null != taskMon.taskStats;
 			}
 		});
 		
-		waitFor(prMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
 				return null != prMon.prStats;
@@ -125,7 +116,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		updatePlanningRequestWithTask(details);
 		
-		waitFor(taskMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
 				return null != taskMon.taskStats;
@@ -165,7 +156,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		
 		removePlanningRequest(prInstId);
 		
-		waitFor(taskMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
 				return null != taskMon.taskStats;

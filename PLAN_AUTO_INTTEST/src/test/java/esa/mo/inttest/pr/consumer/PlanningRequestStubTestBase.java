@@ -281,7 +281,7 @@ public class PlanningRequestStubTestBase {
 	}
 
 	protected ArgumentDefinitionDetails createArgDef(String id, int i) {
-		return new ArgumentDefinitionDetails(new Identifier(id), null, (byte)(i & 0xff), null, null, null);
+		return new ArgumentDefinitionDetails(new Identifier(id), null, (byte)(i & 0xff), null, null, null, null);
 	}
 	
 	protected ArgumentDefinitionDetailsList allAttrDefs() {
@@ -308,8 +308,7 @@ public class PlanningRequestStubTestBase {
 	}
 	
 	protected PlanningRequestDefinitionDetails createPrDef(String id) {
-		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
-		prDef.setName(new Identifier(id)); // mandatory - encoding exception if missing/null
+		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef(id, null);
 		prDef.setArgumentDefs(allAttrDefs());
 		return prDef;
 	}
@@ -363,11 +362,9 @@ public class PlanningRequestStubTestBase {
 		return new AbstractMap.SimpleEntry<IdentifierList, AttributeValueList>(names, vals);
 	}
 	
-	protected PlanningRequestInstanceDetails createPrInst(PlanningRequestDefinitionDetails prDef,
-			TaskInstanceDetailsList taskInsts) {
+	protected PlanningRequestInstanceDetails createPrInst(String prName, TaskInstanceDetailsList taskInsts) {
 		
-		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
-		prInst.setName(prDef.getName()); // mandatory
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prName, null);
 		prInst.setTasks(taskInsts);
 		Map.Entry<IdentifierList, AttributeValueList> pair = allAttrVals();
 		prInst.setArgumentDefNames(pair.getKey());
@@ -412,7 +409,7 @@ public class PlanningRequestStubTestBase {
 		PlanningRequestDefinitionDetails prDef = createPrDef("id1");
 		Long prDefId = submitPrDef(prDef);
 		
-		PlanningRequestInstanceDetails prInst = createPrInst(prDef, null);
+		PlanningRequestInstanceDetails prInst = createPrInst("id2", null);
 		Long prInstId = generateId();
 		
 		storePrInst(prDefId, prInstId, prInst);
@@ -422,10 +419,8 @@ public class PlanningRequestStubTestBase {
 		return new Object[] { prDefId, prDef, prInstId, prInst };
 	}
 
-	protected TaskDefinitionDetails createTaskDef(String id, String prDefName) {
-		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
-		taskDef.setName(new Identifier(id)); // mandatory
-		taskDef.setPrDefName(new Identifier(prDefName)); // mandatory
+	protected TaskDefinitionDetails createTaskDef(String id) {
+		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef(id, null);
 		taskDef.setArgumentDefs(allAttrDefs());
 		return taskDef;
 	}
@@ -437,10 +432,8 @@ public class PlanningRequestStubTestBase {
 		return taskDefIds.get(0);
 	}
 	
-	protected TaskInstanceDetails createTaskInst(TaskDefinitionDetails taskDef) {
-		TaskInstanceDetails taskInst = new TaskInstanceDetails();
-		taskInst.setName(taskDef.getName()); // mandatory
-		taskInst.setPrName(taskDef.getPrDefName()); // mandatory
+	protected TaskInstanceDetails createTaskInst(String name, String prName) {
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(name, null, prName);
 		Map.Entry<IdentifierList, AttributeValueList> pair = allAttrVals();
 		taskInst.setArgumentDefNames(pair.getKey());
 		taskInst.setArgumentValues(pair.getValue());
@@ -474,21 +467,22 @@ public class PlanningRequestStubTestBase {
 	
 	protected Object[] createAndSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
 		
-		String prDefName = "id1";
-		TaskDefinitionDetails taskDef = createTaskDef("id2", prDefName);
+		TaskDefinitionDetails taskDef = createTaskDef("id2");
 		Long taskDefId = submitTaskDef(taskDef);
 		
-		PlanningRequestDefinitionDetails prDef = createPrDef(prDefName);
+		PlanningRequestDefinitionDetails prDef = createPrDef("id1");
 		Long prDefId = submitPrDef(prDef);
 		
-		TaskInstanceDetails taskInst = createTaskInst(taskDef);
+		String taskName = "id4";
+		String prName = "id3";
+		TaskInstanceDetails taskInst = createTaskInst(taskName, prName);
 		Long taskInstId = generateId();
 		storeTaskInst(taskDefId, taskInstId, taskInst);
 		
 		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
 		taskInsts.add(taskInst);
 		
-		PlanningRequestInstanceDetails prInst = createPrInst(prDef, taskInsts);
+		PlanningRequestInstanceDetails prInst = createPrInst(prName, taskInsts);
 		Long prInstId = generateId();
 		storePrInst(prDefId, prInstId, prInst);
 		
@@ -505,12 +499,12 @@ public class PlanningRequestStubTestBase {
 
 	protected void updatePlanningRequestWithTask(Object[] details) throws MALException, MALInteractionException {
 		
-		PlanningRequestDefinitionDetails prDef = (PlanningRequestDefinitionDetails)details[1];
-		
-		TaskDefinitionDetails taskDef = createTaskDef("id2", prDef.getName().getValue());
+		TaskDefinitionDetails taskDef = createTaskDef("id2");
 		Long taskDefId = submitTaskDef(taskDef);
 		
-		TaskInstanceDetails taskInst = createTaskInst(taskDef);
+		String taskName = "id4";
+		String prName= "id3";
+		TaskInstanceDetails taskInst = createTaskInst(taskName, prName);
 		Long taskInstId = generateId();
 		storeTaskInst(taskDefId, taskInstId, taskInst);
 		
@@ -518,7 +512,7 @@ public class PlanningRequestStubTestBase {
 		taskInsts.add(taskInst);
 		
 		PlanningRequestInstanceDetails prInst = (PlanningRequestInstanceDetails)details[3];
-		prInst.setDescription("new updated desc");
+		prInst.setComment("new updated desc");
 		prInst.setTasks(taskInsts);
 		
 		Long prDefId = (Long)details[0];
@@ -608,7 +602,7 @@ public class PlanningRequestStubTestBase {
 	 */
 	protected Object[] addTaskDef() throws MALException, MALInteractionException {
 		TaskDefinitionDetailsList taskDefList = new TaskDefinitionDetailsList();
-		TaskDefinitionDetails taskDef = createTaskDef("new task def", "new pr def");
+		TaskDefinitionDetails taskDef = createTaskDef("new task def");
 		taskDefList.add(taskDef);
 		LongList taskDefIdList = prCons.addDefinition(DefinitionType.TASK_DEF, taskDefList);
 		return new Object[] { taskDefIdList, taskDefList };

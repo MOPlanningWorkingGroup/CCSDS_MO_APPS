@@ -9,14 +9,13 @@ import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.Union;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
@@ -32,26 +31,16 @@ public class CommonFile {
 	 * @param id
 	 * @param desc
 	 * @param type
-	 * @return argDef
+	 * @param unit
+	 * @param repr
+	 * @param radix
+	 * @param def
+	 * @return
 	 */
-	protected ArgumentDefinitionDetails createArgDef(String id, String desc, int type, String unit, String repr, String radix) {
+	protected ArgumentDefinitionDetails createArgDef(String id, String desc, int type, String unit, String repr,
+			String radix, Attribute def) {
 		byte attr = (byte)(type & 0xff);
-		return new ArgumentDefinitionDetails(new Identifier(id), desc, new Byte(attr), unit, repr, radix);
-	}
-	
-	/**
-	 * Creates TaskDef base.
-	 * @param taskDefName
-	 * @param desc
-	 * @param prDefName
-	 * @return taskDef
-	 */
-	protected TaskDefinitionDetails createTaskDef(String taskDefName, String desc, String prDefName) {
-		TaskDefinitionDetails taskDef = new TaskDefinitionDetails();
-		taskDef.setName(new Identifier(taskDefName));
-		taskDef.setDescription(desc);
-		taskDef.setPrDefName(new Identifier(prDefName));
-		return taskDef;
+		return new ArgumentDefinitionDetails(new Identifier(id), desc, new Byte(attr), unit, repr, radix, def);
 	}
 	
 	/**
@@ -60,9 +49,9 @@ public class CommonFile {
 	 */
 	protected ArgumentDefinitionDetailsList createTaskDefArgDefs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("RQ_Source", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null));
-		argDefs.add(createArgDef("RQ_Destination", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
-		argDefs.add(createArgDef("RQ_Type", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
+		argDefs.add(createArgDef("RQ_Source", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		argDefs.add(createArgDef("RQ_Destination", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		argDefs.add(createArgDef("RQ_Type", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
 		return argDefs;
 	}
 	
@@ -71,21 +60,8 @@ public class CommonFile {
 	 * @param argDefs
 	 */
 	protected ArgumentDefinitionDetailsList setTaskDefParamDefs(ArgumentDefinitionDetailsList argDefs) {
-		argDefs.add(createArgDef("RQ_Parameters_count", null, Attribute.USHORT_TYPE_SHORT_FORM, null, null, null));
+		argDefs.add(createArgDef("RQ_Parameters_count", null, Attribute.USHORT_TYPE_SHORT_FORM, null, null, null, null));
 		return argDefs;
-	}
-	
-	/**
-	 * Creates prDef base.
-	 * @param prDefName
-	 * @param desc
-	 * @return
-	 */
-	protected PlanningRequestDefinitionDetails createPrDef(String prDefName, String desc) {
-		PlanningRequestDefinitionDetails prDef = new PlanningRequestDefinitionDetails();
-		prDef.setName(new Identifier(prDefName));
-		prDef.setDescription(desc);
-		return prDef;
 	}
 	
 	/**
@@ -94,28 +70,10 @@ public class CommonFile {
 	 */
 	protected ArgumentDefinitionDetailsList createPrDefArgDefs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("EVRQ_Time", "", Attribute.TIME_TYPE_SHORT_FORM, "", "", ""));
-		argDefs.add(createArgDef("EVRQ_Type", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null));
-		argDefs.add(createArgDef("EVRQ_Description", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
+		argDefs.add(createArgDef("EVRQ_Time", null, Attribute.TIME_TYPE_SHORT_FORM, null, null, null, null));
+		argDefs.add(createArgDef("EVRQ_Type", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		argDefs.add(createArgDef("EVRQ_Description", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
 		return argDefs;
-	}
-	
-	/**
-	 * Creates taskInst base.
-	 * @param taskName
-	 * @param desc
-	 * @param prName
-	 * @param triggers
-	 * @return taskInst
-	 */
-	protected TaskInstanceDetails createTaskInst(String taskName, String desc, String prName,
-			TriggerDetailsList triggers) {
-		TaskInstanceDetails taskInst = new TaskInstanceDetails();
-		taskInst.setName(new Identifier(taskName));
-		taskInst.setDescription(desc);
-		taskInst.setTimingConstraints(triggers);
-		taskInst.setPrName(new Identifier(prName));
-		return taskInst;
 	}
 	
 	/**
@@ -151,15 +109,21 @@ public class CommonFile {
 	}
 	
 	/**
-	 * Creates TimeTrigger from Time.
+	 * Creates TimeTrigger with absolute Time.
 	 * @param time
 	 * @return
 	 */
-	protected TimeTrigger createTaskTime(Time time) {
-		TimeTrigger tt = new TimeTrigger();
-		tt.setTimeValue(time);
-		tt.setAbsoluteTime(new Boolean(true));
-		return tt;
+	protected TimeTrigger createAbsTimeTrig(Time absTime) {
+		return new TimeTrigger(absTime, null);
+	}
+	
+	/**
+	 * Creates TimeTrigger with relative Time.
+	 * @param time
+	 * @return
+	 */
+	protected TimeTrigger createRelTimeTrig(Time relTime, boolean forward) {
+		return new TimeTrigger(null, new RelativeTime(relTime, forward));
 	}
 	
 	/**
@@ -168,11 +132,10 @@ public class CommonFile {
 	 * @param value
 	 * @return
 	 */
-	protected TriggerDetails createTaskTrigger(TriggerName name, Time value) {
+	protected TriggerDetails createTaskTrigger(TriggerName name, TimeTrigger tt) {
 		TriggerDetails trig = new TriggerDetails();
 		trig.setTriggerName(name);
-		trig.setTimeTrigger(createTaskTime(value));
-		trig.setEventTrigger(null);
+		trig.setTimeTrigger(tt);
 		return trig;
 	}
 	
@@ -211,19 +174,6 @@ public class CommonFile {
 	}
 	
 	/**
-	 * Sets prInst base.
-	 * @param prName
-	 * @param desc
-	 * @return
-	 */
-	protected PlanningRequestInstanceDetails createPrInst(String prName, String desc) {
-		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
-		prInst.setName(new Identifier(prName));
-		prInst.setDescription(desc);
-		return prInst;
-	}
-	
-	/**
 	 * Creates "UPLINK" & "START" TriggerDetailsList.
 	 * @param uplink
 	 * @param exec
@@ -231,8 +181,8 @@ public class CommonFile {
 	 */
 	protected TriggerDetailsList createPpfTaskTriggers(Time uplink, Time exec) {
 		TriggerDetailsList list = new TriggerDetailsList();
-		list.add(createTaskTrigger(TriggerName.UPLINK, uplink));
-		list.add(createTaskTrigger(TriggerName.START, exec));
+		list.add(createTaskTrigger(TriggerName.UPLINK, createAbsTimeTrig(uplink)));
+		list.add(createTaskTrigger(TriggerName.START, createRelTimeTrig(exec, true)));
 		return list;
 	}
 }

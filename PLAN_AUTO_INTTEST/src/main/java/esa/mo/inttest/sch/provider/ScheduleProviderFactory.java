@@ -49,8 +49,6 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 	private void initProvider(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
 		
-		malProvMgr = malCtx.createProviderManager();
-		
 		prov = new ScheduleProvider();
 		prov.setDomain(domain);
 		
@@ -110,6 +108,9 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 		
 		super.init();
 		
+		if (null == malProvMgr) {
+			malProvMgr = malCtx.createProviderManager();
+		}
 		initProvider(name);
 		initSchedulesPublisher();
 		

@@ -28,6 +28,8 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
 import org.junit.Test;
 
+import esa.mo.inttest.Util;
+
 public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 
 	private static class SchMonitor extends ScheduleAdapter {
@@ -126,15 +128,13 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		return schInst;
 	}
 	
-	private void waitFor(Object o, long ms, Callable<Boolean> c) throws InterruptedException, Exception {
-		synchronized (o) {
-			long before = System.currentTimeMillis();
-			long d = ms;
-			do {
-				o.wait(d);
-				d = ms - (System.currentTimeMillis() - before);
-			} while (!c.call() && (0 < d));
-		}
+	private void waitForSch(final SchMonitor sm) throws InterruptedException, Exception {
+		Util.waitFor(sm, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return !sm.schStats.isEmpty();
+			}
+		});
 	}
 	
 	private Long submitSchedule(final SchMonitor schMon) throws MALException, MALInteractionException,
@@ -144,12 +144,8 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		createAndSubmitInst(schDefId, schInstId, "test schedule inst");
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
+		
 		return schInstId;
 	}
 	
@@ -179,25 +175,15 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = createAndSubmitInst(schDefId, schInstId, "test schedule inst");
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
-		schInst.setDescription("updated description");
+		schInst.setComment("updated description");
 		
 		schMon.clear(); // clear submit info
 		
 		schCons.updateSchedule(schInstId, schInst);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -218,12 +204,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schCons.removeSchedule(schInstId);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -243,12 +224,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = createAndSubmitInst(schDefId, schInstId, "test schedule inst");
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		SchedulePatchOperations patchOp = new SchedulePatchOperations();
 		patchOp.setScheduleInstName(new Identifier("patch schedule"));
@@ -259,12 +235,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schCons.patchSchedule(schDefId, schInstId, schInst, patchOp, targetSchInstId);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -288,12 +259,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schCons.start(schInstIds);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -317,12 +283,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schCons.pause(schInstIds);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -346,12 +307,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schCons.resume(schInstIds);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		
@@ -375,12 +331,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schCons.terminate(schInstIds);
 		
-		waitFor(schMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return !schMon.schStats.isEmpty();
-			}
-		});
+		waitForSch(schMon);
 		
 		assertFalse(schMon.schStats.isEmpty());
 		

@@ -16,6 +16,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetai
 import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.com.archive.structures.ArchiveDetails;
+import org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
@@ -24,6 +26,8 @@ import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALOperation;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.Attribute;
+import org.ccsds.moims.mo.mal.structures.Element;
+import org.ccsds.moims.mo.mal.structures.ElementList;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
@@ -49,6 +53,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
@@ -72,16 +77,31 @@ public final class Dumper {
 		BROKER = broker;
 	}
 	
-	private static String dumpAttr(Byte attr) {
-		StringBuilder s = new StringBuilder(attr.toString());
-		if (Attribute.STRING_TYPE_SHORT_FORM == (short)attr) {
-			s.append("/String");
-		} else if (Attribute.TIME_TYPE_SHORT_FORM == (short)attr) {
-			s.append("/Time");
-		} else if (Attribute.OCTET_TYPE_SHORT_FORM == (short)attr) {
-			s.append("/Octet");
-		} else if (Attribute.UOCTET_TYPE_SHORT_FORM == (short)attr) {
-			s.append("/UOctet");
+	private static String dumpAttrType(Byte aType) {
+		StringBuilder s = new StringBuilder(aType.toString());
+		switch ((int)aType) {
+			case Attribute._STRING_TYPE_SHORT_FORM:
+				s.append("/String");
+				break;
+			case Attribute._TIME_TYPE_SHORT_FORM:
+				s.append("/Time");
+				break;
+			case Attribute._OCTET_TYPE_SHORT_FORM:
+				s.append("/Octet");
+				break;
+			case Attribute._UOCTET_TYPE_SHORT_FORM:
+				s.append("/UOctet");
+				break;
+			case Attribute._IDENTIFIER_TYPE_SHORT_FORM:
+				s.append("/Identifier");
+				break;
+			case Attribute._USHORT_TYPE_SHORT_FORM:
+				s.append("/UShort");
+				break;
+			case Attribute._INTEGER_TYPE_SHORT_FORM:
+				s.append("/Integer");
+				break;
+			default:
 		}
 		return s.toString();
 	}
@@ -109,10 +129,11 @@ public final class Dumper {
 		if (null != arg) {
 			s.append("{ name=").append(dumpId(arg.getName()));
 			s.append(", desc=").append(quote(arg.getDescription()));
-			s.append(", attrType=").append(dumpAttr(arg.getAttributeType()));
+			s.append(", attrType=").append(dumpAttrType(arg.getAttributeType()));
 			s.append(", representation=").append(arg.getRepresentation());
 			s.append(", radix=").append(arg.getRadix());
 			s.append(", unit=").append(arg.getUnit());
+			s.append(", defaultValue=").append(dumpAttr(arg.getDefaultValue()));
 			s.append(" }");
 		} else {
 			s.append(NULL);
@@ -149,8 +170,7 @@ public final class Dumper {
 		if (null != td) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(td.getName())).append(",\n");
-			s.append(ind).append(STEP).append("description=").append(quote(td.getDescription())).append(",\n");
-			s.append(ind).append(STEP).append("prDefName=").append(dumpId(td.getPrDefName())).append(",\n");
+			s.append(ind).append(STEP).append("desc=").append(quote(td.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(td.getArgumentDefs(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
@@ -196,7 +216,7 @@ public final class Dumper {
 		if (null != prd) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(prd.getName())).append(",\n");
-			s.append(ind).append(STEP).append("description=").append(quote(prd.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("desc=").append(quote(prd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(prd.getArgumentDefs(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("taskDefNames=").append(dumpNames(prd.getTaskDefNames(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -220,11 +240,25 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	private static String dumpAttr(Attribute a) {
+		StringBuilder s = new StringBuilder();
+		final boolean doQuote = (null != a) && ((a.getTypeShortForm() == Attribute.STRING_TYPE_SHORT_FORM)
+				|| (a.getTypeShortForm() == Attribute.IDENTIFIER_TYPE_SHORT_FORM));
+		if (doQuote) {
+			s.append("\"");
+		}
+		s.append(a);
+		if (doQuote) {
+			s.append("\"");
+		}
+		return s.toString();
+	}
+	
 	private static String dumpAttrVal(AttributeValue av) {
 		StringBuilder s = new StringBuilder();
 		if (null != av) {
-			s.append("{ value=").append(av.getValue());
-			s.append(", type=").append(dumpAttr((byte)(0xff & av.getValue().getTypeShortForm())));
+			s.append("{ value=").append(dumpAttr(av.getValue()));
+			s.append(", type=").append(dumpAttrType((byte)(0xff & av.getValue().getTypeShortForm())));
 			s.append(" }");
 		} else {
 			s.append(NULL);
@@ -246,11 +280,23 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	private static String dumpRelTime(RelativeTime rt) {
+		StringBuilder s = new StringBuilder();
+		if (null != rt) {
+			s.append("{ relativeTime=").append(rt.getRelativeTime());
+			s.append(", sign=").append(rt.getSign());
+			s.append(" }");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
 	private static String dumpTimeTrig(TimeTrigger t) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
-			s.append("{ value=").append(t.getTimeValue());
-			s.append(", isAbsoluteTime=").append(t.getIsAbsoluteTime());
+			s.append("{ absoluteTime=").append(t.getAbsoluteTime());
+			s.append(", relativeTime=").append(dumpRelTime(t.getRelativeTime()));
 			s.append(" }");
 		} else {
 			s.append(NULL);
@@ -298,7 +344,7 @@ public final class Dumper {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(ti.getName())).append(",\n");
 			s.append(ind).append(STEP).append("prName=").append(dumpId(ti.getPrName())).append(",\n");
-			s.append(ind).append(STEP).append("description=").append(quote(ti.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("comment=").append(quote(ti.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(ti.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(ti.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(ti.getTimingConstraints(), ind+STEP)).append("\n");
@@ -328,7 +374,7 @@ public final class Dumper {
 		if (null != pri) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(pri.getName())).append(",\n");
-			s.append(ind).append(STEP).append("description=").append(quote(pri.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("comment=").append(quote(pri.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(pri.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(pri.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(pri.getTimingConstraints(), ind+STEP)).append(",\n");
@@ -559,7 +605,7 @@ public final class Dumper {
 		if (null != prr) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prr.getPrInstName())).append(",\n");
-			s.append(ind).append(STEP).append("date=").append(prr.getDate()).append(",\n");
+			s.append(ind).append(STEP).append("date=").append(quote(prr.getDate())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(prr.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argDefValues=").append(dumpAttrVals(prr.getArgumentValues(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -657,7 +703,7 @@ public final class Dumper {
 		if (null != sd) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(sd.getName())).append(",\n");
-			s.append(ind).append(STEP).append("description=").append(quote(sd.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("desc=").append(quote(sd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("eventTypes=").append(dumpEventTypes(sd.getEventTypes(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(sd.getArgumentDefs(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -717,7 +763,7 @@ public final class Dumper {
 		if (null != si) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(si.getName())).append(",\n");
-			s.append(ind).append(STEP).append("description=").append(quote(si.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("comment=").append(quote(si.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(si.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(si.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("scheduleItems=").append(dumpSchItems(si.getScheduleItems(), ind+STEP)).append(",\n");
@@ -866,5 +912,71 @@ public final class Dumper {
 	
 	public static String schPatchOp(SchedulePatchOperations spo) {
 		return dumpSchPatchOp(spo, STEP);
+	}
+	
+	private static String dumpArcDet(ArchiveDetails ad, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != ad) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("instId=").append(ad.getInstId()).append(",\n");
+			s.append(ind).append(STEP).append("objDetails=").append(ad.getDetails()).append(",\n");
+			s.append(ind).append(STEP).append("network=").append(ad.getNetwork()).append(",\n");
+			s.append(ind).append(STEP).append("timeStamp=").append(ad.getTimestamp()).append(",\n");
+			s.append(ind).append(STEP).append("provider=").append(ad.getProvider()).append(",\n");
+			s.append(ind).append("}");
+		}
+		return s.toString();
+	}
+	
+	private static String dumpArcDets(ArchiveDetailsList adl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != adl) {
+			openList(s, adl);
+			for (int i = 0; i < adl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpArcDet(adl.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, adl, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String arcDets(ArchiveDetailsList adl) {
+		return dumpArcDets(adl, STEP);
+	}
+	
+	private static String dumpEl(Element e, String ind) {
+		String s;
+		if (e instanceof TaskInstanceDetails) {
+			s = dumpTaskInst((TaskInstanceDetails)e, ind);
+		} else if (e instanceof PlanningRequestInstanceDetails) {
+			s = dumpPrInst((PlanningRequestInstanceDetails)e, ind);
+		} else if (e instanceof ScheduleInstanceDetails) {
+			s = dumpSchInst((ScheduleInstanceDetails)e, ind);
+		} else {
+			s = (null != e) ? e.toString() : NULL;
+		}
+		return s;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private static String dumpEls(ElementList el, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != el) {
+			openList(s, el);
+			for (int i = 0; i < el.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpEl((Element)el.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, el, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static String els(ElementList el) {
+		return dumpEls(el, STEP);
 	}
 }

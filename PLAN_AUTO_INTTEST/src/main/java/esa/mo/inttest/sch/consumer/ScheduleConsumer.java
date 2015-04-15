@@ -14,18 +14,12 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsLi
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
-import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALStandardError;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Element;
-import org.ccsds.moims.mo.mal.structures.EntityKey;
-import org.ccsds.moims.mo.mal.structures.EntityKeyList;
-import org.ccsds.moims.mo.mal.structures.EntityRequest;
-import org.ccsds.moims.mo.mal.structures.EntityRequestList;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
-import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
@@ -40,6 +34,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 
 import esa.mo.inttest.Dumper;
+import esa.mo.inttest.Util;
 
 /**
  * Schedule consumer for testing.
@@ -95,13 +90,10 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param etypes
 	 * @return
 	 */
-	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList args,
-			ObjectTypeList etypes) {
+	public static ScheduleDefinitionDetails createDef(String name, String desc) {
 		ScheduleDefinitionDetails schDef = new ScheduleDefinitionDetails();
 		schDef.setName(new Identifier(name));
 		schDef.setDescription(desc);
-		schDef.setArgumentDefs(args);
-		schDef.setEventTypes(etypes);
 		return schDef;
 	}
 	
@@ -116,18 +108,8 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	public ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs, String name, Byte attrType,
 			UShort area) {
 		ArgumentDefinitionDetailsList list = (null != defs) ? defs : new ArgumentDefinitionDetailsList();
-		list.add(new ArgumentDefinitionDetails(new Identifier(name), "", attrType, "", "", ""));
+		list.add(new ArgumentDefinitionDetails(new Identifier(name), null, attrType, null, null, null, null));
 		return list;
-	}
-	
-	/**
-	 * Create ObjectType instance from given Element.
-	 * @param e
-	 * @return
-	 */
-	protected ObjectType createObjType(Element e) {
-		return new ObjectType(e.getAreaNumber(), e.getServiceNumber(), e.getAreaVersion(),
-				new UShort(e.getTypeShortForm()));
 	}
 	
 	/**
@@ -138,21 +120,8 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 */
 	public ObjectTypeList addObjType(ObjectTypeList types, Element e) {
 		ObjectTypeList list = (null != types) ? types : new ObjectTypeList();
-		list.add(createObjType(e));
+		list.add(Util.createObjType(e));
 		return list;
-	}
-	
-	/**
-	 * Creates subscription with given id.
-	 * @param subId
-	 * @return
-	 */
-	public Subscription createSub(String subId) {
-		EntityKeyList entKeys = new EntityKeyList();
-		entKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		EntityRequestList entReqs = new EntityRequestList();
-		entReqs.add(new EntityRequest(null, true, true, true, false, entKeys));
-		return new Subscription(new Identifier(subId), entReqs);
 	}
 	
 	/**
@@ -165,11 +134,11 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param trigs
 	 * @return
 	 */
-	public ScheduleInstanceDetails createInst(String name, String desc, IdentifierList argNames,
+	public ScheduleInstanceDetails createInst(String name, String comm, IdentifierList argNames,
 			AttributeValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
 		ScheduleInstanceDetails inst = new ScheduleInstanceDetails();
 		inst.setName(new Identifier(name));
-		inst.setDescription(desc);
+		inst.setComment(comm);
 		inst.setArgumentDefNames(argNames);
 		inst.setArgumentValues(argVals);
 		inst.setScheduleItems(items);
@@ -229,25 +198,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 */
 	public ObjectId createObjId(Element e, IdentifierList domain, Long id) {
 		ObjectKey objKey = new ObjectKey(domain, id);
-		return new ObjectId(createObjType(e), objKey);
-	}
-	
-	/**
-	 * Finds given status from list.
-	 * @param srl
-	 * @param is
-	 * @return
-	 */
-	public StatusRecord findStatus(StatusRecordList srl, InstanceState is) {
-		StatusRecord sr = null;
-		for (int i = 0; (null != srl) && (i < srl.size()); ++i) {
-			StatusRecord r = srl.get(i);
-			if ((null != r) && (is == r.getState())) {
-				sr = r;
-				break;
-			}
-		}
-		return sr;
+		return new ObjectId(Util.createObjType(e), objKey);
 	}
 	
 	/**

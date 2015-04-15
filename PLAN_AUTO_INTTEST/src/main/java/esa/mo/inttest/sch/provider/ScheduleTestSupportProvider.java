@@ -37,26 +37,43 @@ public class ScheduleTestSupportProvider extends ScheduleTestInheritanceSkeleton
 		this.prov = prov;
 	}
 	
+	protected void checkLists(LongList ids, ScheduleStatusDetailsList stats) throws MALException {
+		if (null == ids) {
+			throw new MALException("schedule ids list is null");
+		}
+		if (null == stats) {
+			throw new MALException("schedule statuses list is null");
+		}
+		if (ids.isEmpty()) {
+			throw new MALException("schedule ids list is empty");
+		}
+		if (ids.size() != stats.size()) {
+			throw new MALException("schedule ids count differs from schedule statuses count");
+		}
+	}
+	
+	protected void checkElements(int i, LongList ids, ScheduleStatusDetailsList stats) throws MALException {
+		Long id = ids.get(i);
+		if (null == id) {
+			throw new MALException("schedule id[" + i + "] is null");
+		}
+		ScheduleStatusDetails stat = stats.get(i);
+		if (null == stat) {
+			throw new MALException("schedule status[" + i + "] is null");
+		}
+	}
+	
 	public void updateScheduleStatus(LongList schIds, ScheduleStatusDetailsList schStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.updateScheduleStatus(schIds={0}, schStats={1})",
 				new Object[] { schIds, Dumper.schStats(schStats), Dumper.received(interaction) });
-		if (null == schIds) {
-			throw new MALException("schedule ids list is null");
-		}
-		if (null == schStats) {
-			throw new MALException("schedule statuses list is null");
-		}
-		if (schIds.size() != schStats.size()) {
-			throw new MALException("schedule ids list size differs from schedule statuses list size");
-		}
+		checkLists(schIds, schStats);
 		for (int i = 0; (null != schIds) && (i < schIds.size()); ++i) {
+			checkElements(i, schIds, schStats);
 			Long id = schIds.get(i);
 			ScheduleStatusDetails stat = schStats.get(i);
-			if (null != id && null != stat) {
-				prov.getInstStore().setStatus(id, stat);
-				prov.publish(UpdateType.UPDATE, id, stat);
-			}
+			prov.getInstStore().setStatus(id, stat);
+			prov.publish(UpdateType.UPDATE, id, stat);
 		}
 		LOG.log(Level.INFO, "{0}.updateScheduleStatus() response: returning nothing", Dumper.sending(interaction));
 	}

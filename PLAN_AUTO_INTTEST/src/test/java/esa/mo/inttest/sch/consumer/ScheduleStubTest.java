@@ -80,7 +80,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);
 		
-		schInst.setDescription("updated description");
+		schInst.setComment("updated description");
 		
 		schCons.updateSchedule(schInstId, schInst);
 		

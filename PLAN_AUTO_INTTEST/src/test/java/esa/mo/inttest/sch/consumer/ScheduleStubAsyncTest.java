@@ -24,6 +24,8 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.junit.Test;
 
+import esa.mo.inttest.Util;
+
 public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 
 	protected ScheduleDefinitionDetails createDef(String n) {
@@ -31,17 +33,6 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schDef.setName(new Identifier(n));
 		schDef.setEventTypes(new ObjectTypeList());
 		return schDef;
-	}
-	
-	protected void waitFor(final Object o, long ms, Callable<Boolean> c) throws InterruptedException, Exception {
-		synchronized (o) {
-			long before = System.currentTimeMillis();
-			long d = ms;
-			do {
-				o.wait(d); // wait until waked or sec passes
-				d = ms - (System.currentTimeMillis() - before);
-			} while (!c.call() && (0 < d)); // cond failed and havent waited enough yet
-		}
 	}
 	
 	@Test
@@ -74,7 +65,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(submitted, 1000, new Callable<Boolean>() {
+		Util.waitFor(submitted, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return submitted[0];
@@ -109,7 +100,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);
 		
-		schInst.setDescription("updated description");
+		schInst.setComment("updated description");
 		
 		final boolean[] updated = { false };
 		
@@ -129,7 +120,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(updated, 1000, new Callable<Boolean>() {
+		Util.waitFor(updated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return updated[0];
@@ -182,7 +173,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(removed, 1000, new Callable<Boolean>() {
+		Util.waitFor(removed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return removed[0];
@@ -236,7 +227,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(patched, 1000, new Callable<Boolean>() {
+		Util.waitFor(patched, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return patched[0];
@@ -284,7 +275,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(stats, 1000, new Callable<Boolean>() {
+		Util.waitFor(stats, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != stats[0];
@@ -324,7 +315,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(registered, 1000, new Callable<Boolean>() {
+		Util.waitFor(registered, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return registered[0];
@@ -359,7 +350,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(dereg, 1000, new Callable<Boolean>() {
+		Util.waitFor(dereg, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return dereg[0];
@@ -406,7 +397,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(started, 1000, new Callable<Boolean>() {
+		Util.waitFor(started, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return started[0];
@@ -446,7 +437,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(paused, 1000, new Callable<Boolean>() {
+		Util.waitFor(paused, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return paused[0];
@@ -486,7 +477,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(resumed, 1000, new Callable<Boolean>() {
+		Util.waitFor(resumed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return resumed[0];
@@ -526,7 +517,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(terminated, 1000, new Callable<Boolean>() {
+		Util.waitFor(terminated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return terminated[0];
@@ -561,7 +552,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(ids, 1000, new Callable<Boolean>() {
+		Util.waitFor(ids, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != ids[0];
@@ -597,7 +588,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(ids, 1000, new Callable<Boolean>() {
+		Util.waitFor(ids, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != ids[0];
@@ -647,7 +638,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(updated, 1000, new Callable<Boolean>() {
+		Util.waitFor(updated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return updated[0];
@@ -693,7 +684,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 		});
 		
-		waitFor(removed, 1000, new Callable<Boolean>() {
+		Util.waitFor(removed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return removed[0];

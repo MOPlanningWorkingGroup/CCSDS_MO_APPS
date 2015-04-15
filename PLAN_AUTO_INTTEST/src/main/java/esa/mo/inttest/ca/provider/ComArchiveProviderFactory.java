@@ -38,8 +38,6 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 	private void initProvider(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
 		
-		malProvMgr = malCtx.createProviderManager();
-		
 		prov = new ComArchiveProvider();
 		prov.setDomain(domain);
 		
@@ -67,6 +65,9 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 		
 		super.init();
 		
+		if (null == malProvMgr) {
+			malProvMgr = malCtx.createProviderManager();
+		}
 		initProvider(name);
 		
 		LOG.exiting(getClass().getName(), "start");

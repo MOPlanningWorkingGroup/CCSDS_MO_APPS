@@ -4,12 +4,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
-import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.Time;
@@ -17,6 +15,7 @@ import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
@@ -29,15 +28,15 @@ public class StationScheduleIncrementFile extends CommonFile {
 
 	private static final String SCH_NAME = "SIST";
 	
-	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList argDefs,
-			ObjectTypeList eventTypes) {
-		ScheduleDefinitionDetails schDef = new ScheduleDefinitionDetails();
-		schDef.setName(new Identifier(name));
-		schDef.setDescription(desc);
-		schDef.setArgumentDefs(argDefs);
-		schDef.setEventTypes(eventTypes);
-		return schDef;
-	}
+//	public ScheduleDefinitionDetails createDef(String name, String desc, ArgumentDefinitionDetailsList argDefs,
+//			ObjectTypeList eventTypes) {
+//		ScheduleDefinitionDetails schDef = new ScheduleDefinitionDetails();
+//		schDef.setName(new Identifier(name));
+//		schDef.setDescription(desc);
+//		schDef.setArgumentDefs(argDefs);
+//		schDef.setEventTypes(eventTypes);
+//		return schDef;
+//	}
 	
 	protected ScheduleItemInstanceDetails createItemInst(String itemName, String name, ObjectId delegate,
 			ArgumentDefinitionDetailsList argDefs, AttributeValueList argVals, TriggerDetailsList triggers) {
@@ -51,11 +50,11 @@ public class StationScheduleIncrementFile extends CommonFile {
 		return schItem;
 	}
 	
-	public ScheduleInstanceDetails createInst(String name, String desc, AttributeValueList args,
+	public ScheduleInstanceDetails createInst(String name, String comm, AttributeValueList args,
 			TriggerDetailsList triggers, ScheduleItemInstanceDetailsList items) {
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
 		schInst.setName(new Identifier(name));
-		schInst.setDescription(desc);
+		schInst.setComment(comm);
 		schInst.setArgumentValues(args);
 		schInst.setTimingConstraints(triggers);
 		schInst.setScheduleItems(items);
@@ -64,7 +63,7 @@ public class StationScheduleIncrementFile extends CommonFile {
 	
 	protected ArgumentDefinitionDetailsList createItemArgDefs() {
 		ArgumentDefinitionDetailsList args = new ArgumentDefinitionDetailsList();
-		args.add(createArgDef("template", "", Attribute.STRING_TYPE_SHORT_FORM, "", "", ""));
+		args.add(createArgDef("template", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
 		return args;
 	}
 	
@@ -76,8 +75,8 @@ public class StationScheduleIncrementFile extends CommonFile {
 	
 	protected TriggerDetailsList createItemTriggers(Time startTime, Time endTime) {
 		TriggerDetailsList trigs = new TriggerDetailsList();
-		trigs.add(new TriggerDetails(TriggerName.START, new TimeTrigger(startTime, true), null, null, null));
-		trigs.add(new TriggerDetails(TriggerName.END, new TimeTrigger(endTime, false), null, null, null));
+		trigs.add(new TriggerDetails(TriggerName.START, new TimeTrigger(startTime, null), null, null, null, null, null));
+		trigs.add(new TriggerDetails(TriggerName.END, new TimeTrigger(null, new RelativeTime(endTime, true)), null, null, null, null, null));
 		return trigs;
 	}
 	

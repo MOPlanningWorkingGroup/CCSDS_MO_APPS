@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import esa.mo.inttest.DemoUtils;
 import esa.mo.inttest.Dumper;
+import esa.mo.inttest.Util;
 import esa.mo.inttest.sch.consumer.ScheduleConsumer;
 import esa.mo.inttest.sch.consumer.ScheduleConsumerFactory;
 import esa.mo.inttest.sch.provider.ScheduleProviderFactory;
@@ -134,21 +135,23 @@ public class ThreeSchedulersDemoTest {
 	private LongList addDefinitions() throws MALException, MALInteractionException {
 		LongList defIds = new LongList();
 		
-		ScheduleDefinitionDetails def = cons1.createDef("test schedule definition 1", "test 1", null, null);
+		ScheduleDefinitionDetails def = ScheduleConsumer.createDef("test schedule definition 1", "test 1");
 		ScheduleDefinitionDetailsList defs = new ScheduleDefinitionDetailsList();
 		defs.add(def);
 		LongList ids = cons1.getStub().addDefinition(defs);
 		defIds.add(ids.get(0));
 		
-		ArgumentDefinitionDetailsList argDefs = cons1.addArgDef(null, "arg1", (byte)(Attribute.STRING_TYPE_SHORT_FORM&0xff), null);
-		def = cons1.createDef("test schedule definition 2", "test 2", argDefs, null);
+		ArgumentDefinitionDetailsList argDefs = cons1.addArgDef(null, "arg1", Util.attrType(Attribute.STRING_TYPE_SHORT_FORM), null);
+		def = ScheduleConsumer.createDef("test schedule definition 2", "test 2");
+		def.setArgumentDefs(argDefs);
 		defs.clear();
 		defs.add(def);
 		ids = cons1.getStub().addDefinition(defs);
 		defIds.add(ids.get(0));
 		
 		ObjectTypeList eTypes = cons1.addObjType(null, new ScheduleInstanceDetails());
-		def = cons1.createDef("test schedule definition 3", "test 3", null, eTypes);
+		def = ScheduleConsumer.createDef("test schedule definition 3", "test 3");
+		def.setEventTypes(eTypes);
 		defs.clear();
 		defs.add(def);
 		ids = cons1.getStub().addDefinition(defs);
@@ -159,7 +162,7 @@ public class ThreeSchedulersDemoTest {
 	
 	private void registerMonitor(String id, ScheduleConsumer sc, String n) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorSchedulesRegister(subId={0})", new Object[] { id, n + " -> " + BROKER });
-		sc.getStub().monitorSchedulesRegister(sc.createSub(id), sc);
+		sc.getStub().monitorSchedulesRegister(Util.createSub(id), sc);
 		LOG.log(Level.INFO, "{0}.monitorSchedulesRegister() response: returning nothing", n + " <-" + BROKER);
 	}
 	
@@ -208,7 +211,7 @@ public class ThreeSchedulersDemoTest {
 		ScheduleStatusDetailsList stats = consStub.getScheduleStatus(created);
 		for (int i = 0; (null != stats) && (i < stats.size()); ++i) {
 			ScheduleStatusDetails stat = stats.get(i);
-			StatusRecord sr = cons1.findStatus(stat.getStatus(), InstanceState.ACCEPTED);
+			StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.ACCEPTED);
 			if (null == sr) {
 				stat.setStatus(cons1.addOrUpdate(stat.getStatus(), InstanceState.ACCEPTED,
 						new Time(System.currentTimeMillis()), "accepted"));

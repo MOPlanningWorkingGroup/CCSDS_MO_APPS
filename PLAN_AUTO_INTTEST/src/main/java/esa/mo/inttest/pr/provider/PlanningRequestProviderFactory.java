@@ -50,8 +50,6 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	private void initProvider(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
 		
-		malProvMgr = malCtx.createProviderManager();
-		
 		prov = new PlanningRequestProvider();
 		prov.setDomain(domain);
 		
@@ -133,6 +131,9 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		
 		super.init();
 		
+		if (null == malProvMgr) {
+			malProvMgr = malCtx.createProviderManager();
+		}
 		initProvider(name);
 		initTaskPublisher();
 		initPrPublisher();
@@ -172,6 +173,10 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 	public void stop() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "stop");
 		
+		if (null != prov) {
+			prov.setTaskPub(null);
+			prov.setPrPub(null);
+		}
 		if (taskPub != null) {
 			try {
 				taskPub.deregister();
@@ -202,7 +207,7 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 			malProvMgr.close();
 		}
 		malProvMgr = null;
-		testProv = null;
+		testProv = null; // test support
 		prov = null;
 		
 		super.close();

@@ -47,8 +47,6 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 	private ArchiveStub initConsumer(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initConsumer");
 		
-		malConsMgr = malCtx.createConsumerManager();
-		
 		String consName = (null != name && !name.isEmpty()) ? name : "CaCons";
 		Blob authId = new Blob("".getBytes());
 		Identifier network = new Identifier("junit");

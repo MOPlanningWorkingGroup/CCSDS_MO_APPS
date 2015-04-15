@@ -79,7 +79,7 @@ public class DemoUtils {
 	 */
 	public static final class DemoFormatter extends SimpleFormatter {
 
-		private static final String form = "[%1$d] %5$s%n";
+		private static final String FORMAT = "[%1$d] %5$s%n";
 
 		public DemoFormatter() {
 			super();
@@ -111,7 +111,7 @@ public class DemoUtils {
 				pw.close();
 				throwable = sw.toString();
 			}
-			return String.format(form, lr.getSequenceNumber(), source, lr.getLoggerName(),
+			return String.format(FORMAT, lr.getSequenceNumber(), source, lr.getLoggerName(),
 					lr.getLevel().getName(), message, throwable);
 		}
 	}

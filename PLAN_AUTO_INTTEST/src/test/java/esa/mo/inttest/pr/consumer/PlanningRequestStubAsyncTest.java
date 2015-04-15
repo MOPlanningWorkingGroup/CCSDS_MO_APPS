@@ -34,6 +34,8 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetail
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.Test;
 
+import esa.mo.inttest.Util;
+
 public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestStubAsyncTest.class.getName());
@@ -58,17 +60,6 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		return new Object[] { malMsg, prMon };
 	}
 	
-	protected void waitFor(Object o, long ms, Callable<Boolean> c) throws InterruptedException, Exception {
-		synchronized (o) {
-			long before = System.currentTimeMillis();
-			long d = ms;
-			do {
-				o.wait(d);
-				d = ms - (System.currentTimeMillis() - before);
-			} while (!c.call() && (0 < d)); // cond failed and didnt wait long enough
-		}
-	}
-	
 	@Test
 	public void testMonitorPlanningRequestsRegister() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testMonitorPrReg");
@@ -78,7 +69,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		MALMessage malMsg = (MALMessage)details[0];
 		final PrMonitor prMon = (PrMonitor)details[1];
 		
-		waitFor(prMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return prMon.registered;
@@ -109,7 +100,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		MALMessage malMsg2 = asyncDeRegisterPrMonitor(subId, prMon);
 		
-		waitFor(prMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return prMon.deRegistered;
@@ -145,7 +136,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		MALMessage malMsg = (MALMessage)details[0];
 		final TaskMonitor taskMon = (TaskMonitor)details[1];
 		
-		waitFor(taskMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return taskMon.registered;
@@ -176,7 +167,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		MALMessage malMsg2 = asyncDeRegisterTaskMonitor(subId, taskMon);
 		
-		waitFor(taskMon, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return taskMon.deRegistered;
@@ -195,7 +186,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			LongList taskDefIds, LongList taskInstIds, final PlanningRequestResponseInstanceDetailsList[] resp)
 					throws MALException, MALInteractionException {
 		
-		MALMessage malMsg = prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds,
+		return prCons.asyncSubmitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds,
 				new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
@@ -214,7 +205,6 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 				LOG.log(Level.INFO, "submit pr error={0}", error);
 			}
 		});
-		return malMsg;
 	}
 	
 	@Test
@@ -224,7 +214,8 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		PlanningRequestDefinitionDetails prDef = createPrDef("async pr def");
 		Long prDefId = submitPrDef(prDef);
 		
-		PlanningRequestInstanceDetails prInst = createPrInst(prDef, null);
+		String prName = "async pr inst";
+		PlanningRequestInstanceDetails prInst = createPrInst(prName, null);
 		Long prInstId = generateId();
 		
 		storePrInst(prDefId, prInstId, prInst);
@@ -233,7 +224,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		MALMessage malMsg = asyncSubmitPr(prDefId, prInstId, prInst, null, null, response);
 		
-		waitFor(response, 1000, new Callable<Boolean>() {
+		Util.waitFor(response, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != response[0];
@@ -255,10 +246,11 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testSubmitPlanningRequestWithTask");
 		
-		TaskDefinitionDetails taskDef = createTaskDef("async task def", "async pr def");
+		TaskDefinitionDetails taskDef = createTaskDef("async task def");
 		Long taskDefId = submitTaskDef(taskDef);
 		
-		TaskInstanceDetails taskInst = createTaskInst(taskDef);
+		String prName = "async pr inst";
+		TaskInstanceDetails taskInst = createTaskInst("async task inst", prName);
 		Long taskInstId = generateId();
 		
 		storeTaskInst(taskDefId, taskInstId, taskInst);
@@ -269,7 +261,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
 		taskInsts.add(taskInst);
 		
-		PlanningRequestInstanceDetails prInst = createPrInst(prDef, taskInsts);
+		PlanningRequestInstanceDetails prInst = createPrInst(prName, taskInsts);
 		Long prInstId = generateId();
 		
 		storePrInst(prDefId, prInstId, prInst);
@@ -284,7 +276,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		MALMessage malMsg = asyncSubmitPr(prDefId, prInstId, prInst, taskDefIds, taskInstIds, response);
 		
-		waitFor(response, 1000, new Callable<Boolean>() {
+		Util.waitFor(response, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != response[0];
@@ -322,7 +314,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		LongList taskDefIds = (LongList)details[3];
 		LongList taskInstIds = (LongList)details[4];
 		
-		prInst.setDescription("async updated");
+		prInst.setComment("async updated");
 		
 		final boolean[] updated = { false };
 		
@@ -344,7 +336,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(updated, 1000, new Callable<Boolean>() {
+		Util.waitFor(updated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return updated[0];
@@ -394,7 +386,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(removed, 1000, new Callable<Boolean>() {
+		Util.waitFor(removed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return removed[0];
@@ -451,7 +443,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(stats, 1000, new Callable<Boolean>() {
+		Util.waitFor(stats, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != stats[0];
@@ -494,10 +486,10 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(stats, 1000, new Callable<Boolean>() {
+		Util.waitFor(stats, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return null != stats;
+				return null != stats[0];
 			}
 		});
 		
@@ -538,7 +530,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(ids, 1000, new Callable<Boolean>() {
+		Util.waitFor(ids, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != ids[0];
@@ -581,7 +573,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(ids, 1000, new Callable<Boolean>() {
+		Util.waitFor(ids, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != ids[0];
@@ -629,7 +621,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(updated, 1000, new Callable<Boolean>() {
+		Util.waitFor(updated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return updated[0];
@@ -673,7 +665,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(removed, 1000, new Callable<Boolean>() {
+		Util.waitFor(removed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return removed[0];
@@ -720,7 +712,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(taskDefIds, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskDefIds, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != taskDefIds[0];
@@ -739,7 +731,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	public void testAddTaskDefinition() throws MALException, MALInteractionException, InterruptedException, Exception {
 		enter("testAddTaskDef");
 		
-		TaskDefinitionDetails taskDef = createTaskDef("async task def", "async pr def");
+		TaskDefinitionDetails taskDef = createTaskDef("async task def");
 		
 		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
 		taskDefs.add(taskDef);
@@ -765,7 +757,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(taskDefIds, 1000, new Callable<Boolean>() {
+		Util.waitFor(taskDefIds, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return null != taskDefIds[0];
@@ -819,7 +811,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(updated, 1000, new Callable<Boolean>() {
+		Util.waitFor(updated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return updated[0];
@@ -867,7 +859,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			}
 		});
 		
-		waitFor(removed, 1000, new Callable<Boolean>() {
+		Util.waitFor(removed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				return removed[0];

@@ -40,42 +40,84 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 		this.prov = prov;
 	}
 	
+	protected void checkPrLists(LongList ids, PlanningRequestStatusDetailsList stats) throws MALException {
+		if (null == ids) {
+			throw new MALException("pr ids list is null");
+		}
+		if (null == stats) {
+			throw new MALException("pr statuses list is null");
+		}
+		if (ids.isEmpty()) {
+			throw new MALException("pr ids list is empty");
+		}
+		if (ids.size() != stats.size()) {
+			throw new MALException("pr ids count does not match pr statuses count");
+		}
+	}
+	
+	protected void checkPrElements(int i, LongList ids, PlanningRequestStatusDetailsList stats) throws MALException {
+		Long id = ids.get(i);
+		if (null == id) {
+			throw new MALException("pr id[" + i + "] is null");
+		}
+		PlanningRequestStatusDetails stat = stats.get(i);
+		if (null == stat) {
+			throw new MALException("pr status[" + i + "] is null");
+		}
+	}
+	
 	public void updatePrStatus(LongList prIds, PlanningRequestStatusDetailsList prStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.updatePrStatus(prIds={0}, prStats={1})",
 				new Object[] { prIds, Dumper.prStats(prStats), Dumper.received(interaction) });
-		if (null == prIds) {
-			throw new MALException("pr ids list is null");
-		}
-		if (null == prStats) {
-			throw new MALException("pr statuses list is null");
-		}
-		if (prIds.size() != prStats.size()) {
-			throw new MALException("pr ids list size doesnt match pr statuses list size");
-		}
+		checkPrLists(prIds, prStats);
 		for (int i = 0; (null != prIds) && (i < prIds.size()); ++i) {
+			checkPrElements(i , prIds, prStats);
 			Long id = prIds.get(i);
 			PlanningRequestStatusDetails stat = prStats.get(i);
-			if (null != id && null != stat) {
-				prov.getInstStore().setPrStatus(id, stat);
-				prov.publishPr(UpdateType.UPDATE, id, stat);
-			}
+			prov.getInstStore().setPrStatus(id, stat);
+			prov.publishPr(UpdateType.UPDATE, id, stat);
 		}
 		LOG.log(Level.INFO, "{0}.updatePrStatus() response: returning nothing", Dumper.sending(interaction));
 	}
-
+	
+	protected void checkTaskLists(LongList ids, TaskStatusDetailsList stats) throws MALException {
+		if (null == ids) {
+			throw new MALException("task ids list is null");
+		}
+		if (null == stats) {
+			throw new MALException("task statuses list is null");
+		}
+		if (ids.isEmpty()) {
+			throw new MALException("task ids list is empty");
+		}
+		if (ids.size() != stats.size()) {
+			throw new MALException("task ids count differs from task statuses count");
+		}
+	}
+	
+	protected void checkTaskElements(int i, LongList ids, TaskStatusDetailsList stats) throws MALException {
+		Long id = ids.get(i);
+		if (null == id) {
+			throw new MALException("task id[" + i + "] is null");
+		}
+		TaskStatusDetails stat = stats.get(i);
+		if (null == stat) {
+			throw new MALException("task statutus[" + i + "] is null");
+		}
+	}
+	
 	public void updateTaskStatus(LongList taskIds, TaskStatusDetailsList taskStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.updateTaskStatus(taskIds={0}, taskStats={1})",
 				new Object[] { taskIds, Dumper.taskStats(taskStats), Dumper.received(interaction) });
-		
+		checkTaskLists(taskIds, taskStats);
 		for (int i = 0; (null != taskIds) && (i < taskIds.size()); ++i) {
+			checkTaskElements(i, taskIds, taskStats);
 			Long id = taskIds.get(i);
 			TaskStatusDetails stat = taskStats.get(i);
-			if (null != id && null != stat) {
-				prov.getInstStore().setTaskStatus(id, stat);
-				prov.publishTask(UpdateType.UPDATE, id, stat);
-			}
+			prov.getInstStore().setTaskStatus(id, stat);
+			prov.publishTask(UpdateType.UPDATE, id, stat);
 		}
 		LOG.log(Level.INFO, "{0}.updateTaskStatus() response: returning nothing", Dumper.sending(interaction));
 	}

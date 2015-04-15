@@ -217,13 +217,13 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	protected void checkNulls(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst)
 			throws MALException {
 		if (null == prDefId) {
-			throw new MALException("pr definition id not given");
+			throw new MALException("pr definition id is null");
 		}
 		if (null == prInstId) {
-			throw new MALException("pr instance id not given");
+			throw new MALException("pr instance id is null");
 		}
 		if (null == prInst) {
-			throw new MALException("pr instance not given");
+			throw new MALException("pr instance is null");
 		}
 	}
 	
@@ -351,9 +351,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		String timeStamp = sdf.format(new Date(System.currentTimeMillis()));
 		
-		PlanningRequestResponseInstanceDetails prr = new PlanningRequestResponseInstanceDetails(prInst.getName(),
-				timeStamp, prInst.getArgumentValues(), prInst.getArgumentDefNames());
-		return prr;
+		return new PlanningRequestResponseInstanceDetails(prInst.getName(), timeStamp,
+				prInst.getArgumentValues(), prInst.getArgumentDefNames());
 	}
 	
 	public PlanningRequestResponseInstanceDetailsList submitPlanningRequest(Long prDefId, Long prInstId,
@@ -569,6 +568,22 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	}
 	
 	@SuppressWarnings("rawtypes")
+	protected void checkBaseLists(LongList ids, BaseDefinitionList defs) throws MALException {
+		if (null == ids) {
+			throw new MALException("definition ids list is null");
+		}
+		if (null == defs) {
+			throw new MALException("definitions list is null");
+		}
+		if (ids.isEmpty()) {
+			throw new MALException("definition ids list is empty");
+		}
+		if (ids.size() != defs.size()) {
+			throw new MALException("definition ids count does not match definitions count");
+		}
+	}
+	
+	@SuppressWarnings("rawtypes")
 	protected void updateBaseDefs(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs)
 			throws MALException {
 		if (DefinitionType.TASK_DEF == defType) {
@@ -590,18 +605,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		if (null == defType) {
 			throw new MALException("no definition type given");
 		}
-		if (null == defIds) {
-			throw new MALException("no definition ids list given");
-		}
-		if (null == baseDefs) {
-			throw new MALException("no definitions list given");
-		}
-		if (defIds.isEmpty()) {
-			throw new MALException("no definition ids in list");
-		}
-		if (defIds.size() != baseDefs.size()) {
-			throw new MALException("definition ids count does not match definitions count");
-		}
+		checkBaseLists(defIds, baseDefs);
 		updateBaseDefs(defType, defIds, baseDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
 	}

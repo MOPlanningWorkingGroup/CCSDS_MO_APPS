@@ -28,6 +28,8 @@ import esa.mo.inttest.Dumper;
 public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 
 	private static final Logger LOG = Logger.getLogger(ComArchiveProvider.class.getName());
+	
+	private ObjStore objStore = new ObjStore();
 	private IdentifierList domain = new IdentifierList();
 	
 	public ComArchiveProvider() {
@@ -47,10 +49,15 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public void query(Boolean returnBody, ObjectType objType, ArchiveQueryList archiveQuery,
-			QueryFilterList queryFilter, QueryInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "received query request: returnBody={0}, objType={1}, arcQuery={2}, filter={3}, interaction={4}",
-				new Object[] { returnBody, Dumper.objType(objType), archiveQuery, queryFilter, interaction });
+	public void query(Boolean returnBody, ObjectType objType, ArchiveQueryList arcQs,
+			QueryFilterList queryFilters, QueryInteraction interaction) throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "CA.query(returnBody={0}, objType={1}, arcQuery={2}, filter={3}, interaction={4})",
+				new Object[] { returnBody, Dumper.objType(objType), arcQs, queryFilters, interaction });
+		Check.objType(objType);
+		Check.queryInteract(interaction);
+		boolean doRetBod = (null != returnBody) && returnBody.booleanValue();
+		objStore.query(doRetBod, objType, arcQs, queryFilters, interaction);
+		LOG.log(Level.INFO, "CA.query() response in interaction");
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -66,16 +73,18 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 	public LongList store(Boolean returnIds, ObjectType objType, IdentifierList domain,
 			ArchiveDetailsList objDetails, ElementList objBodies, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "received store request: returnIds={0}, objType={1}, domain={2}, details={3}, bodies={4}, interaction={5}",
-				new Object[] { returnIds, Dumper.objType(objType), Dumper.names(domain), objDetails, objBodies, interaction });
-		LongList ids = null;
-		if (returnIds != null && returnIds.booleanValue()) {
-			ids = new LongList();
-			for (int i = 0; i < objDetails.size(); ++i) {
-				ArchiveDetails arcDetail = objDetails.get(i);
-				ids.add(arcDetail.getInstId()); // TODO store elements for retrieval - for now just reply id-s
-			}
+		LOG.log(Level.INFO, "CA.store(returnIds={0}, objType={1}, domain={2}, details={3}, bodies={4})",
+				new Object[] { returnIds, Dumper.objType(objType), Dumper.names(domain), Dumper.arcDets(objDetails), Dumper.els(objBodies) });
+		Check.objType(objType);
+		Check.objects(objDetails, objBodies);
+		final boolean doRetIds = (null != returnIds) && returnIds.booleanValue();
+		LongList ids = doRetIds ? new LongList() : null;
+		objStore.addAll(objType, domain, objDetails, objBodies); 
+		for (int i = 0; doRetIds && (i < objDetails.size()); ++i) {
+			ArchiveDetails arcDetail = objDetails.get(i);
+			ids.add(arcDetail.getInstId());
 		}
+		LOG.log(Level.INFO, "CA.store() response: ids={0}", ids);
 		return ids;
 	}
 
@@ -94,5 +103,4 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 				new Object[] { Dumper.objType(objType), Dumper.names(domain), objIds, interaction });
 		return null;
 	}
-
 }
