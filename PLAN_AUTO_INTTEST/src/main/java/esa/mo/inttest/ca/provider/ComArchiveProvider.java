@@ -32,14 +32,25 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 	private ObjStore objStore = new ObjStore();
 	private IdentifierList domain = new IdentifierList();
 	
+	/**
+	 * Ctor.
+	 */
 	public ComArchiveProvider() {
 		domain.add(new Identifier("desd"));
 	}
 	
+	/**
+	 * Set domain to use.
+	 * @param domain
+	 */
 	public void setDomain(IdentifierList domain) {
 		this.domain = domain;
 	}
 	
+	/**
+	 * Implements retrieval.
+	 * @see org.ccsds.moims.mo.com.archive.provider.ArchiveHandler#retrieve(org.ccsds.moims.mo.com.structures.ObjectType, org.ccsds.moims.mo.mal.structures.IdentifierList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.com.archive.provider.RetrieveInteraction)
+	 */
 	@Override
 	public void retrieve(ObjectType objType, IdentifierList domain, LongList objIds, RetrieveInteraction interaction)
 			throws MALInteractionException, MALException {
@@ -47,6 +58,10 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 				new Object[] { Dumper.objType(objType), Dumper.names(domain), objIds, interaction });
 	}
 
+	/**
+	 * Implements query.
+	 * @see org.ccsds.moims.mo.com.archive.provider.ArchiveHandler#query(java.lang.Boolean, org.ccsds.moims.mo.com.structures.ObjectType, org.ccsds.moims.mo.com.archive.structures.ArchiveQueryList, org.ccsds.moims.mo.com.archive.structures.QueryFilterList, org.ccsds.moims.mo.com.archive.provider.QueryInteraction)
+	 */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void query(Boolean returnBody, ObjectType objType, ArchiveQueryList arcQs,
@@ -60,6 +75,9 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 		LOG.log(Level.INFO, "CA.query() response in interaction");
 	}
 
+	/** Implements counting.
+	 * @see org.ccsds.moims.mo.com.archive.provider.ArchiveHandler#count(org.ccsds.moims.mo.com.structures.ObjectType, org.ccsds.moims.mo.com.archive.structures.ArchiveQueryList, org.ccsds.moims.mo.com.archive.structures.QueryFilterList, org.ccsds.moims.mo.com.archive.provider.CountInteraction)
+	 */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void count(ObjectType objType, ArchiveQueryList archiveQuery, QueryFilterList queryFilter,
@@ -68,6 +86,9 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 				new Object[] { Dumper.objType(objType), archiveQuery, queryFilter, interaction });
 	}
 
+	/** Implements store.
+	 * @see org.ccsds.moims.mo.com.archive.provider.ArchiveHandler#store(java.lang.Boolean, org.ccsds.moims.mo.com.structures.ObjectType, org.ccsds.moims.mo.mal.structures.IdentifierList, org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList, org.ccsds.moims.mo.mal.structures.ElementList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public LongList store(Boolean returnIds, ObjectType objType, IdentifierList domain,
@@ -88,6 +109,9 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 		return ids;
 	}
 
+	/** Implements update.
+	 * @see org.ccsds.moims.mo.com.archive.provider.ArchiveHandler#update(org.ccsds.moims.mo.com.structures.ObjectType, org.ccsds.moims.mo.mal.structures.IdentifierList, org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList, org.ccsds.moims.mo.mal.structures.ElementList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void update(ObjectType objType, IdentifierList domain, ArchiveDetailsList objDetails, ElementList objBodies,
@@ -96,6 +120,10 @@ public class ComArchiveProvider extends ArchiveInheritanceSkeleton {
 				new Object[] { Dumper.objType(objType), Dumper.names(domain), objDetails, objBodies, interaction });
 	}
 
+	/**
+	 * Implements removal.
+	 * @see org.ccsds.moims.mo.com.archive.provider.ArchiveHandler#delete(org.ccsds.moims.mo.com.structures.ObjectType, org.ccsds.moims.mo.mal.structures.IdentifierList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	@Override
 	public LongList delete(ObjectType objType, IdentifierList domain, LongList objIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {

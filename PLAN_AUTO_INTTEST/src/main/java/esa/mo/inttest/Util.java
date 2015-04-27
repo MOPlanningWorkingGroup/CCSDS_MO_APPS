@@ -12,7 +12,10 @@ import org.ccsds.moims.mo.mal.structures.FineTime;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.structures.Time;
+import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UShort;
+import org.ccsds.moims.mo.mal.structures.UpdateHeader;
+import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
@@ -130,5 +133,20 @@ public class Util {
 				d = ms - (System.currentTimeMillis() - before);
 			}
 		}
+	}
+	
+	/**
+	 * Creates UpdateHeader structure for publishing.
+	 * @param ut
+	 * @param uri
+	 * @return
+	 */
+	public static UpdateHeader createUpdateHeader(UpdateType ut, URI uri) {
+		UpdateHeader uh = new UpdateHeader();
+		uh.setKey(new EntityKey(new Identifier("*"),  0L, 0L, 0L));
+		uh.setSourceURI(uri);
+		uh.setTimestamp(currentTime());
+		uh.setUpdateType(ut);
+		return uh;
 	}
 }

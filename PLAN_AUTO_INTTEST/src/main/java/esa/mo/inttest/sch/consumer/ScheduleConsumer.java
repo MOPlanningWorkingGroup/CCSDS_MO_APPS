@@ -20,7 +20,6 @@ import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Element;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
-import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
@@ -28,9 +27,6 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
-import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
-import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
-import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 
 import esa.mo.inttest.Dumper;
@@ -69,7 +65,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	public void monitorSchedulesNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 			ObjectIdList objIds, ScheduleStatusDetailsList schStats, Map qosProps) {
 		LOG.log(Level.INFO, "{4}.monitorSchedulesNotifyReceived(id={0}, List:updHdrs, List:objIds, List:schStats)\n  updHdrs[]={1}\n  objIds[]={2}\n  schStats[]={3}",
-				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats), Dumper.fromBroker(msgHdr) });
+				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats), Dumper.fromBroker("SchProvider", msgHdr) });
 	}
 	
 	/**
@@ -79,7 +75,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	@SuppressWarnings("rawtypes")
 	public void monitorSchedulesNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError err, Map qosProps) {
 		LOG.log(Level.INFO, "{1}.monitorSchedulesNotifyErrorReceived(error)\n  error={0}",
-				new Object[] { err, Dumper.fromBroker(msgHdr) });
+				new Object[] { err, Dumper.fromBroker("SchProvider", msgHdr) });
 	}
 	
 	/**
@@ -105,7 +101,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param area
 	 * @return
 	 */
-	public ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs, String name, Byte attrType,
+	public static ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs, String name, Byte attrType,
 			UShort area) {
 		ArgumentDefinitionDetailsList list = (null != defs) ? defs : new ArgumentDefinitionDetailsList();
 		list.add(new ArgumentDefinitionDetails(new Identifier(name), null, attrType, null, null, null, null));
@@ -118,7 +114,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param e
 	 * @return
 	 */
-	public ObjectTypeList addObjType(ObjectTypeList types, Element e) {
+	public static ObjectTypeList addObjType(ObjectTypeList types, Element e) {
 		ObjectTypeList list = (null != types) ? types : new ObjectTypeList();
 		list.add(Util.createObjType(e));
 		return list;
@@ -134,7 +130,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param trigs
 	 * @return
 	 */
-	public ScheduleInstanceDetails createInst(String name, String comm, IdentifierList argNames,
+	public static ScheduleInstanceDetails createInst(String name, String comm, IdentifierList argNames,
 			AttributeValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
 		ScheduleInstanceDetails inst = new ScheduleInstanceDetails();
 		inst.setName(new Identifier(name));
@@ -152,7 +148,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param name
 	 * @return
 	 */
-	public IdentifierList addArgName(IdentifierList names, String name) {
+	public static IdentifierList addArgName(IdentifierList names, String name) {
 		IdentifierList list = (null != names) ? names : new IdentifierList();
 		list.add(new Identifier(name));
 		return list;
@@ -164,7 +160,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param val
 	 * @return
 	 */
-	public AttributeValueList addArgValue(AttributeValueList vals, Attribute val) {
+	public static AttributeValueList addArgValue(AttributeValueList vals, Attribute val) {
 		AttributeValueList list = (null != vals) ? vals : new AttributeValueList();
 		list.add(new AttributeValue(val));
 		return list;
@@ -181,7 +177,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param del
 	 * @return
 	 */
-	public ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items, String name, String schName,
+	public static ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items, String name, String schName,
 			ArgumentDefinitionDetailsList argTypes, AttributeValueList argVals, TriggerDetailsList trigs, ObjectId del) {
 		ScheduleItemInstanceDetailsList list = (null != items) ? items : new ScheduleItemInstanceDetailsList();
 		list.add(new ScheduleItemInstanceDetails(new Identifier(name), new Identifier(schName), argTypes, argVals,
@@ -196,33 +192,8 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param id
 	 * @return
 	 */
-	public ObjectId createObjId(Element e, IdentifierList domain, Long id) {
+	public static ObjectId createObjId(Element e, IdentifierList domain, Long id) {
 		ObjectKey objKey = new ObjectKey(domain, id);
 		return new ObjectId(Util.createObjType(e), objKey);
-	}
-	
-	/**
-	 * Adds given status to list if missing or updates existing one.
-	 * @param srl
-	 * @param is
-	 * @param t
-	 * @param comm
-	 * @return
-	 */
-	public StatusRecordList addOrUpdate(StatusRecordList srl, InstanceState is, Time t, String comm) {
-		StatusRecordList list = (null != srl) ? srl : new StatusRecordList();
-		boolean found = false;
-		for (int i = 0; !found && (null != list) && (i < list.size()); ++i) {
-			StatusRecord r = list.get(i);
-			found = (is == r.getState());
-			if (found) {
-				r.setTimeStamp(t);
-				r.setComment(comm);
-			}
-		}
-		if (!found) {
-			list.add(new StatusRecord(is, t, comm));
-		}
-		return list;
 	}
 }

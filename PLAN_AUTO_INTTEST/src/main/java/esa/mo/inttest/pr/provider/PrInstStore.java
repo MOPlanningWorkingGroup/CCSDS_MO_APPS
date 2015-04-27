@@ -39,14 +39,25 @@ public class PrInstStore {
 	
 	private List<Item> prs = new ArrayList<Item>();
 	
-	public PrInstStore() {
-	}
-
+	/**
+	 * Adds PR instance.
+	 * @param prDefId
+	 * @param prInstId
+	 * @param prInst
+	 * @param taskDefIds
+	 * @param taskInstIds
+	 * @param prStat
+	 */
 	public void addPr(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
 			LongList taskInstIds, PlanningRequestStatusDetails prStat) {
 		prs.add(new Item(prDefId, prInstId, prInst, taskDefIds, taskInstIds, prStat));
 	}
 	
+	/**
+	 * Looks up PR inst by id.
+	 * @param prInstId
+	 * @return
+	 */
 	public Item findPr(Long prInstId) {
 		Item rval = null;
 		Iterator<Item> it = prs.iterator();
@@ -60,6 +71,11 @@ public class PrInstStore {
 		return rval;
 	}
 	
+	/**
+	 * Replaces PR status by id.
+	 * @param prInstId
+	 * @param prStat
+	 */
 	public void setPrStatus(Long prInstId, PlanningRequestStatusDetails prStat) {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
@@ -71,6 +87,12 @@ public class PrInstStore {
 		}
 	}
 	
+	/**
+	 * Replaces PR inst and status by id.
+	 * @param prInstId
+	 * @param prInst
+	 * @param prStat
+	 */
 	public void updatePr(Long prInstId, PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
@@ -83,6 +105,10 @@ public class PrInstStore {
 		}
 	}
 	
+	/**
+	 * Removes PR (Item) by id.
+	 * @param prInstId
+	 */
 	public void removePr(Long prInstId) {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
@@ -94,6 +120,11 @@ public class PrInstStore {
 		}
 	}
 	
+	/**
+	 * Looks up Task by id.
+	 * @param taskInstId
+	 * @return
+	 */
 	public TaskStatusDetails findTask(Long taskInstId) {
 		TaskStatusDetails taskStat = null;
 		Iterator<Item> it = prs.iterator();
@@ -116,6 +147,11 @@ public class PrInstStore {
 		return taskStat;
 	}
 	
+	/**
+	 * Replaces Task status by id.
+	 * @param taskInstId
+	 * @param taskStat
+	 */
 	public void setTaskStatus(Long taskInstId, TaskStatusDetails taskStat) {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {

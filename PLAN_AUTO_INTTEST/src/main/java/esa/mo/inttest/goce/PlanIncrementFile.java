@@ -26,69 +26,60 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
  */
 public class PlanIncrementFile extends CommonFile {
 
-	private static final String TASK_DEF_NAME = "goce pif task def";
-	private static final String PR_NAME = "goce pif pr";
-	
 	/**
 	 * Defines some additional <RQ> fields and some <EV> fields.
 	 * @param argDefs
 	 * @return
 	 */
-	protected ArgumentDefinitionDetailsList setPifTaskDefArgDefs(ArgumentDefinitionDetailsList argDefs) {
-		argDefs.add(createArgDef("RQ_Status", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		argDefs.add(createArgDef("RQ_Subsystem", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		argDefs.add(createArgDef("EV_Name", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		argDefs.add(createArgDef("EV_Source", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		argDefs.add(createArgDef("EV_Time", null, Attribute.TIME_TYPE_SHORT_FORM, null, null, null, null));
-		argDefs.add(createArgDef("EV_ID", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+	protected ArgumentDefinitionDetailsList setSubsysEventArgDefs(ArgumentDefinitionDetailsList argDefs) {
+		argDefs.add(createArgDef("RQ_Subsystem", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("CDMU_CTR")));
+		argDefs.add(createArgDef("Parent_Event_Name", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		argDefs.add(createArgDef("Parent_Event_Source", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		argDefs.add(createArgDef("Parent_Event_Time", null, Attribute.TIME_TYPE_SHORT_FORM, null, null, null, null));
 		return argDefs;
 	}
 	
-	protected ArgumentDefinitionDetailsList createPifPrDefArgDefs() {
+	/**
+	 * Defines version arguments.
+	 * @return
+	 */
+	protected ArgumentDefinitionDetailsList createPifVersionArgDefs() {
 		ArgumentDefinitionDetailsList fields = new ArgumentDefinitionDetailsList();
-		fields.add(createArgDef("PIF_File_Type", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_Start", null, Attribute.TIME_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_File_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_Status", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		fields.add(createArgDef("PIF_File_Type", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("FOS PLAN INCREMENT FILE")));
+		fields.add(createArgDef("PIF_File_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("2")));
 		fields.add(createArgDef("PIF_Replan_Time", null, Attribute.TIME_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_SPF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_PPF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_OPF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_MTF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_WODB_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_RC_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_KUP_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
-		fields.add(createArgDef("PIF_SI_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, null));
+		fields.add(createArgDef("PIF_SPF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("1")));
+		fields.add(createArgDef("PIF_PPF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("1")));
+		fields.add(createArgDef("PIF_OPF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("1")));
+		fields.add(createArgDef("PIF_MTF_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("0")));
+		fields.add(createArgDef("PIF_WODB_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("GODB_013")));
+		fields.add(createArgDef("PIF_RC_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("3")));
+		fields.add(createArgDef("PIF_KUP_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("1")));
+		fields.add(createArgDef("PIF_SI_Version", null, Attribute.STRING_TYPE_SHORT_FORM, null, null, null, new Union("1")));
 		return fields;
 	}
 	
-	protected void setPifTaskArgs(TaskInstanceDetails taskInst, String stat, String subSys, String evName, String evSrc,
-			Time evTime, String evId) {
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Status"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(stat)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("RQ_Subsystem"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(subSys)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("EV_Name"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(evName)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("EV_Source"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(evSrc)));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("EV_Time"));
-		taskInst.getArgumentValues().add(new AttributeValue(evTime));
-		
-		taskInst.getArgumentDefNames().add(new Identifier("EV_ID"));
-		taskInst.getArgumentValues().add(new AttributeValue(new Union(evId)));
-	}
-
+	/**
+	 * Creates Start trigger of absolute time.
+	 * @param exec
+	 * @return
+	 */
 	protected TriggerDetailsList createPifTaskTrigger(Time exec) {
 		TriggerDetailsList list = new TriggerDetailsList();
 		list.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(exec)));
 		return list;
 	}
 
+	/**
+	 * Sets some arguments.
+	 * @param prInst
+	 * @param fType
+	 * @param start
+	 * @param fVer
+	 * @param stat
+	 * @param replan
+	 * @return
+	 */
 	protected PlanningRequestInstanceDetails setPifPrArgs1(PlanningRequestInstanceDetails prInst, String fType,
 			Time start, String fVer, String stat, Time replan) {
 		prInst.setArgumentDefNames(new IdentifierList());
@@ -111,6 +102,19 @@ public class PlanIncrementFile extends CommonFile {
 		return prInst;
 	}
 	
+	/**
+	 * Sets some more (version) arguments.
+	 * @param prInst
+	 * @param spf
+	 * @param ppf
+	 * @param opf
+	 * @param mtf
+	 * @param wodb
+	 * @param rc
+	 * @param kup
+	 * @param si
+	 * @return
+	 */
 	protected PlanningRequestInstanceDetails setPifPrArgs2(PlanningRequestInstanceDetails prInst, String spf,
 			String ppf, String opf, String mtf, String wodb, String rc, String kup, String si) {
 		
@@ -140,37 +144,68 @@ public class PlanIncrementFile extends CommonFile {
 		return prInst;
 	}
 
+	/**
+	 * Creates task definition.
+	 * @return
+	 */
 	public TaskDefinitionDetails createTaskDef() {
-		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef(TASK_DEF_NAME, "incremental task");
-		ArgumentDefinitionDetailsList argDefs = createTaskDefArgDefs();
-		setPifTaskDefArgDefs(argDefs);
-		setTaskDefParamDefs(argDefs);
-		argDefs.add(createArgDef("MON_ID", "Monitoring ID", Attribute.INTEGER_TYPE_SHORT_FORM, null, "Raw", "Decimal", null));
+		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("MCEMON", "ENA_MON_ID_PASW v01");
+		ArgumentDefinitionDetailsList argDefs = createSrcDestTypeArgDefs("FDS");
+		setSubsysEventArgDefs(argDefs);
+		setParamsCountArgDef(argDefs);
+		argDefs.add(createArgDef("MON_ID", "Monitoring ID", Attribute.LONG_TYPE_SHORT_FORM, "", "Raw", "Decimal", null));
 		taskDef.setArgumentDefs(argDefs);
 		return taskDef;
 	}
 	
+	/**
+	 * Creates PR definition.
+	 * @param taskDefNames
+	 * @return
+	 */
 	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) {
-		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("goce pif pr def", "plan2");
-		prDef.setArgumentDefs(createPifPrDefArgDefs());
+		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("PIF", "PIF from PIF");
+		prDef.setArgumentDefs(createPifVersionArgDefs());
 		prDef.setTaskDefNames(taskDefNames);
 		return prDef;
 	}
 	
+	/**
+	 * Returns PR instance name.
+	 * @return
+	 */
+	public String getPrName() {
+		return "PIF-1";
+	}
+	
+	/**
+	 * Creates Task instance.
+	 * @return
+	 * @throws ParseException
+	 */
 	public TaskInstanceDetails createTaskInst() throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MCEMON", "ENA_MON_ID_PASW v01", PR_NAME);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MCEMON-1", null, getPrName());
 		taskInst.setTimingConstraints(createPifTaskTrigger(parseTime("UTC=2007-08-31T20:03:23")));
-		setTaskArgs(taskInst, "FDS", "MPS", "Time-tagged sequence");
-		setPifTaskArgs(taskInst, "Enabled", "CDMU_CTR", "MCEMON", "SPF", parseTime("UTC=2008-04-09T15:00:00.000"), "");
-		setTaskParam(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
-		setTaskParam(taskInst, "MON_ID", new AttributeValue(new Union(60000)));
+		setTaskArg(taskInst, "Parent_Event_Name", new AttributeValue(new Union("MCEMON")));
+		setTaskArg(taskInst, "Parent_Event_Source", new AttributeValue(new Union("SPF")));
+		setTaskArg(taskInst, "Parent_Event_Time", new AttributeValue(parseTime("UTC=2008-04-09T15:00:00.000")));
+		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
+		setTaskArg(taskInst, "MON_ID", new AttributeValue(new Union(60000L))); // long
 		return taskInst;
 	}
 	
+	/**
+	 * Creates PR instance.
+	 * @param taskInsts
+	 * @return
+	 * @throws ParseException
+	 */
 	public PlanningRequestInstanceDetails createPrInst(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(PR_NAME, "goce plan 3");
-		setPifPrArgs1(prInst, "FOS plan increment file", parseTime("UTC=2008-04-07T00:00:00"), "2", "GENERATED", null);
-		setPifPrArgs2(prInst, "1", "1", "1", "0", "GODB_013", "3", "1", "1");
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(getPrName(), null);
+		TriggerDetailsList trigs = new TriggerDetailsList();
+		trigs.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(parseTime("UTC=2008-04-07T00:00:00"))));
+		prInst.setTimingConstraints(trigs);
+		setPrArg(prInst, "PIF_Replan_Time", null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

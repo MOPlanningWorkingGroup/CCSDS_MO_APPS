@@ -23,7 +23,6 @@ import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
-import org.ccsds.moims.mo.mal.MALOperation;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Element;
@@ -68,13 +67,11 @@ public final class Dumper {
 
 	private static final String STEP = "  ";
 	private static final String NULL = "null";
-	private static String BROKER = "Broker";
 	
+	/**
+	 * Hidden ctor.
+	 */
 	private Dumper() {
-	}
-	
-	public static void setBroker(String broker) {
-		BROKER = broker;
 	}
 	
 	private static String dumpAttrType(Byte aType) {
@@ -100,6 +97,9 @@ public final class Dumper {
 				break;
 			case Attribute._INTEGER_TYPE_SHORT_FORM:
 				s.append("/Integer");
+				break;
+			case Attribute._LONG_TYPE_SHORT_FORM:
+				s.append("/Long");
 				break;
 			default:
 		}
@@ -179,6 +179,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Task Definitions list.
+	 * @param tdl
+	 * @return
+	 */
 	public static String taskDefs(TaskDefinitionDetailsList tdl) {
 		StringBuilder s = new StringBuilder();
 		if (null != tdl) {
@@ -207,6 +212,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Idenfitiers list.
+	 * @param il
+	 * @return
+	 */
 	public static String names(IdentifierList il) {
 		return dumpNames(il, STEP);
 	}
@@ -284,7 +294,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != rt) {
 			s.append("{ relativeTime=").append(rt.getRelativeTime());
-			s.append(", sign=").append(rt.getSign());
+			s.append(", sign=").append(rt.getSignPositive());
 			s.append(" }");
 		} else {
 			s.append(NULL);
@@ -386,6 +396,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs PR Instance.
+	 * @param pri
+	 * @return
+	 */
 	public static String prInst(PlanningRequestInstanceDetails pri) {
 		return dumpPrInst(pri, STEP);
 	}
@@ -424,6 +439,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs UpdateHeaders list.
+	 * @param uhl
+	 * @return
+	 */
 	public static String updHdrs(UpdateHeaderList uhl) {
 		return dumpUpdHdrs(uhl, STEP);
 	}
@@ -436,6 +456,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Object Types list.
+	 * @param ot
+	 * @return
+	 */
 	public static String objType(ObjectType ot) {
 		StringBuilder s = new StringBuilder();
 		if (null != ot) {
@@ -472,6 +497,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Object Ids list.
+	 * @param oil
+	 * @return
+	 */
 	public static String objIds(ObjectIdList oil) {
 		return dumpObjIds(oil, STEP);
 	}
@@ -554,10 +584,20 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs PR Statuses list.
+	 * @param prsl
+	 * @return
+	 */
 	public static String prStats(PlanningRequestStatusDetailsList prsl) {
 		return dumpPrStats(prsl, STEP);
 	}
 	
+	/**
+	 * Outputs Task Statuses list.
+	 * @param tsl
+	 * @return
+	 */
 	public static String taskStats(TaskStatusDetailsList tsl) {
 		return dumpTaskStats(tsl, STEP);
 	}
@@ -595,6 +635,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs PR BaseDefinitions list.
+	 * @param bdl
+	 * @return
+	 */
 	@SuppressWarnings("rawtypes")
 	public static String baseDefs(BaseDefinitionList bdl) {
 		return dumpBaseDefs(bdl, STEP);
@@ -605,7 +650,7 @@ public final class Dumper {
 		if (null != prr) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prr.getPrInstName())).append(",\n");
-			s.append(ind).append(STEP).append("date=").append(quote(prr.getDate())).append(",\n");
+			s.append(ind).append(STEP).append("timeStamp=").append(quote(prr.getTimestamp())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(prr.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argDefValues=").append(dumpAttrVals(prr.getArgumentValues(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -615,6 +660,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs PR Response list.
+	 * @param prrl
+	 * @return
+	 */
 	public static String prResps(PlanningRequestResponseInstanceDetailsList prrl) {
 		StringBuilder s = new StringBuilder();
 		if (null != prrl) {
@@ -629,59 +679,53 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	private static String dumpMalOp(MALOperation mo) {
-		StringBuilder s = new StringBuilder();
-		if (null != mo) {
-			s.append("{ caps=").append(mo.getCapabilitySet());
-			s.append(" interaction=").append(mo.getInteractionType());
-			s.append(" name=").append(mo.getName());
-			s.append(" number=").append(mo.getNumber());
-			s.append(" service=").append(mo.getService());
-			s.append(" }");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
-	public static String malInt(MALInteraction mi) {
-		StringBuilder s = new StringBuilder();
-		if (null != mi) {
-			s.append("{ msgHdr=").append(mi.getMessageHeader());
-			s.append(" op=").append(dumpMalOp(mi.getOperation()));
-			s.append(" }");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
+	/**
+	 * Outputs message transmission source.
+	 * @param mmg
+	 * @return
+	 */
 	public static String msgFrom(MALMessageHeader mmg) {
 		String f = mmg.getURIFrom().getValue();
 		int i = f.indexOf('-');
 		return f.substring(i+1);
 	}
 	
+	/**
+	 * Outputs message transmission target.
+	 * @param mmh
+	 * @return
+	 */
 	public static String msgTo(MALMessageHeader mmh) {
 		String t = mmh.getURITo().getValue();
 		int i = t.indexOf('-'); // works for RMI
 		return t.substring(i+1);
 	}
 	
+	/**
+	 * Outputs message transmission "from -> to".
+	 * @param mi
+	 * @return
+	 */
 	public static String received(MALInteraction mi) {
 		return msgFrom(mi.getMessageHeader()) + " -> " + msgTo(mi.getMessageHeader());
 	}
 	
+	/**
+	 * Outputs message transmission "to <- from".
+	 * @param mi
+	 * @return
+	 */
 	public static String sending(MALInteraction mi) {
 		return msgFrom(mi.getMessageHeader()) + " <- " + msgTo(mi.getMessageHeader());
 	}
 	
-	public static String toBroker(MALInteraction mi) {
-		return BROKER + " <- " + msgTo(mi.getMessageHeader());
-	}
-	
-	public static String fromBroker(MALMessageHeader mmh) {
-		return BROKER + " -> " + msgTo(mmh);
+	/**
+	 * Outputs message transmission "broker -> receiver".
+	 * @param mmh
+	 * @return
+	 */
+	public static String fromBroker(String broker, MALMessageHeader mmh) {
+		return broker + " -> " + msgTo(mmh);
 	}
 	
 	private static String dumpEventTypes(ObjectTypeList otl, String ind) {
@@ -727,6 +771,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Schedule Definition.
+	 * @param sdl
+	 * @return
+	 */
 	public static String schDefs(ScheduleDefinitionDetailsList sdl) {
 		return dumpSchDefs(sdl, STEP);
 	}
@@ -775,6 +824,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Schedule Instance.
+	 * @param si
+	 * @return
+	 */
 	public static String schInst(ScheduleInstanceDetails si) {
 		return dumpSchInst(si, STEP);
 	}
@@ -834,6 +888,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs ScheduleStatuses list.
+	 * @param ssl
+	 * @return
+	 */
 	public static String schStats(ScheduleStatusDetailsList ssl) {
 		return dumpSchStats(ssl, STEP);
 	}
@@ -910,6 +969,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Schedule Patch Operations.
+	 * @param spo
+	 * @return
+	 */
 	public static String schPatchOp(SchedulePatchOperations spo) {
 		return dumpSchPatchOp(spo, STEP);
 	}
@@ -942,6 +1006,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs Archive Details list.
+	 * @param adl
+	 * @return
+	 */
 	public static String arcDets(ArchiveDetailsList adl) {
 		return dumpArcDets(adl, STEP);
 	}
@@ -975,6 +1044,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs ElementList - List of TaskInstances, PlanningRequestInstances or ScheduleInstances.
+	 * @param el
+	 * @return
+	 */
 	@SuppressWarnings("rawtypes")
 	public static String els(ElementList el) {
 		return dumpEls(el, STEP);

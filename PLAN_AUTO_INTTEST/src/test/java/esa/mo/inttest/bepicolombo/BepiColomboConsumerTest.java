@@ -1,4 +1,4 @@
-package esa.mo.inttest.goce;
+package esa.mo.inttest.bepicolombo;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -15,34 +15,29 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import esa.mo.inttest.DemoUtils;
-import esa.mo.inttest.goce.GoceConsumer;
+import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
-import esa.mo.inttest.sch.consumer.ScheduleConsumerFactory;
-import esa.mo.inttest.sch.provider.ScheduleProviderFactory;
 
-/**
- * GOCE consumer test. Tests four GOCE example files using provider stub.
- */
-public class GoceConsumerTest {
+public class BepiColomboConsumerTest {
 
 	private static final String PR_PROV = "PrProvider";
-	private static final String CLIENT1 = "GoceUser";
-	private static final String SCH_PROV = "SchProvider";
-	private static final String CLIENT2 = "GoceUser2";
+	private static final String CLIENT1 = "BepiUser";
+//	private static final String SCH_PROV = "SchProvider";
+//	private static final String CLIENT2 = "GoceUser2";
 	
 	private PlanningRequestProviderFactory prProvFct;
 	private PlanningRequestConsumerFactory prConsFct;
-	private ScheduleProviderFactory schProvFct;
-	private ScheduleConsumerFactory schConsFct;
+//	private ScheduleProviderFactory schProvFct;
+//	private ScheduleConsumerFactory schConsFct;
 	
-	private GoceConsumer goce;
+	private BepiColomboConsumer bepi;
 	
 	private static boolean log2file = false;
 	private static List<Handler> files = null;
-	
+
 	@BeforeClass
-	public static void setUpClass() throws Exception {
+	public static void setUpBeforeClass() throws Exception {
 		// use maven profile "gen-log-files" to turn logging to files on
 		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
@@ -50,18 +45,18 @@ public class GoceConsumerTest {
 			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
 			files = new ArrayList<Handler>();
-			String path = ".\\target\\demo_logs\\goce\\";
+			String path = ".\\target\\demo_logs\\bepicolombo\\";
 			files.add(DemoUtils.createHandler(PR_PROV, path));
 			files.add(DemoUtils.createHandler(CLIENT1, path));
-			files.add(DemoUtils.createHandler(SCH_PROV, path));
+//			files.add(DemoUtils.createHandler(SCH_PROV, path));
 			for (Handler h: files) {
 				Logger.getLogger("").addHandler(h);
 			}
 		}
 	}
-	
+
 	@AfterClass
-	public static void tearDownClass() throws Exception {
+	public static void tearDownAfterClass() throws Exception {
 		if (log2file) {
 			for (Handler h: files) {
 				Logger.getLogger("").removeHandler(h);
@@ -77,30 +72,30 @@ public class GoceConsumerTest {
 		prProvFct.setPropertyFile(props);
 		prProvFct.start(PR_PROV);
 		
-		schProvFct = new ScheduleProviderFactory();
-		schProvFct.setPropertyFile(props);
-		schProvFct.setBrokerUri(prProvFct.getBrokerUri());
-		schProvFct.start(SCH_PROV);
+//		schProvFct = new ScheduleProviderFactory();
+//		schProvFct.setPropertyFile(props);
+//		schProvFct.setBrokerUri(prProvFct.getBrokerUri());
+//		schProvFct.start(SCH_PROV);
 		
 		prConsFct = new PlanningRequestConsumerFactory();
 		prConsFct.setPropertyFile(props);
 		prConsFct.setProviderUri(prProvFct.getProviderUri());
 		prConsFct.setBrokerUri(prProvFct.getBrokerUri());
 		
-		schConsFct = new ScheduleConsumerFactory();
-		schConsFct.setPropertyFile(props);
-		schConsFct.setProviderUri(schProvFct.getProviderUri());
-		schConsFct.setBrokerUri(prProvFct.getBrokerUri());
+//		schConsFct = new ScheduleConsumerFactory();
+//		schConsFct.setPropertyFile(props);
+//		schConsFct.setProviderUri(schProvFct.getProviderUri());
+//		schConsFct.setBrokerUri(prProvFct.getBrokerUri());
 		
-		goce = new GoceConsumer(prConsFct.start(CLIENT1), schConsFct.start(CLIENT2));
+		bepi = new BepiColomboConsumer(new PlanningRequestConsumer(prConsFct.start(CLIENT1)/*, schConsFct.start(CLIENT2)*/));
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		if (prConsFct != null) {
-			prConsFct.stop(goce.getPrStub());
+			prConsFct.stop(bepi.getConsumer().getStub());
 		}
-		goce = null;
+		bepi = null;
 		prConsFct = null;
 		
 		if (prProvFct != null) {
@@ -110,27 +105,8 @@ public class GoceConsumerTest {
 	}
 
 	@Test
-	public void testPpf() throws MALException, MALInteractionException, ParseException {
-		goce.ppf();
+	public void testCrf() throws MALException, MALInteractionException, ParseException {
+		bepi.crf();
 	}
 
-	@Test
-	public void testPif() throws MALException, MALInteractionException, ParseException {
-		goce.pif();
-	}
-
-	@Test
-	public void testSpf() throws MALException, MALInteractionException, ParseException {
-		goce.spf();
-	}
-
-	@Test
-	public void testOpf() throws MALException, MALInteractionException, ParseException {
-		goce.opf();
-	}
-
-	@Test
-	public void testSist() throws MALException, MALInteractionException, ParseException {
-		goce.sist();
-	}
 }

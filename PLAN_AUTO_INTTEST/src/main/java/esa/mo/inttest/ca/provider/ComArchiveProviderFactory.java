@@ -35,6 +35,11 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 		brokerUri = broker;
 	}
 	
+	/**
+	 * Creates a provider.
+	 * @param name
+	 * @throws MALException
+	 */
 	private void initProvider(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
 		

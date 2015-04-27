@@ -6,6 +6,9 @@ import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.structures.ElementList;
 
+/**
+ * Verification and validation methods for Com Archive.
+ */
 public class Check {
 
 	/**
@@ -14,12 +17,23 @@ public class Check {
 	private Check() {
 	}
 	
+	/**
+	 * Verify that ObjectType is not null.
+	 * @param ot
+	 * @throws MALException
+	 */
 	public static void objType(ObjectType ot) throws MALException {
 		if (null == ot) {
 			throw new MALException("object type is null");
 		}
 	}
 	
+	/**
+	 * Verify that both lists are not null and have equal number of elements.
+	 * @param objDetails
+	 * @param objBodies
+	 * @throws MALException
+	 */
 	@SuppressWarnings("rawtypes")
 	public static void objects(ArchiveDetailsList objDetails, ElementList objBodies) throws MALException {
 		if (null == objDetails) {
@@ -36,6 +50,11 @@ public class Check {
 		}
 	}
 	
+	/**
+	 * Verify that QueryInteraction is not null.
+	 * @param qa
+	 * @throws MALException
+	 */
 	public static void queryInteract(QueryInteraction qa) throws MALException {
 		if (null == qa) {
 			throw new MALException("query interaction is null");

@@ -23,63 +23,66 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
  */
 public class PayloadPlanningFile extends CommonFile {
 
-	protected static final String TASK_DEF_NAME = "goce ppf task def";
-	protected static final String PR_DEF_NAME = "goce ppf pr def";
-	protected static final String PR_NAME_1 = "goce ppf pr inst 1";
-	protected static final String PR_NAME_2 = "goce ppf pr inst 2";
+	private static final String[] TASK_DEF_NAMES = { "MSDDIA_B", "MSEDIA_A" };
+	private static final String[] TASK_DEF_DESCS = { "Disable_SSTI-B_Diag v01", "Enable_SSTI-A_Diag v01" };
+	private static final String[] TASK_TIMES = { "UTC=2007-08-31T19:53:23", "UTC=2007-08-31T20:03:23" };
 	
-	public String getTaskDefName() {
-		return TASK_DEF_NAME;
+	protected String getTaskDefName(int idx) {
+		return TASK_DEF_NAMES[idx];
 	}
 	
-	public String getPrDefName() {
-		return PR_DEF_NAME;
+	protected String getTaskDefDesc(int idx) {
+		return TASK_DEF_DESCS[idx];
 	}
 	
-	public TaskDefinitionDetails createTaskDef() throws MALException, MALInteractionException {
-		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef(TASK_DEF_NAME, "payload task");
-		ArgumentDefinitionDetailsList argDefs = createTaskDefArgDefs();
-		setTaskDefParamDefs(argDefs);
-		argDefs.add(createArgDef("SID", "SID", Attribute.INTEGER_TYPE_SHORT_FORM, null, "Raw", "Decimal", null));
+	public TaskDefinitionDetails createTaskDef(int idx) throws MALException, MALInteractionException {
+		String taskDefName = getTaskDefName(idx);
+		String taskDefDesc = getTaskDefDesc(idx);
+		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef(taskDefName, taskDefDesc);
+		ArgumentDefinitionDetailsList argDefs = createSrcDestTypeArgDefs("RPF");
+		setParamsCountArgDef(argDefs);
+		argDefs.add(createArgDef("SID", "SID", Attribute.LONG_TYPE_SHORT_FORM, "", "Raw", "Decimal", null));
 		taskDef.setArgumentDefs(argDefs);
 		return taskDef;
 	}
 	
+	protected String getPrDefName() {
+		return "PPF-PR-Def";
+	}
+	
 	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) throws MALException, MALInteractionException {
-		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef(PR_DEF_NAME, "payload pr");
-		prDef.setArgumentDefs(createPrDefArgDefs());
+		String prDefName = getPrDefName();
+		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef(prDefName, "EVRQ from PPF");
 		prDef.setTaskDefNames(taskDefNames);
 		return prDef;
 	}
 	
-	public TaskInstanceDetails createTaskInst1() throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MSDDIA_B", "Disable_SSTI-B_Diag v01", PR_NAME_1);
-		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime("UTC=2007-08-31T19:53:23")));
-		setTaskArgs(taskInst, "RPF", "MPS", "Time-tagged sequence");
-		setTaskParam(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
-		setTaskParam(taskInst, "SID", new AttributeValue(new Union(32)));
+	protected String getTaskInstName(int idx) {
+		return TASK_DEF_NAMES[idx] + "-1";
+	}
+	
+	protected String getPrInstName(int idx) {
+		return "PPF-PR-" + (idx+1);
+	}
+	
+	protected String getTaskTime(int idx) {
+		return TASK_TIMES[idx];
+	}
+	
+	public TaskInstanceDetails createTaskInst(int idx) throws ParseException {
+		String taskName = getTaskInstName(idx);
+		String prName = getPrInstName(idx);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(taskName, null, prName);
+		String taskTime = getTaskTime(idx);
+		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime(taskTime)));
+		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
+		setTaskArg(taskInst, "SID", new AttributeValue(new Union(32L))); // long
 		return taskInst;
 	}
 	
-	public TaskInstanceDetails createTaskInst2() throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MSEDIA_A", "Enable_SSTI-A_Diag v01", PR_NAME_2);
-		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime("UTC=2007-08-31T20:03:23")));
-		setTaskArgs(taskInst, "RPF", "MPS", "Time-tagged sequence");
-		setTaskParam(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
-		setTaskParam(taskInst, "SID", new AttributeValue(new Union(32)));
-		return taskInst;
-	}
-	
-	public PlanningRequestInstanceDetails createPrInst1(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(PR_NAME_1, "goce ppf pr 1");
-		setPrArgs(prInst, parseTime("UTC=2007-08-31T19:53:23"), "Request", "");
-		prInst.setTasks(taskInsts);
-		return prInst;
-	}
-	
-	public PlanningRequestInstanceDetails createPrInst2(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(PR_NAME_2, "goce ppf pr 2");
-		setPrArgs(prInst, parseTime("UTC=2007-08-31T20:02:23"), "Request", "");
+	public PlanningRequestInstanceDetails createPrInst(int idx, TaskInstanceDetailsList taskInsts) throws ParseException {
+		String prName = getPrInstName(idx);
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prName, null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

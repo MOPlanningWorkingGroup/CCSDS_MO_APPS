@@ -47,6 +47,11 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		brokerUri = broker;
 	}
 	
+	/**
+	 * Creates Service.
+	 * @param name
+	 * @throws MALException
+	 */
 	private void initProvider(String name) throws MALException {
 		LOG.entering(getClass().getName(), "initProvider");
 		
@@ -63,6 +68,8 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		malProv = malProvMgr.createProvider(provName, proto, PlanningRequestHelper.PLANNINGREQUEST_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
 		
+		prov.setUri(malProv.getURI());
+		
 		// testing support
 		testProv = new PlanningRequestTestSupportProvider();
 		testProv.setProvider(prov);
@@ -76,6 +83,11 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		LOG.exiting(getClass().getName(), "initProvider");
 	}
 
+	/**
+	 * Creates Task publisher and registers it.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	private void initTaskPublisher() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "initTaskPublicher");
 		
@@ -98,6 +110,11 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		LOG.exiting(getClass().getName(), "initTaskPublisher");
 	}
 
+	/**
+	 * Creates PR publisher and registers it.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	private void initPrPublisher() throws MALException, MALInteractionException {
 		LOG.entering(getClass().getName(), "initPrPublisher");
 		
@@ -140,7 +157,16 @@ public class PlanningRequestProviderFactory extends PlanningRequestFactory {
 		
 		LOG.exiting(getClass().getName(), "start");
 	}
-
+	
+	/**
+	 * Sets plugin to use to provider.
+	 * @param p
+	 */
+	public void setPlugin(Plugin p) {
+		p.setProv(prov);
+		prov.setPlugin(p);
+	}
+	
 	/**
 	 * Returns provider URI for consumer to connect to.
 	 * @return

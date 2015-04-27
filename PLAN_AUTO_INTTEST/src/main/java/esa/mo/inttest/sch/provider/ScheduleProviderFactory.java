@@ -62,6 +62,8 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 		malProv = malProvMgr.createProvider(provName, proto, ScheduleHelper.SCHEDULE_SERVICE,
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
 		
+		prov.setUri(malProv.getURI());
+		
 		// testing support
 		testProv = new ScheduleTestSupportProvider();
 		testProv.setProvider(prov);

@@ -16,25 +16,20 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsLi
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
-import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
-import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.URI;
-import org.ccsds.moims.mo.mal.structures.UShort;
-import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
-import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
-import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 
 import esa.mo.inttest.Dumper;
+import esa.mo.inttest.Util;
 import esa.mo.inttest.sch.provider.InstStore.Item;
 
 /**
@@ -48,6 +43,8 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private DefStore schDefs = new DefStore();
 	private InstStore schInsts = new InstStore();
 	private MonitorSchedulesPublisher schPub = null;
+	private URI uri = null;
+	
 	
 	/**
 	 * Default ctor.
@@ -65,6 +62,14 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	}
 	
 	/**
+	 * Set Uri to use.
+	 * @param u
+	 */
+	public void setUri(URI u) {
+		uri = u;
+	}
+	
+	/**
 	 * Set Schedules publisher to use.
 	 * @param pub
 	 */
@@ -76,28 +81,10 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		return schInsts;
 	}
 	
-	private StatusRecordList addOrUpdate(StatusRecordList srl, InstanceState state, Time time, String comm) {
-		StatusRecordList list = (null != srl) ? srl : new StatusRecordList();
-		StatusRecord sr = null;
-		for (int i = 0; (null == sr) && (i < list.size()); ++i) {
-			if (list.get(i).getState() == state) {
-				sr = list.get(i);
-			}
-		}
-		if (null == sr) {
-			sr = new StatusRecord(state, time, comm);
-			list.add(sr);
-		} else {
-			sr.setTimeStamp(time);
-			sr.setComment(comm);
-		}
-		return list;
-	}
-	
 	private ScheduleStatusDetails createStat(ScheduleInstanceDetails inst) {
 		ScheduleStatusDetails stat = new ScheduleStatusDetails();
 		stat.setScheduleInstName(inst.getName());
-		stat.setStatus(addOrUpdate(stat.getStatus(), InstanceState.LAST_MODIFIED,
+		stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.LAST_MODIFIED,
 				new Time(System.currentTimeMillis()), "created"));
 		stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList()); // mandatory
 		return stat;
@@ -106,45 +93,22 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private ScheduleItemStatusDetails createItemStat(ScheduleItemInstanceDetails inst) {
 		ScheduleItemStatusDetails stat = new ScheduleItemStatusDetails();
 		stat.setScheduleItemInstName(inst.getScheduleItemInstName());
-		stat.setStatus(addOrUpdate(stat.getStatus(), InstanceState.LAST_MODIFIED,
+		stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.LAST_MODIFIED,
 				new Time(System.currentTimeMillis()), "created"));
 		return stat;
 	}
 	
-	private UpdateHeader createUpdateHeader(UpdateType ut) {
-		EntityKey ek = new EntityKey();
-		ek.setFirstSubKey(new Identifier("*"));
-		ek.setSecondSubKey(0L);
-		ek.setThirdSubKey(0L);
-		ek.setFourthSubKey(0L);
-		URI srcUri = new URI("uri://provider");
-		UpdateHeader uh = new UpdateHeader();
-		uh.setKey(ek);
-		uh.setSourceURI(srcUri);
-		uh.setTimestamp(new Time(System.currentTimeMillis()));
-		uh.setUpdateType(ut);
-		return uh;
-	}
-	
 	private ObjectId createObjId(Long id) {
-		ObjectKey ok = new ObjectKey();
-		ok.setDomain(domain); // mandatory
-		ok.setInstId(id);
-		ObjectType ot = new ObjectType();
-		ot.setArea(ScheduleInstanceDetails.AREA_SHORT_FORM);
-		ot.setNumber(new UShort(ScheduleInstanceDetails.TYPE_SHORT_FORM));
-		ot.setService(ScheduleInstanceDetails.SERVICE_SHORT_FORM);
-		ot.setVersion(ScheduleInstanceDetails.AREA_VERSION);
 		ObjectId oi = new ObjectId();
-		oi.setKey(ok);
-		oi.setType(ot);
+		oi.setKey(new ObjectKey(domain, id));
+		oi.setType(Util.createObjType(new ScheduleInstanceDetails()));
 		return oi;
 	}
 	
 	protected void publish(UpdateType ut, Long instId, ScheduleStatusDetails stat) throws MALException, MALInteractionException {
 		if (null != schPub) {
 			UpdateHeaderList updHdrs = new UpdateHeaderList();
-			updHdrs.add(createUpdateHeader(ut));
+			updHdrs.add(Util.createUpdateHeader(ut, uri));
 			ObjectIdList objIds = new ObjectIdList();
 			objIds.add(createObjId(instId));
 			ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
@@ -203,7 +167,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			throw new MALException("schedule instance is null");
 		}
 		ScheduleStatusDetails schStat = schInsts.update(schInstId, schInst);
-		schStat.setStatus(addOrUpdate(schStat.getStatus(), InstanceState.LAST_MODIFIED,
+		schStat.setStatus(Util.addOrUpdateStatus(schStat.getStatus(), InstanceState.LAST_MODIFIED,
 				new Time(System.currentTimeMillis()), "modified"));
 		// keep it simple - delete old item statuses and create new ones
 		schStat.getScheduleItemStatuses().clear();
@@ -228,11 +192,11 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			throw new MALException("schedule instance id is null");
 		}
 		ScheduleStatusDetails schStat = schInsts.remove(schInstId);
-		schStat.setStatus(addOrUpdate(schStat.getStatus(), InstanceState.LAST_MODIFIED,
+		schStat.setStatus(Util.addOrUpdateStatus(schStat.getStatus(), InstanceState.LAST_MODIFIED,
 				new Time(System.currentTimeMillis()), "deleted"));
 		for (int i = 0; (null != schStat.getScheduleItemStatuses()) && (i < schStat.getScheduleItemStatuses().size()); ++i) {
 			ScheduleItemStatusDetails schItemStat = schStat.getScheduleItemStatuses().get(i);
-			schItemStat.setStatus(addOrUpdate(schItemStat.getStatus(), InstanceState.LAST_MODIFIED,
+			schItemStat.setStatus(Util.addOrUpdateStatus(schItemStat.getStatus(), InstanceState.LAST_MODIFIED,
 					new Time(System.currentTimeMillis()), "deleted"));
 		}
 		publish(UpdateType.DELETION, schInstId, schStat);
@@ -300,7 +264,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(addOrUpdate(it.stat.getStatus(), InstanceState.DISTRIBUTED_FOR_EXECUTION,
+			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.DISTRIBUTED_FOR_EXECUTION,
 					new Time(System.currentTimeMillis()), "started"));
 			publish(UpdateType.UPDATE, id, it.stat);
 		}
@@ -333,7 +297,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(addOrUpdate(it.stat.getStatus(), InstanceState.PLANNED,
+			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.PLANNED,
 					new Time(System.currentTimeMillis()), "paused"));
 			publish(UpdateType.UPDATE, id, it.stat);
 		}
@@ -366,7 +330,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(addOrUpdate(it.stat.getStatus(), InstanceState.SCHEDULED,
+			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.SCHEDULED,
 					new Time(System.currentTimeMillis()), "resumed"));
 			publish(UpdateType.UPDATE, id, it.stat);
 		}
@@ -399,7 +363,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(addOrUpdate(it.stat.getStatus(), InstanceState.INVALID,
+			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.INVALID,
 					new Time(System.currentTimeMillis()), "terminated"));
 			publish(UpdateType.UPDATE, id, it.stat);
 		}

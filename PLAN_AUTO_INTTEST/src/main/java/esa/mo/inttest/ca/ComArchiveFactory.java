@@ -14,6 +14,10 @@ import esa.mo.inttest.FactoryBase;
  */
 public abstract class ComArchiveFactory extends FactoryBase {
 
+	/**
+	 * Implements Helper(s) initialization for Service.
+	 * @see esa.mo.inttest.FactoryBase#initHelpers()
+	 */
 	protected void initHelpers() throws MALException {
 		MALService tmp = COMHelper.COM_AREA.getServiceByName(ArchiveHelper.ARCHIVE_SERVICE_NAME);
 		if (tmp == null) {

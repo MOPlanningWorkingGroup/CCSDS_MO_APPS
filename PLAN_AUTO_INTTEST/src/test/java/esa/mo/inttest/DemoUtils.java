@@ -1,8 +1,10 @@
 package esa.mo.inttest;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Paths;
 import java.util.logging.FileHandler;
 import java.util.logging.Filter;
 import java.util.logging.Level;
@@ -30,27 +32,39 @@ public class DemoUtils {
 		public DemoFilter(String n) {
 			name = n;
 		}
-
-		/**
-		 * Does LogRecord contain a specific name?
-		 * 
-		 * @param s
-		 * @return
-		 */
-		protected boolean hasName(String s) {
-			boolean doLog = false;
-			int i = (null != s) ? s.indexOf(name) : -1;
-			if (-1 != i && name.length() >= s.length()) {
-				i = -2; // matches and not long enough to check suffix
+		
+		protected int hasSuffix(String s, int at) {
+			int r = at + name.length();
+			if (r < s.length()) {
+				char ch = s.charAt(r);
+				if (!Character.isDigit(ch)) {
+					r = -1;
+				}
+			} else {
+				r = -1;
 			}
-			int ch = (0 <= i) ? s.charAt(name.length()) : -1;
-			// include "PrProvider", but exclude "PrProvider0"
-			if (-1 != ch && '0' != ch && '1' != ch) {
-				doLog = true;
-			}
-			return doLog;
+			return r;
 		}
-
+		
+		protected String findAndReplace(String s) {
+			int at = (null != s) ? s.indexOf(name) : -1;
+			String z = null;
+			if (-1 != at) {
+				int suf = hasSuffix(s, at);
+				if (-1 != suf) {
+					char ch = s.charAt(suf);
+					if ('0' == ch || '1' == ch) { // exclude
+					} else { // replace
+						StringBuilder b = new StringBuilder(s);
+						b.replace(suf, suf+1, "");
+						z = b.toString();
+					}
+				} else { // found, no replace
+					z = s;
+				}
+			}
+			return z;
+		}
 		/**
 		 * Overrides isLoggable() for additional filtering.
 		 * 
@@ -60,12 +74,15 @@ public class DemoUtils {
 		public boolean isLoggable(LogRecord record) {
 			boolean doLog = false;
 			// "message" is format string with {}
-			for (int j = 0; (null != record.getParameters()) && (j < record.getParameters().length); ++j) {
-				Object o = record.getParameters()[j];
-				if (o instanceof String) {
-					String s = (String) o;
-					if (hasName(s)) {
+			Object[] p = record.getParameters();
+			for (int j = 0; (null != p) && (j < p.length); ++j) {
+				if ((null != p[j]) && (p[j] instanceof String)) {
+					String z = findAndReplace((String)p[j]);
+					if (null != z) {
 						doLog = true;
+						if (!z.equals(p[j])) {
+							p[j] = z;
+						}
 						break;
 					}
 				}
@@ -123,6 +140,17 @@ public class DemoUtils {
 	}
 
 	/**
+	 * Is log2file property set?
+	 * @return
+	 */
+	public static boolean getLogFlag() {
+		String val = System.getProperty("log2file");
+		boolean doLog = (null != val) && "true".equalsIgnoreCase(val);
+		System.out.println("writing to log files is turned on: "+doLog);
+		return doLog;
+	}
+	
+	/**
 	 * Set less spammy Logger levels for MAL classes.
 	 */
 	public static void setLevels() {
@@ -135,13 +163,24 @@ public class DemoUtils {
 	/**
 	 * Set additional handlers to logging to files.
 	 * 
-	 * @param n
+	 * @param name
+	 * @param path
 	 * @return
 	 * @throws IOException
 	 */
-	public static FileHandler createHandler(final String n) throws IOException {
-		FileHandler fh = new FileHandler(n + ".log");
-		fh.setFilter(new DemoFilter(n));
+	public static FileHandler createHandler(final String name, final String path) throws IOException {
+		String fn = name;
+		if (null != path) {
+			fn = path + name;
+			File folder = Paths.get(fn).getParent().toFile();
+			if (folder.exists() && folder.isDirectory()) {
+				// ok
+			} else {
+				folder.mkdirs();
+			}
+		}
+		FileHandler fh = new FileHandler(fn + ".log");
+		fh.setFilter(new DemoFilter(name));
 		fh.setFormatter(new DemoFormatter());
 		return fh;
 	}

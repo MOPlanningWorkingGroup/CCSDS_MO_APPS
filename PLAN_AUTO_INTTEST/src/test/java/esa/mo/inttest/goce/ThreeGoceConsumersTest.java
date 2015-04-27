@@ -30,7 +30,6 @@ import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
-import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
@@ -73,7 +72,7 @@ public class ThreeGoceConsumersTest {
 			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(subId={0}, List:updateHeaders, " +
 					"List:objectIds, List:prStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  prStatuses[]={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
-					Dumper.fromBroker(msgHdr) });
+					"PrProvider -> "+Dumper.fromBroker("PrProvider", msgHdr) });
 			this.prStats = prStats;
 		}
 		
@@ -82,15 +81,7 @@ public class ThreeGoceConsumersTest {
 		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error,
 				Map qosProps) {
 			LOG.log(Level.INFO, "{1}.monitorPlanningRequestsNotifyErrorReceived(error={0})",
-					new Object[] { error, Dumper.fromBroker(msgHdr) });
-		}
-		
-		@SuppressWarnings("rawtypes")
-		@Override
-		public void notifyReceivedFromOtherService(MALMessageHeader msgHdr, MALNotifyBody body, Map qosProps)
-				throws MALException {
-			LOG.log(Level.INFO, "{1}.notifyReceivedFromOtherService(body={0})",
-					new Object[] { body, Dumper.fromBroker(msgHdr) });
+					new Object[] { error, Dumper.fromBroker("PrProvider", msgHdr) });
 		}
 	}
 
@@ -108,7 +99,7 @@ public class ThreeGoceConsumersTest {
 			LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(subId={0}, List:updateHeaders, " +
 				"List:objectIds, List:taskStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  taskStatuses[]={3}",
 				new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
-				Dumper.fromBroker(msgHdr) });
+				Dumper.fromBroker("PrProvider", msgHdr) });
 			this.taskStats = taskStats;
 		}
 		
@@ -116,15 +107,7 @@ public class ThreeGoceConsumersTest {
 		@Override
 		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error, Map qosProps) {
 			LOG.log(Level.INFO, "{1}.monitorTasksNotifyErrorReceived(error={0})",
-					new Object[] { error, Dumper.fromBroker(msgHdr) });
-		}
-		
-		@SuppressWarnings("rawtypes")
-		@Override
-		public void notifyReceivedFromOtherService(MALMessageHeader msgHdr, MALNotifyBody body, Map qosProps)
-				throws MALException {
-			LOG.log(Level.INFO, "{1}.notifyReceivedFromOtherService(body={0})",
-					new Object[] { body, Dumper.fromBroker(msgHdr) });
+					new Object[] { error, Dumper.fromBroker("PrProvider", msgHdr) });
 		}
 	}
 
@@ -425,7 +408,6 @@ public class ThreeGoceConsumersTest {
 	private static final Logger LOG = Logger.getLogger(ThreeGoceConsumersTest.class.getName());
 	
 	private static final String PROVIDER = "PrProvider";
-	private static final String BROKER = PROVIDER; // label broker as provider since it's part of provider
 	private static final String CLIENT1 = "PrPowerUser";
 	private static final String CLIENT2 = "PrNormalUser";
 	private static final String CLIENT3 = "PrMonitorUser";
@@ -447,19 +429,17 @@ public class ThreeGoceConsumersTest {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		// use maven profile "gen-log-files" to turn logging to files on
-		String val = System.getProperty("log2file");
-		log2file = (null != val) && "true".equalsIgnoreCase(val);
-		System.out.println("writing to log files is turned on: "+log2file);
+		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
-			Dumper.setBroker(BROKER);
 			// trim down log spam
 			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
 			files = new ArrayList<Handler>();
-			files.add(DemoUtils.createHandler(CLIENT1));
-			files.add(DemoUtils.createHandler(CLIENT2));
-			files.add(DemoUtils.createHandler(CLIENT3));
-			files.add(DemoUtils.createHandler(PROVIDER));
+			String path = ".\\target\\demo_logs\\pr\\";
+			files.add(DemoUtils.createHandler(CLIENT1, path));
+			files.add(DemoUtils.createHandler(CLIENT2, path));
+			files.add(DemoUtils.createHandler(CLIENT3, path));
+			files.add(DemoUtils.createHandler(PROVIDER, path));
 			for (Handler h: files) {
 				Logger.getLogger("").addHandler(h);
 			}
@@ -472,7 +452,6 @@ public class ThreeGoceConsumersTest {
 			for (Handler h: files) {
 				Logger.getLogger("").removeHandler(h);
 			}
-			Dumper.setBroker("Broker");
 		}
 	}
 	
@@ -491,9 +470,9 @@ public class ThreeGoceConsumersTest {
 		consFct.setBrokerUri(provFct.getBrokerUri());
 		consFct.setTestProviderUri(provFct.getTestProviderUri()); // testSupport connection
 		
-		goce1 = new GoceConsumer(consFct.start(CLIENT1)); // start a new instance of consumer
-		goce2 = new GoceConsumer(consFct.start(CLIENT2));
-		goce3 = new GoceConsumer(consFct.start(CLIENT3));
+		goce1 = new GoceConsumer(consFct.start(CLIENT1), null); // start a new instance of consumer
+		goce2 = new GoceConsumer(consFct.start(CLIENT2), null);
+		goce3 = new GoceConsumer(consFct.start(CLIENT3), null);
 		
 		procTestProv = consFct.startTest(PROVIDER+"0"); // cons/prov names need to be unique within RMI
 		procProv = consFct.start(PROVIDER+"1");
@@ -507,9 +486,9 @@ public class ThreeGoceConsumersTest {
 		if (consFct != null) {
 			consFct.stop(procProv);
 			consFct.stopTest(procTestProv);
-			consFct.stop(goce3.getStub());
-			consFct.stop(goce2.getStub());
-			consFct.stop(goce1.getStub());
+			consFct.stop(goce3.getPrStub());
+			consFct.stop(goce2.getPrStub());
+			consFct.stop(goce1.getPrStub());
 		}
 		goce3 = null;
 		goce2 = null;
@@ -565,16 +544,16 @@ public class ThreeGoceConsumersTest {
 		String taskSubId = "prCons3taskSubId";
 		TaskMonitor taskMon = new TaskMonitor();
 		LOG.log(Level.INFO, "{1}.monitorTasksRegister(subId={0})",
-				new Object[] { taskSubId, CLIENT3+" -> "+BROKER });
-		goce3.getStub().monitorTasksRegister(createSub(taskSubId), taskMon);
-		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT3+" <- "+BROKER);
+				new Object[] { taskSubId, CLIENT3+" -> "+PROVIDER });
+		goce3.getPrStub().monitorTasksRegister(createSub(taskSubId), taskMon);
+		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT3+" <- "+PROVIDER);
 		
 		String prSubId = "prCons3prSubId";
 		PrMonitor prMon = new PrMonitor();
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsRegister(subId={0})",
-				new Object[] { prSubId, CLIENT3+" -> "+BROKER });
-		goce3.getStub().monitorPlanningRequestsRegister(createSub(prSubId), prMon);
-		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing", CLIENT3+" <- "+BROKER);
+				new Object[] { prSubId, CLIENT3+" -> "+PROVIDER });
+		goce3.getPrStub().monitorPlanningRequestsRegister(createSub(prSubId), prMon);
+		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing", CLIENT3+" <- "+PROVIDER);
 		
 		// processor/worker3 monitors and changes task and pr statuses
 		Processor proc = new Processor(procTestProv, procProv);
@@ -624,17 +603,17 @@ public class ThreeGoceConsumersTest {
 		prSubs.clear();
 		prSubs.add(new Identifier(prSubId));
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsDeregister(subId={0})",
-				new Object[] { prSubId, CLIENT3+" -> "+BROKER });
-		goce3.getStub().monitorPlanningRequestsDeregister(prSubs);
+				new Object[] { prSubId, CLIENT3+" -> "+PROVIDER });
+		goce3.getPrStub().monitorPlanningRequestsDeregister(prSubs);
 		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsDeregister() response: returning nothing",
-				CLIENT3+" <- "+BROKER);
+				CLIENT3+" <- "+PROVIDER);
 		
 		taskSubs.clear();
 		taskSubs.add(new Identifier(taskSubId));
 		LOG.log(Level.INFO, "{1}.monitorTasksDeregister(subId={0})",
-				new Object[] { taskSubId, CLIENT3+" -> "+BROKER });
-		goce3.getStub().monitorTasksDeregister(taskSubs);
-		LOG.log(Level.INFO, "{0}.monitorTasksDeregister() response: returning nothing", CLIENT3+" <- "+BROKER);
+				new Object[] { taskSubId, CLIENT3+" -> "+PROVIDER });
+		goce3.getPrStub().monitorTasksDeregister(taskSubs);
+		LOG.log(Level.INFO, "{0}.monitorTasksDeregister() response: returning nothing", CLIENT3+" <- "+PROVIDER);
 		
 		assertNotNull(taskMon.taskStats); // assuming 'goce3' received at least one pr and task notification
 		assertNotNull(prMon.prStats);

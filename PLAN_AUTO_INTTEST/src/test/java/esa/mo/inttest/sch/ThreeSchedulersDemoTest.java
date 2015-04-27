@@ -37,7 +37,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import esa.mo.inttest.DemoUtils;
-import esa.mo.inttest.Dumper;
 import esa.mo.inttest.Util;
 import esa.mo.inttest.sch.consumer.ScheduleConsumer;
 import esa.mo.inttest.sch.consumer.ScheduleConsumerFactory;
@@ -48,7 +47,6 @@ public class ThreeSchedulersDemoTest {
 	private static final Logger LOG = Logger.getLogger(ThreeSchedulersDemoTest.class.getName());
 	
 	private static final String PROVIDER = "SchProvider";
-	private static final String BROKER = PROVIDER; // label broker as provider since it's part of provider
 	private static final String CLIENT1 = "SchPowerUser";
 	private static final String CLIENT2 = "SchNormalUser";
 	private static final String CLIENT3 = "SchMonitorUser";
@@ -69,19 +67,17 @@ public class ThreeSchedulersDemoTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		// use maven profile "gen-log-files" to turn logging to files on
-		String val = System.getProperty("log2file");
-		log2file = (null != val) && "true".equalsIgnoreCase(val);
-		System.out.println("writing to log files is turned on: "+log2file);
+		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
-			Dumper.setBroker(BROKER);
 			// trim down log spam
 			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
 			files = new ArrayList<Handler>();
-			files.add(DemoUtils.createHandler(CLIENT1));
-			files.add(DemoUtils.createHandler(CLIENT2));
-			files.add(DemoUtils.createHandler(CLIENT3));
-			files.add(DemoUtils.createHandler(PROVIDER));
+			String path = ".\\target\\demo_logs\\sch\\";
+			files.add(DemoUtils.createHandler(CLIENT1, path));
+			files.add(DemoUtils.createHandler(CLIENT2, path));
+			files.add(DemoUtils.createHandler(CLIENT3, path));
+			files.add(DemoUtils.createHandler(PROVIDER, path));
 			for (Handler h: files) {
 				Logger.getLogger("").addHandler(h);
 			}
@@ -94,7 +90,6 @@ public class ThreeSchedulersDemoTest {
 			for (Handler h: files) {
 				Logger.getLogger("").removeHandler(h);
 			}
-			Dumper.setBroker("Broker"); // restore
 		}
 	}
 	
@@ -141,7 +136,7 @@ public class ThreeSchedulersDemoTest {
 		LongList ids = cons1.getStub().addDefinition(defs);
 		defIds.add(ids.get(0));
 		
-		ArgumentDefinitionDetailsList argDefs = cons1.addArgDef(null, "arg1", Util.attrType(Attribute.STRING_TYPE_SHORT_FORM), null);
+		ArgumentDefinitionDetailsList argDefs = ScheduleConsumer.addArgDef(null, "arg1", Util.attrType(Attribute.STRING_TYPE_SHORT_FORM), null);
 		def = ScheduleConsumer.createDef("test schedule definition 2", "test 2");
 		def.setArgumentDefs(argDefs);
 		defs.clear();
@@ -149,7 +144,7 @@ public class ThreeSchedulersDemoTest {
 		ids = cons1.getStub().addDefinition(defs);
 		defIds.add(ids.get(0));
 		
-		ObjectTypeList eTypes = cons1.addObjType(null, new ScheduleInstanceDetails());
+		ObjectTypeList eTypes = ScheduleConsumer.addObjType(null, new ScheduleInstanceDetails());
 		def = ScheduleConsumer.createDef("test schedule definition 3", "test 3");
 		def.setEventTypes(eTypes);
 		defs.clear();
@@ -161,17 +156,17 @@ public class ThreeSchedulersDemoTest {
 	}
 	
 	private void registerMonitor(String id, ScheduleConsumer sc, String n) throws MALException, MALInteractionException {
-		LOG.log(Level.INFO, "{1}.monitorSchedulesRegister(subId={0})", new Object[] { id, n + " -> " + BROKER });
+		LOG.log(Level.INFO, "{1}.monitorSchedulesRegister(subId={0})", new Object[] { id, n + " -> " + PROVIDER });
 		sc.getStub().monitorSchedulesRegister(Util.createSub(id), sc);
-		LOG.log(Level.INFO, "{0}.monitorSchedulesRegister() response: returning nothing", n + " <-" + BROKER);
+		LOG.log(Level.INFO, "{0}.monitorSchedulesRegister() response: returning nothing", n + " <-" + PROVIDER);
 	}
 	
 	private void deRegisterMonitor(String id, ScheduleConsumer sc, String n) throws MALException, MALInteractionException {
 		IdentifierList subs = new IdentifierList();
 		subs.add(new Identifier(id));
-		LOG.log(Level.INFO, "{1}.monitorSchedulesDeregister(subId={0})", new Object[] { id, n + " -> " + BROKER });
+		LOG.log(Level.INFO, "{1}.monitorSchedulesDeregister(subId={0})", new Object[] { id, n + " -> " + PROVIDER });
 		sc.getStub().monitorSchedulesDeregister(subs);
-		LOG.log(Level.INFO, "{0}.monitorSchedulesDeregister() response: returning nothing", n + " <- " + BROKER);
+		LOG.log(Level.INFO, "{0}.monitorSchedulesDeregister() response: returning nothing", n + " <- " + PROVIDER);
 	}
 	
 	private AtomicLong lastId = new AtomicLong(0L);
@@ -183,22 +178,22 @@ public class ThreeSchedulersDemoTest {
 	private LongList addInstances(LongList defIds) throws MALException, MALInteractionException {
 		LongList instIds = new LongList();
 		
-		ScheduleInstanceDetails inst = cons2.createInst("test schedule instance 1", "test 1", null, null, null, null);
+		ScheduleInstanceDetails inst = ScheduleConsumer.createInst("test schedule instance 1", "test 1", null, null, null, null);
 		Long instId = generateId();
 		cons2.getStub().submitSchedule(defIds.get(0), instId, inst);
 		instIds.add(instId);
 		
-		IdentifierList argNames = cons2.addArgName(null, "arg1");
-		AttributeValueList argVals = cons2.addArgValue(null, new Union("desd"));
-		inst = cons2.createInst("test schedule instance 2", "test 2", argNames, argVals, null, null);
+		IdentifierList argNames = ScheduleConsumer.addArgName(null, "arg1");
+		AttributeValueList argVals = ScheduleConsumer.addArgValue(null, new Union("desd"));
+		inst = ScheduleConsumer.createInst("test schedule instance 2", "test 2", argNames, argVals, null, null);
 		instId = generateId();
 		cons2.getStub().submitSchedule(defIds.get(1), instId, inst);
 		instIds.add(instId);
 		
-		inst = cons2.createInst("test schedule instance 3", "test 3", null, null, null, null);
+		inst = ScheduleConsumer.createInst("test schedule instance 3", "test 3", null, null, null, null);
 		instId = generateId();
-		ObjectId objId = cons2.createObjId(new ScheduleInstanceDetails(), consFct.getDomain(), instId);
-		ScheduleItemInstanceDetailsList items = cons2.addItem(null, "schedule item", inst.getName().getValue(), null,
+		ObjectId objId = ScheduleConsumer.createObjId(new ScheduleInstanceDetails(), consFct.getDomain(), instId);
+		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, "schedule item", inst.getName().getValue(), null,
 				null, new TriggerDetailsList(), objId);
 		inst.setScheduleItems(items);
 		cons2.getStub().submitSchedule(defIds.get(2), instId, inst);
@@ -213,7 +208,7 @@ public class ThreeSchedulersDemoTest {
 			ScheduleStatusDetails stat = stats.get(i);
 			StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.ACCEPTED);
 			if (null == sr) {
-				stat.setStatus(cons1.addOrUpdate(stat.getStatus(), InstanceState.ACCEPTED,
+				stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.ACCEPTED,
 						new Time(System.currentTimeMillis()), "accepted"));
 			}
 		}

@@ -19,34 +19,33 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
  */
 public class OperationsPlanningFile extends CommonFile {
 
-	private static final String PR_NAME = "goce opf pr";
-	
 	public TaskDefinitionDetails createTaskDef() {
-		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("goce opf task", "operations task 4");
-		ArgumentDefinitionDetailsList argDefs = createTaskDefArgDefs();
-		setTaskDefParamDefs(argDefs);
+		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("MCDD10HZ", "DIS_DFACS_10_HZ v01");
+		ArgumentDefinitionDetailsList argDefs = createSrcDestTypeArgDefs("FCT");
+		setParamsCountArgDef(argDefs);
 		taskDef.setArgumentDefs(argDefs);
 		return taskDef;
 	}
 	
 	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) {
-		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("goce opf pr def", "plan4");
-		prDef.setArgumentDefs(createPrDefArgDefs());
+		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("OPF", "EVRQ from OPF");
 		prDef.setTaskDefNames(taskDefNames);
 		return prDef;
 	}
 	
+	public String getPrName() {
+		return "OPF-1";
+	}
+	
 	public TaskInstanceDetails createTaskInst() throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MCDD10HZ", "DIS_DFACS_10_HZ v01", PR_NAME);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MCDD10HZ", null, getPrName());
+		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(0)));
 		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime("UTC=2007-01-02T12:10:00")));
-		setTaskArgs(taskInst, "FCT", "MPS", "Time-tagged sequence");
-		setTaskParam(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(0)));
 		return taskInst;
 	}
 	
 	public PlanningRequestInstanceDetails createPrInst(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(PR_NAME, "goce plan 7");
-		setPrArgs(prInst, parseTime("UTC=2007-01-01T12:10:00"), "Request", "");
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(getPrName(), null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}
