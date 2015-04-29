@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Filter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -183,5 +186,36 @@ public class DemoUtils {
 		fh.setFilter(new DemoFilter(name));
 		fh.setFormatter(new DemoFormatter());
 		return fh;
+	}
+	
+	/**
+	 * Create logging handlers.
+	 * @param path
+	 * @param clients
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<Handler> createHandlers(String path, String... clients) throws IOException {
+		// trim down log spam
+		DemoUtils.setLevels();
+		// log each consumer/provider lines to it's own file
+		List<Handler> files = new ArrayList<Handler>();
+		for (String client: clients) {
+			Handler h = createHandler(client, path);
+			files.add(h);
+			Logger.getLogger("").addHandler(h);
+		}
+		return files;
+	}
+	
+	/**
+	 * Closes and removes handlers.
+	 * @param handlers
+	 */
+	public static void removeHandlers(List<Handler> handlers) {
+		for (Handler h: handlers) {
+			h.close();
+			Logger.getLogger("").removeHandler(h);
+		}
 	}
 }

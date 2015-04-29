@@ -3,6 +3,7 @@ package esa.mo.inttest.goce;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -137,6 +138,7 @@ public class CommonFile {
 	 */
 	protected Time parseTime(String s) throws ParseException {
 		SimpleDateFormat sdf = new SimpleDateFormat("zzz'='yyyy-MM-dd'T'HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Date d = sdf.parse(s);
 		long l = d.getTime(); // GMT
 		return new Time(l);

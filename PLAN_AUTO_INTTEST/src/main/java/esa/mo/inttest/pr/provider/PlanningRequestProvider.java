@@ -1,8 +1,5 @@
 package esa.mo.inttest.pr.provider;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +22,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
@@ -47,6 +45,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	
 	private TaskDefStore taskDefs = new TaskDefStore();
 	private PrDefStore prDefs = new PrDefStore();
+	private RespDefStore respDefs = new RespDefStore();
 	private PrInstStore prInsts = new PrInstStore();
 	private MonitorTasksPublisher taskPub = null;
 	private MonitorPlanningRequestsPublisher prPub = null;
@@ -227,11 +226,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	}
 	
 	protected PlanningRequestResponseInstanceDetails createResponse(PlanningRequestInstanceDetails prInst) {
-		SimpleDateFormat sdf = new SimpleDateFormat("zzz'='yyyy-MM-dd'T'HH:mm:ss.SSS");
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String timeStamp = sdf.format(new Date(System.currentTimeMillis()));
-		
-		return new PlanningRequestResponseInstanceDetails(prInst.getName(), timeStamp,
+		return new PlanningRequestResponseInstanceDetails(prInst.getName(), Util.currentTime(),
 				prInst.getArgumentValues(), prInst.getArgumentDefNames());
 	}
 	
@@ -394,6 +389,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			ids.addAll(taskDefs.listAll(names));
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			ids.addAll(prDefs.listAll(names));
+		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
+			ids.addAll(respDefs.listAll(names));
 		}
 		LOG.log(Level.INFO, "{1}.listDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
@@ -415,6 +412,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)defs;
 			ids.addAll(prDefs.addAll(defs2));
+		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
+			PlanningRequestResponseDefinitionDetailsList defs2 = (PlanningRequestResponseDefinitionDetailsList)defs;
+			ids.addAll(respDefs.addAll(defs2));
 		}
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
@@ -430,6 +430,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)baseDefs;
 			prDefs.updateAll(defIds, defs2);
+		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
+			PlanningRequestResponseDefinitionDetailsList defs2 = (PlanningRequestResponseDefinitionDetailsList)baseDefs;
+			respDefs.updateAll(defIds, defs2);
 		}
 	}
 	
@@ -442,7 +445,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.defIdList(defIds);
 		Check.baseDefList(baseDefs);
 		Check.defLists(defIds, baseDefs);
-		Check.defsExist(defIds, defType, prDefs, taskDefs);
+		Check.defsExist(defIds, defType, prDefs, taskDefs, respDefs);
 		Check.defTypes(baseDefs, defType);
 		updateBaseDefs(defType, defIds, baseDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
@@ -454,11 +457,13 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Object[] { defType, defIds, Dumper.received(interaction) });
 		Check.defType(defType);
 		Check.defIdList(defIds);
-		Check.defsExist(defIds, defType, prDefs, taskDefs);
+		Check.defsExist(defIds, defType, prDefs, taskDefs, respDefs);
 		if (DefinitionType.TASK_DEF == defType) {
 			taskDefs.removeAll(defIds);
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			prDefs.removeAll(defIds);
+		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
+			respDefs.removeAll(defIds);
 		}
 		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
 	}

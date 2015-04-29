@@ -11,6 +11,9 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
@@ -52,11 +55,6 @@ public class BepiColomboConsumer {
 		return ids.get(0);
 	}
 	
-	protected void submitPrInst(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-			LongList taskInstIds) throws MALException, MALInteractionException {
-		cons.getStub().submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
-	}
-	
 	private AtomicLong lastId = new AtomicLong(0L);
 	
 	protected long generateId() {
@@ -79,7 +77,7 @@ public class BepiColomboConsumer {
 		return list;
 	}
 	
-	public void crf() throws MALException, MALInteractionException, ParseException {
+	public PlanningRequestResponseInstanceDetailsList crf() throws MALException, MALInteractionException, ParseException {
 		CommandRequestFile crf = new CommandRequestFile();
 		
 		TaskDefinitionDetails taskDef1 = crf.createPassTaskDef();
@@ -117,6 +115,23 @@ public class BepiColomboConsumer {
 		LongList taskDefIds = ids(taskDefId1, taskDefId2, taskDefId3, taskDefId4);
 		LongList taskInstIds = ids(taskInstId1, taskInstId2, taskInstId3, taskInstId4);
 		
-		submitPrInst(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		return cons.getStub().submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+	}
+	
+	protected Long submitRespDef(PlanningRequestResponseDefinitionDetails def) throws MALException, MALInteractionException {
+		PlanningRequestResponseDefinitionDetailsList defs = new PlanningRequestResponseDefinitionDetailsList();
+		defs.add(def);
+		LongList ids = cons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_RESPONSE_DEF, defs);
+		return ids.get(0);
+	}
+	
+	public PlanningRequestResponseInstanceDetailsList crrf() throws MALException, MALInteractionException, ParseException {
+		CommandRequestFile crf = new CommandRequestFile();
+		CommandRequestResponseFile crrf = new CommandRequestResponseFile();
+		
+		PlanningRequestResponseDefinitionDetails respDef = crrf.createRespDef(crf.getPrDefName());
+		Long respDefId = submitRespDef(respDef);
+		
+		return crf();
 	}
 }

@@ -1,6 +1,5 @@
 package esa.mo.inttest;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,8 +119,9 @@ public class PrAndSchDemoTest {
 		@SuppressWarnings("rawtypes")
 		public void monitorSchedulesNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 				ObjectIdList objIds, ScheduleStatusDetailsList schStats, Map qosProps) {
-			LOG.log(Level.INFO, "{4}.monitorSchedulesNotifyReceived(id={0}, updHdrs={1}, objIds={2}, schStats={3})",
-					new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats), Dumper.fromBroker("SchProvider", msgHdr) });
+			LOG.log(Level.INFO, "{4}.monitorSchedulesNotifyReceived(id={0}, List:updHeaders={1}, List:objIds={2}, List:schStatuses={3})",
+					new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats),
+					Dumper.fromBroker("SchProvider", msgHdr) });
 
 			for (int i = 0; i < updHdrs.size(); ++i) {
 				UpdateHeader updHdr = updHdrs.get(i);
@@ -217,27 +217,16 @@ public class PrAndSchDemoTest {
 		// use maven profile "gen-log-files" to turn logging to files on
 		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
-			// trim down log spam
-			DemoUtils.setLevels();
-			// log each consumer/provider lines to it's own file
-			files = new ArrayList<Handler>();
 			String path = ".\\target\\demo_logs\\pr_and_sch\\";
-			files.add(DemoUtils.createHandler(CLIENT, path));
-			files.add(DemoUtils.createHandler(CLIENT2, path));
-			files.add(DemoUtils.createHandler(PR_PROV, path));
-			files.add(DemoUtils.createHandler(SCH_PROV, path));
-			for (Handler h: files) {
-				Logger.getLogger("").addHandler(h);
-			}
+			// log each consumer/provider lines to it's own file
+			files = DemoUtils.createHandlers(path, CLIENT, CLIENT2, PR_PROV, SCH_PROV);
 		}
 	}
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
 		if (log2file) {
-			for (Handler h: files) {
-				Logger.getLogger("").removeHandler(h);
-			}
+			DemoUtils.removeHandlers(files);
 		}
 	}
 	
@@ -312,7 +301,7 @@ public class PrAndSchDemoTest {
 	private void registerTaskMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorTasksRegister(subId={0})", new Object[] { id, CLIENT + " -> " + PR_PROV });
 		pr.getStub().monitorTasksRegister(Util.createSub(id), pr);
-		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT + " <-" + PR_PROV);
+		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT + " <- " + PR_PROV);
 	}
 	
 	private void deRegisterTaskMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
@@ -326,7 +315,7 @@ public class PrAndSchDemoTest {
 	private void registerPrMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsRegister(subId={0})", new Object[] { id, CLIENT + " -> " + PR_PROV });
 		pr.getStub().monitorPlanningRequestsRegister(Util.createSub(id), pr);
-		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing", CLIENT + " <-" + PR_PROV);
+		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing", CLIENT + " <- " + PR_PROV);
 	}
 	
 	private void deRegisterPrMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {

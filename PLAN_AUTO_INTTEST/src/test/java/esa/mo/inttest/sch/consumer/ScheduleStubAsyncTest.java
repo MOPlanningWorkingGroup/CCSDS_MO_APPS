@@ -247,7 +247,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-		schInst.setName(new Identifier("test schedule isnstance"));
+		schInst.setName(new Identifier("test schedule instance"));
 		
 		Long schInstId = 1L;
 		

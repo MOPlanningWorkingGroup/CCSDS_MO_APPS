@@ -59,8 +59,9 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	@SuppressWarnings("rawtypes")
 	public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 			ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps) {
-		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHdrs, List:objIds, List:schStats)\n  updHdrs[]={1}\n  objIds[]={2}\n  schStats[]={3}",
-				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats), Dumper.fromBroker("PrProvider", msgHdr) });
+		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHeaders, List:objIds, List:schStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  schStatuses[]={3}",
+				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
+				Dumper.fromBroker("PrProvider", msgHdr) });
 	}
 	
 	/**
@@ -80,8 +81,9 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	@SuppressWarnings("rawtypes")
 	public void monitorTasksNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 			ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-		LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(id={0}, List:updHdrs, List:objIds, List:taskStats)\n  updHdrs[]={1}\n  objIds[]={2}\n  taskStats[]={3}",
-				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats), Dumper.fromBroker("PrProvider", msgHdr) });
+		LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(id={0}, List:updHeaders, List:objIds, List:taskStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  taskStatuses[]={3}",
+				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
+				Dumper.fromBroker("PrProvider", msgHdr) });
 	}
 
 	/**

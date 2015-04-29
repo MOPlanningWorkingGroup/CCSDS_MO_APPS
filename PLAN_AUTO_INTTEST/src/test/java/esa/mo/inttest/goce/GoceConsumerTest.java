@@ -1,10 +1,8 @@
 package esa.mo.inttest.goce;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
-import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -46,26 +44,16 @@ public class GoceConsumerTest {
 		// use maven profile "gen-log-files" to turn logging to files on
 		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
-			// trim down log spam
-			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
-			files = new ArrayList<Handler>();
 			String path = ".\\target\\demo_logs\\goce\\";
-			files.add(DemoUtils.createHandler(PR_PROV, path));
-			files.add(DemoUtils.createHandler(CLIENT1, path));
-			files.add(DemoUtils.createHandler(SCH_PROV, path));
-			for (Handler h: files) {
-				Logger.getLogger("").addHandler(h);
-			}
+			files = DemoUtils.createHandlers(path, PR_PROV, CLIENT1, SCH_PROV);
 		}
 	}
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
 		if (log2file) {
-			for (Handler h: files) {
-				Logger.getLogger("").removeHandler(h);
-			}
+			DemoUtils.removeHandlers(files);
 		}
 	}
 

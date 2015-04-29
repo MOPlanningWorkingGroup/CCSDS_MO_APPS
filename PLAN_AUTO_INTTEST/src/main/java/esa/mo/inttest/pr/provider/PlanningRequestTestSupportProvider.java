@@ -68,7 +68,7 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 	
 	public void updatePrStatus(LongList prIds, PlanningRequestStatusDetailsList prStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{2}.updatePrStatus(prIds={0}, prStats={1})",
+		LOG.log(Level.INFO, "{2}.updatePrStatus(prIds={0}, prStatuses={1})",
 				new Object[] { prIds, Dumper.prStats(prStats), Dumper.received(interaction) });
 		checkPrLists(prIds, prStats);
 		for (int i = 0; (null != prIds) && (i < prIds.size()); ++i) {
@@ -109,7 +109,7 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 	
 	public void updateTaskStatus(LongList taskIds, TaskStatusDetailsList taskStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{2}.updateTaskStatus(taskIds={0}, taskStats={1})",
+		LOG.log(Level.INFO, "{2}.updateTaskStatus(taskIds={0}, taskStatuses={1})",
 				new Object[] { taskIds, Dumper.taskStats(taskStats), Dumper.received(interaction) });
 		checkTaskLists(taskIds, taskStats);
 		for (int i = 0; (null != taskIds) && (i < taskIds.size()); ++i) {

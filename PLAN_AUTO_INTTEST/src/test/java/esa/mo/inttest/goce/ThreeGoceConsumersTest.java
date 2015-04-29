@@ -3,7 +3,6 @@ package esa.mo.inttest.goce;
 import static org.junit.Assert.*;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -72,7 +71,7 @@ public class ThreeGoceConsumersTest {
 			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(subId={0}, List:updateHeaders, " +
 					"List:objectIds, List:prStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  prStatuses[]={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
-					"PrProvider -> "+Dumper.fromBroker("PrProvider", msgHdr) });
+					Dumper.fromBroker("PrProvider", msgHdr) });
 			this.prStats = prStats;
 		}
 		
@@ -431,27 +430,16 @@ public class ThreeGoceConsumersTest {
 		// use maven profile "gen-log-files" to turn logging to files on
 		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
-			// trim down log spam
-			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
-			files = new ArrayList<Handler>();
 			String path = ".\\target\\demo_logs\\pr\\";
-			files.add(DemoUtils.createHandler(CLIENT1, path));
-			files.add(DemoUtils.createHandler(CLIENT2, path));
-			files.add(DemoUtils.createHandler(CLIENT3, path));
-			files.add(DemoUtils.createHandler(PROVIDER, path));
-			for (Handler h: files) {
-				Logger.getLogger("").addHandler(h);
-			}
+			files = DemoUtils.createHandlers(path, CLIENT1, CLIENT2, CLIENT3, PROVIDER);
 		}
 	}
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
 		if (log2file) {
-			for (Handler h: files) {
-				Logger.getLogger("").removeHandler(h);
-			}
+			DemoUtils.removeHandlers(files);
 		}
 	}
 	

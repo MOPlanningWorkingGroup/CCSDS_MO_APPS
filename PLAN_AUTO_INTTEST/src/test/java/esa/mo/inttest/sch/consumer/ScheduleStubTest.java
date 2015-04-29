@@ -138,7 +138,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
-		ScheduleInstanceDetails schInst = createInst(schDefIds.get(0), "test schedule isnstance");
+		ScheduleInstanceDetails schInst = createInst(schDefIds.get(0), "test schedule instance");
 		Long schInstId = 1L;
 		
 		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);

@@ -1,6 +1,5 @@
 package esa.mo.inttest.sch;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Handler;
@@ -69,27 +68,16 @@ public class ThreeSchedulersDemoTest {
 		// use maven profile "gen-log-files" to turn logging to files on
 		log2file = DemoUtils.getLogFlag();
 		if (log2file) {
-			// trim down log spam
-			DemoUtils.setLevels();
 			// log each consumer/provider lines to it's own file
-			files = new ArrayList<Handler>();
 			String path = ".\\target\\demo_logs\\sch\\";
-			files.add(DemoUtils.createHandler(CLIENT1, path));
-			files.add(DemoUtils.createHandler(CLIENT2, path));
-			files.add(DemoUtils.createHandler(CLIENT3, path));
-			files.add(DemoUtils.createHandler(PROVIDER, path));
-			for (Handler h: files) {
-				Logger.getLogger("").addHandler(h);
-			}
+			files = DemoUtils.createHandlers(path, CLIENT1, CLIENT2, CLIENT3, PROVIDER);
 		}
 	}
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
 		if (log2file) {
-			for (Handler h: files) {
-				Logger.getLogger("").removeHandler(h);
-			}
+			DemoUtils.removeHandlers(files);
 		}
 	}
 	
@@ -158,7 +146,7 @@ public class ThreeSchedulersDemoTest {
 	private void registerMonitor(String id, ScheduleConsumer sc, String n) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorSchedulesRegister(subId={0})", new Object[] { id, n + " -> " + PROVIDER });
 		sc.getStub().monitorSchedulesRegister(Util.createSub(id), sc);
-		LOG.log(Level.INFO, "{0}.monitorSchedulesRegister() response: returning nothing", n + " <-" + PROVIDER);
+		LOG.log(Level.INFO, "{0}.monitorSchedulesRegister() response: returning nothing", n + " <- " + PROVIDER);
 	}
 	
 	private void deRegisterMonitor(String id, ScheduleConsumer sc, String n) throws MALException, MALInteractionException {

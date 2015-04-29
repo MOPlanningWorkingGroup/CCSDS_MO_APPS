@@ -65,7 +65,7 @@ public class ScheduleTestSupportProvider extends ScheduleTestInheritanceSkeleton
 	
 	public void updateScheduleStatus(LongList schIds, ScheduleStatusDetailsList schStats, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{2}.updateScheduleStatus(schIds={0}, schStats={1})",
+		LOG.log(Level.INFO, "{2}.updateScheduleStatus(schIds={0}, schStatuses={1})",
 				new Object[] { schIds, Dumper.schStats(schStats), Dumper.received(interaction) });
 		checkLists(schIds, schStats);
 		for (int i = 0; (null != schIds) && (i < schIds.size()); ++i) {

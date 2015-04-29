@@ -64,8 +64,9 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	@SuppressWarnings("rawtypes")
 	public void monitorSchedulesNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 			ObjectIdList objIds, ScheduleStatusDetailsList schStats, Map qosProps) {
-		LOG.log(Level.INFO, "{4}.monitorSchedulesNotifyReceived(id={0}, List:updHdrs, List:objIds, List:schStats)\n  updHdrs[]={1}\n  objIds[]={2}\n  schStats[]={3}",
-				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats), Dumper.fromBroker("SchProvider", msgHdr) });
+		LOG.log(Level.INFO, "{4}.monitorSchedulesNotifyReceived(id={0}, List:updHeaders, List:objIds, List:schStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  schStatuses[]={3}",
+				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.schStats(schStats),
+				Dumper.fromBroker("SchProvider", msgHdr) });
 	}
 	
 	/**

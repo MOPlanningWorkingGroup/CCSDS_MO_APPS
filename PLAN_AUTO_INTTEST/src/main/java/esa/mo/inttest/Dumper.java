@@ -1,6 +1,9 @@
 package esa.mo.inttest;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.ccsds.moims.mo.automation.schedule.structures.PatchOperation;
 import org.ccsds.moims.mo.automation.schedule.structures.PatchOperationList;
@@ -28,8 +31,10 @@ import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Element;
 import org.ccsds.moims.mo.mal.structures.ElementList;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
+import org.ccsds.moims.mo.mal.structures.FineTime;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
@@ -38,6 +43,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
@@ -52,6 +58,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.EventTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
@@ -100,6 +107,15 @@ public final class Dumper {
 				break;
 			case Attribute._LONG_TYPE_SHORT_FORM:
 				s.append("/Long");
+				break;
+			case Attribute._ULONG_TYPE_SHORT_FORM:
+				s.append("/ULong");
+				break;
+			case Attribute._BOOLEAN_TYPE_SHORT_FORM:
+				s.append("/Boolean");
+				break;
+			case Attribute._FLOAT_TYPE_SHORT_FORM:
+				s.append("/Float");
 				break;
 			default:
 		}
@@ -318,15 +334,36 @@ public final class Dumper {
 		return (null != tn) ? quote(tn.toString()) : NULL;
 	}
 	
+	private static String dumpEventTrig(EventTrigger et, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != et) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("id=").append(dumpId(et.getEventId())).append(",\n");
+			s.append(ind).append(STEP).append("baseEventDef=").append(objType(et.getBaseEventDefinition())).append(",\n");
+			s.append(ind).append(STEP).append("delta=").append(et.getDelta()).append(",\n");
+			s.append(ind).append(STEP).append("everyOccurrence=").append(et.getEveryOccurrence()).append(",\n");
+			s.append(ind).append(STEP).append("eventCount=").append(et.getEventCount()).append(",\n");
+			s.append(ind).append(STEP).append("startEventCount=").append(et.getStartEventCount()).append(",\n");
+			s.append(ind).append(STEP).append("endEventCount=").append(et.getEndEventCount()).append(",\n");
+			s.append(ind).append(STEP).append("propagationFactor=").append(et.getPropagationFactor()).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
 	private static String dumpTrigger(TriggerDetails t, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("triggerName=").append(dumpTrigName(t.getTriggerName())).append(",\n");
 			s.append(ind).append(STEP).append("timeTrigger=").append(dumpTimeTrig(t.getTimeTrigger())).append(",\n");
-			s.append(ind).append(STEP).append("eventTrigger=").append(t.getEventTrigger()).append(",\n");
+			s.append(ind).append(STEP).append("eventTrigger=").append(dumpEventTrig(t.getEventTrigger(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("repeat=").append(t.getRepeat()).append(",\n");
-			s.append(ind).append(STEP).append("separation=").append(t.getSeparation()).append("\n");
+			s.append(ind).append(STEP).append("separation=").append(t.getSeparation()).append(",\n");
+			s.append(ind).append(STEP).append("earliestOffset=").append(dumpEventTrig(t.getEarliestOffset(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("latestOffset=").append(dumpEventTrig(t.getLatestOffset(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);
@@ -415,11 +452,24 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	private static String dumpTs(Time t) {
+		StringBuilder s = new StringBuilder();
+		if (null != t) {
+			SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'HH:mm:ss.SSS");
+			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+			Date date = new Date(t.getValue());
+			s.append(quote(sdf.format(date)));
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
 	private static String dumpUpdHdr(UpdateHeader uh, String ind) {
 		StringBuilder s = new StringBuilder("{\n");
 		s.append(ind).append(STEP).append("key=").append(dumpEntKey(uh.getKey())).append(",\n");
 		s.append(ind).append(STEP).append("sourceUri=").append(uh.getSourceURI()).append(",\n");
-		s.append(ind).append(STEP).append("timeStamp=").append(uh.getTimestamp()).append(",\n");
+		s.append(ind).append(STEP).append("timeStamp=").append(dumpTs(uh.getTimestamp())).append(",\n");
 		s.append(ind).append(STEP).append("updateType=").append(uh.getUpdateType()).append("\n");
 		s.append(ind).append("}");
 		return s.toString();
@@ -508,7 +558,7 @@ public final class Dumper {
 	
 	private static String dumpStat(StatusRecord sr) {
 		StringBuilder s = new StringBuilder();
-		s.append("{ timeStamp=").append(sr.getTimeStamp());
+		s.append("{ timeStamp=").append(dumpTs(sr.getTimeStamp()));
 		s.append(", state=").append(sr.getState());
 		s.append(", comment=").append(quote(sr.getComment()));
 		s.append(" }");
@@ -602,6 +652,21 @@ public final class Dumper {
 		return dumpTaskStats(tsl, STEP);
 	}
 	
+	private static String dumpRespDef(PlanningRequestResponseDefinitionDetails rd, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != rd) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("name=").append(rd.getName()).append(",\n");
+			s.append(ind).append(STEP).append("desc=").append(quote(rd.getDescription())).append(",\n");
+			s.append(ind).append(STEP).append("prDefName=").append(dumpId(rd.getPrDefName())).append(",\n");
+			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(rd.getArgumentDefs(), ind+STEP)).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
 	private static String dumpBaseDef(BaseDefinition bd, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != bd) {
@@ -611,6 +676,9 @@ public final class Dumper {
 			} else if (bd instanceof PlanningRequestDefinitionDetails) {
 				PlanningRequestDefinitionDetails prd = (PlanningRequestDefinitionDetails)bd;
 				s.append(dumpPrDef(prd, ind));
+			} else if (bd instanceof PlanningRequestResponseDefinitionDetails) {
+				PlanningRequestResponseDefinitionDetails rd = (PlanningRequestResponseDefinitionDetails)bd;
+				s.append(dumpRespDef(rd, ind));
 			} else {
 				s.append(bd);
 			}
@@ -645,12 +713,12 @@ public final class Dumper {
 		return dumpBaseDefs(bdl, STEP);
 	}
 	
-	private static String dumpPrResp(PlanningRequestResponseInstanceDetails prr, String ind) {
+	private static String dumpRespInst(PlanningRequestResponseInstanceDetails prr, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != prr) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prr.getPrInstName())).append(",\n");
-			s.append(ind).append(STEP).append("timeStamp=").append(quote(prr.getTimestamp())).append(",\n");
+			s.append(ind).append(STEP).append("timeStamp=").append(dumpTs(prr.getTimestamp())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(prr.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argDefValues=").append(dumpAttrVals(prr.getArgumentValues(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -670,7 +738,7 @@ public final class Dumper {
 		if (null != prrl) {
 			openList(s, prrl);
 			for (int i = 0; i < prrl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpPrResp(prrl.get(i), STEP)).append(",\n");
+				s.append(STEP).append(i).append(": ").append(dumpRespInst(prrl.get(i), STEP)).append(",\n");
 			}
 			closeList(s, prrl, "");
 		} else {
@@ -978,6 +1046,16 @@ public final class Dumper {
 		return dumpSchPatchOp(spo, STEP);
 	}
 	
+	private static String dumpFT(FineTime t) {
+		StringBuilder s = new StringBuilder();
+		if (null != t) {
+			s.append(quote(t.toString()));
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
 	private static String dumpArcDet(ArchiveDetails ad, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != ad) {
@@ -985,7 +1063,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("instId=").append(ad.getInstId()).append(",\n");
 			s.append(ind).append(STEP).append("objDetails=").append(ad.getDetails()).append(",\n");
 			s.append(ind).append(STEP).append("network=").append(ad.getNetwork()).append(",\n");
-			s.append(ind).append(STEP).append("timeStamp=").append(ad.getTimestamp()).append(",\n");
+			s.append(ind).append(STEP).append("timeStamp=").append(dumpFT(ad.getTimestamp())).append(",\n");
 			s.append(ind).append(STEP).append("provider=").append(ad.getProvider()).append(",\n");
 			s.append(ind).append("}");
 		}

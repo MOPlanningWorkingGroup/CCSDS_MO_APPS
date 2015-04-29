@@ -9,6 +9,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
@@ -109,12 +110,12 @@ public class Check {
 	 * @throws MALException
 	 */
 	public static void listSizes(TaskInstanceDetailsList tasks, LongList defIds, LongList instIds) throws MALException {
-		int count = (null != tasks) ? tasks.size() : 0;
+		int taskCount = (null != tasks) ? tasks.size() : 0;
 		int defIdCount = (null != defIds) ? defIds.size() : 0;
-		if (count != defIdCount) {
+		if (taskCount != defIdCount) {
 			throw new MALException("pr tasks count does not match task definition id count");
 		}
-		int instIdCount = (null != tasks) ? tasks.size() : 0;
+		int instIdCount = (null != instIds) ? instIds.size() : 0;
 		if (defIdCount != instIdCount) {
 			throw new MALException("task definition id count does not match task instance id count");
 		}
@@ -269,6 +270,8 @@ public class Check {
 			// correct
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == type) {
 			// correct
+		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == type) {
+			// correct
 		} else {
 			throw new MALException("definition type is not supported: " + type);
 		}
@@ -303,11 +306,13 @@ public class Check {
 		}
 	}
 	
-	protected static boolean extendsBaseDef(BaseDefinition bd, DefinitionType dt) {
+	protected static boolean extendsBaseDef(BaseDefinition bd, DefinitionType dt) throws MALException {
 		boolean rval = false;
 		if ((DefinitionType.TASK_DEF == dt) && (bd instanceof TaskDefinitionDetails)) {
 			rval = true;
 		} else if ((DefinitionType.PLANNING_REQUEST_DEF == dt) && (bd instanceof PlanningRequestDefinitionDetails)) {
+			rval = true;
+		} else if ((DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == dt) && (bd instanceof PlanningRequestResponseDefinitionDetails)) {
 			rval = true;
 		}
 		return rval;
@@ -357,9 +362,11 @@ public class Check {
 	 * @param type
 	 * @param prStore
 	 * @param taskStore
+	 * @param respStore
 	 * @throws MALException
 	 */
-	public static void defsExist(LongList ids, DefinitionType type, PrDefStore prStore, TaskDefStore taskStore) throws MALException {
+	public static void defsExist(LongList ids, DefinitionType type, PrDefStore prStore, TaskDefStore taskStore,
+			RespDefStore respStore) throws MALException {
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
 			if (null == id) {
@@ -374,6 +381,11 @@ public class Check {
 				TaskDefinitionDetails def = taskStore.find(id);
 				if (null == def) {
 					throw new MALException("task definition[" + i + "] not found, id: " + id);
+				}
+			} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == type) {
+				PlanningRequestResponseDefinitionDetails def = respStore.find(id);
+				if (null == def) {
+					throw new MALException("pr response definition[" + i + "] not found, id: " + id);
 				}
 			}
 		}

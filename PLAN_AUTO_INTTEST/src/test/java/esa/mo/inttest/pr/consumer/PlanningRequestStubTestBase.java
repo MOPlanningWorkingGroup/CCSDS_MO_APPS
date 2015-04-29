@@ -58,6 +58,7 @@ import org.junit.Before;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -102,7 +103,7 @@ public class PlanningRequestStubTestBase {
 		@Override
 		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId, UpdateHeaderList updHdrs,
 				ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "task monitor notify: subId={0},\n  updateHeaders={1},\n  objectIds={2},\n  taskStatuses={3}",
+			LOG.log(Level.INFO, "task monitor notify: subId={0},\n  List:updateHeaders={1},\n  List:objectIds={2},\n  List:taskStatuses={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats) });
 			this.taskStats = taskStats;
 			synchronized (this) {
@@ -167,7 +168,7 @@ public class PlanningRequestStubTestBase {
 		@Override
 		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
 				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps) {
-			LOG.log(Level.INFO, "pr monitor notify: subId={0}, updateHeaders={1}, objectIds={2}, prStatuses={3}",
+			LOG.log(Level.INFO, "pr monitor notify: subId={0}, List:updateHeaders={1}, List:objectIds={2}, List:prStatuses={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats) });
 			this.prStats = prStats;
 			synchronized (this) {
@@ -372,10 +373,10 @@ public class PlanningRequestStubTestBase {
 		return prInst;
 	}
 	
-	private long lastId = 0;
+	private AtomicLong lastId = new AtomicLong(0L);
 	
 	protected Long generateId() {
-		return ++lastId;
+		return lastId.incrementAndGet();
 	}
 	
 	protected void storePrInst(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst) throws MALException,
