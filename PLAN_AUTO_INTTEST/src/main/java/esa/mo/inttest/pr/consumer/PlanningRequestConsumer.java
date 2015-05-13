@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.mal.MALStandardError;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
@@ -35,6 +34,7 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	private static final Logger LOG = Logger.getLogger(PlanningRequestConsumer.class.getName());
 	
 	private PlanningRequestStub stub;
+	private String broker = "PrProvider";
 	
 	/**
 	 * Ctor.
@@ -52,6 +52,10 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 		 return this.stub;
 	}
 	
+	public void setBrokerName(String name) {
+		broker = name;
+	}
+	
 	/**
 	 * Implements PR status notification callback.
 	 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorPlanningRequestsNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList, java.util.Map)
@@ -61,17 +65,7 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 			ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps) {
 		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHeaders, List:objIds, List:schStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  schStatuses[]={3}",
 				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
-				Dumper.fromBroker("PrProvider", msgHdr) });
-	}
-	
-	/**
-	 * Implements PR status notification error callback.
-	 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorPlanningRequestsNotifyErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.MALStandardError, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError err, Map qosProps) {
-		LOG.log(Level.INFO, "{1}.monitorPlanningRequestNotifyErrorReceived(error)\n  error={0}",
-				new Object[] { err, Dumper.fromBroker("PrProvider", msgHdr) });
+				Dumper.fromBroker(broker, msgHdr) });
 	}
 	
 	/**
@@ -83,19 +77,9 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 			ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
 		LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(id={0}, List:updHeaders, List:objIds, List:taskStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  taskStatuses[]={3}",
 				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
-				Dumper.fromBroker("PrProvider", msgHdr) });
+				Dumper.fromBroker(broker, msgHdr) });
 	}
 
-	/**
-	 * Implements Task status notification error callback.
-	 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorTasksNotifyErrorReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.MALStandardError, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError err, Map qosProps) {
-		LOG.log(Level.INFO, "{1}.monitorTasksNotifyErrorReceived(error)\n  error={0}",
-				new Object[] { err, Dumper.fromBroker("PrProvider", msgHdr) });
-	}
-	
 	/**
 	 * Creates task definition base.
 	 * @param name

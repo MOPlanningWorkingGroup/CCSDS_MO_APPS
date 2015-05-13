@@ -27,7 +27,6 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
-import esa.mo.inttest.Util;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
 
 public class CommandRequestFile {
@@ -151,7 +150,7 @@ public class CommandRequestFile {
 		if (t.endsWith("Z")) {
 			t = t.substring(0, t.length()-1);
 		}
-		String form = "YYYY-DDD'T'HH:mm:ss";
+		String form = "yyyy-DDD'T'HH:mm:ss";
 		int tp = t.indexOf(':');
 		int dp = t.indexOf('.');
 		if (-1 != dp && dp < tp) { // have dot before time

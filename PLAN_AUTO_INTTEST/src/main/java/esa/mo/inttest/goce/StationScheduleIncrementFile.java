@@ -61,7 +61,7 @@ public class StationScheduleIncrementFile extends CommonFile {
 	}
 	
 	protected Time parseTime(String s) throws ParseException {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy.ddd.HH.mm.ss.SSS");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy.DDD.HH.mm.ss.SSS");
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Date d = sdf.parse(s);
 		long l = d.getTime();

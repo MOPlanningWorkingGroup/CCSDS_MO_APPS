@@ -12,8 +12,6 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
-import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemPatchOperations;
-import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemPatchOperationsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
@@ -455,7 +453,7 @@ public final class Dumper {
 	private static String dumpTs(Time t) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
-			SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'HH:mm:ss.SSS");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 			Date date = new Date(t.getValue());
 			s.append(quote(sdf.format(date)));
@@ -992,44 +990,15 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	private static String dumpSchItemPatchOp(ScheduleItemPatchOperations sipo, String ind) {
-		StringBuilder s = new StringBuilder();
-		if (null != sipo) {
-			s.append("{\n");
-			s.append(ind).append(STEP).append("scheduleItemName=").append(dumpId(sipo.getScheduleItemInstName())).append(",\n");
-			s.append(ind).append(STEP).append("delegateItem=").append(dumpPatchOp(sipo.getDelegateItem())).append(",\n");
-			s.append(ind).append(STEP).append("argTypes=").append(dumpPatchOps(sipo.getArgumentTypes(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("argValues=").append(dumpPatchOps(sipo.getArgumentValues(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("timingConstraints=").append(dumpPatchOps(sipo.getTimingConstraints(), ind+STEP)).append("\n");
-			s.append(ind).append("}");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
-	private static String dumpSchItemPatchOps(ScheduleItemPatchOperationsList sipol, String ind) {
-		StringBuilder s = new StringBuilder();
-		if (null != sipol) {
-			openList(s, sipol);
-			for (int i = 0; i < sipol.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpSchItemPatchOp(sipol.get(i), ind+STEP)).append(",\n");
-			}
-			closeList(s, sipol, ind);
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
 	private static String dumpSchPatchOp(SchedulePatchOperations spo, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != spo) {
 			s.append("{\n");
 			s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(spo.getScheduleInstName())).append(",\n");
+			s.append(ind).append(STEP).append("argDefNames=").append(dumpPatchOps(spo.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpPatchOps(spo.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("timingConstraints=").append(dumpPatchOps(spo.getTimingConstraints(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("scheduleItems=").append(dumpSchItemPatchOps(spo.getScheduleItems(), ind+STEP)).append("\n");
+			s.append(ind).append(STEP).append("scheduleItems=").append(dumpPatchOps(spo.getScheduleItems(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);

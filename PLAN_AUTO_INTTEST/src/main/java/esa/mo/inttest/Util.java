@@ -10,6 +10,7 @@ import org.ccsds.moims.mo.mal.structures.EntityRequest;
 import org.ccsds.moims.mo.mal.structures.EntityRequestList;
 import org.ccsds.moims.mo.mal.structures.FineTime;
 import org.ccsds.moims.mo.mal.structures.Identifier;
+import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.URI;
@@ -29,16 +30,25 @@ public class Util {
 	}
 	
 	/**
+	 * Creates subscription with given id and sub-domain.
+	 * @param subId
+	 * @return
+	 */
+	public static Subscription createSub(String subId, IdentifierList subDom) {
+		EntityKeyList entKeys = new EntityKeyList();
+		entKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
+		EntityRequestList entReqs = new EntityRequestList();
+		entReqs.add(new EntityRequest(subDom, true, true, true, false, entKeys));
+		return new Subscription(new Identifier(subId), entReqs);
+	}
+	
+	/**
 	 * Creates subscription with given id.
 	 * @param subId
 	 * @return
 	 */
 	public static Subscription createSub(String subId) {
-		EntityKeyList entKeys = new EntityKeyList();
-		entKeys.add(new EntityKey(new Identifier("*"), 0L, 0L, 0L));
-		EntityRequestList entReqs = new EntityRequestList();
-		entReqs.add(new EntityRequest(null, true, true, true, false, entKeys));
-		return new Subscription(new Identifier(subId), entReqs);
+		return createSub(subId, null);
 	}
 	
 	/**

@@ -71,7 +71,7 @@ public class ThreeGoceConsumersTest {
 			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(subId={0}, List:updateHeaders, " +
 					"List:objectIds, List:prStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  prStatuses[]={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
-					Dumper.fromBroker("PrProvider", msgHdr) });
+					Dumper.fromBroker(PROVIDER, msgHdr) });
 			this.prStats = prStats;
 		}
 		
@@ -80,7 +80,7 @@ public class ThreeGoceConsumersTest {
 		public void monitorPlanningRequestsNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error,
 				Map qosProps) {
 			LOG.log(Level.INFO, "{1}.monitorPlanningRequestsNotifyErrorReceived(error={0})",
-					new Object[] { error, Dumper.fromBroker("PrProvider", msgHdr) });
+					new Object[] { error, Dumper.fromBroker(PROVIDER, msgHdr) });
 		}
 	}
 
@@ -98,7 +98,7 @@ public class ThreeGoceConsumersTest {
 			LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(subId={0}, List:updateHeaders, " +
 				"List:objectIds, List:taskStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  taskStatuses[]={3}",
 				new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
-				Dumper.fromBroker("PrProvider", msgHdr) });
+				Dumper.fromBroker(PROVIDER, msgHdr) });
 			this.taskStats = taskStats;
 		}
 		
@@ -106,7 +106,7 @@ public class ThreeGoceConsumersTest {
 		@Override
 		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error, Map qosProps) {
 			LOG.log(Level.INFO, "{1}.monitorTasksNotifyErrorReceived(error={0})",
-					new Object[] { error, Dumper.fromBroker("PrProvider", msgHdr) });
+					new Object[] { error, Dumper.fromBroker(PROVIDER, msgHdr) });
 		}
 	}
 

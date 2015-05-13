@@ -68,14 +68,6 @@ public class ScheduleHelperTest {
 		o = f.createElement();
 		assertTrue(o instanceof SchedulePatchOperationsList);
 		
-		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(ScheduleItemPatchOperations.SHORT_FORM);
-		o = f.createElement();
-		assertTrue(o instanceof ScheduleItemPatchOperations);
-		
-		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(ScheduleItemPatchOperationsList.SHORT_FORM);
-		o = f.createElement();
-		assertTrue(o instanceof ScheduleItemPatchOperationsList);
-		
 		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(PatchOperation.SHORT_FORM);
 		o = f.createElement();
 		assertTrue(o instanceof PatchOperation);

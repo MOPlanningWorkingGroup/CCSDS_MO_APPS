@@ -3,13 +3,20 @@ package esa.mo.inttest.sch.provider;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ccsds.moims.mo.automation.schedule.structures.PatchOperation;
+import org.ccsds.moims.mo.automation.schedule.structures.PatchOperationList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.mal.MALException;
+import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 
 /**
  * Schedule instances storage for testing.
@@ -112,39 +119,154 @@ public class InstStore {
 		return it.stat;
 	}
 	
+	protected void patchTriggers(TriggerDetailsList src1, TriggerDetailsList src2,
+			PatchOperationList pat, TriggerDetailsList trg) {
+		TriggerDetailsList newTrigs = new TriggerDetailsList();
+		for (int i = 0; (null != pat) && (i < pat.size()); ++i) {
+			PatchOperation pOp = pat.get(i);
+			if (PatchOperation.UPDATE == pOp) {
+				// copy value from src2 to target
+				trg.add(src2.get(i));
+			} else if (PatchOperation.REMOVE == pOp) {
+				// just dont copy it to target
+			} else {
+				// copy value from src1 to target
+				trg.add(src1.get(i));
+				if (PatchOperation.ADD == pOp) {
+					// just store it for adding later to target
+					newTrigs.add(src2.get(i));
+				}
+			}
+		}
+		trg.addAll(newTrigs);
+	}
+	
+	protected void patchArgDefNames(IdentifierList src1, IdentifierList src2,
+			PatchOperationList pat, IdentifierList trg) {
+		IdentifierList newArgNames = new IdentifierList();
+		for (int i = 0; (null != pat) && (i < pat.size()); ++i) {
+			PatchOperation pOp = pat.get(i);
+			if (PatchOperation.UPDATE == pOp) {
+				// copy value from src2 to target
+				trg.add(src2.get(i));
+			} else if (PatchOperation.REMOVE == pOp) {
+				// just dont copy it to target
+			} else {
+				// copy value from src1 to target
+				trg.add(src1.get(i));
+				if (PatchOperation.ADD == pOp) {
+					newArgNames.add(src2.get(i));
+				}
+			}
+		}
+		trg.addAll(newArgNames);
+	}
+	
+	protected void patchArgVals(AttributeValueList src1, AttributeValueList src2,
+			PatchOperationList pat, AttributeValueList trg) {
+		AttributeValueList newArgVals = new AttributeValueList();
+		for (int i = 0; (null != pat) && (i < pat.size()); ++i) {
+			PatchOperation pOp = pat.get(i);
+			if (PatchOperation.UPDATE == pOp) {
+				// copy value from src2 to target
+				trg.add(src2.get(i));
+			} else if (PatchOperation.REMOVE == pOp) {
+				// just dont copy it to target
+			} else {
+				// copy value from src1 to target
+				trg.add(src1.get(i));
+				if (PatchOperation.ADD == pOp) {
+					newArgVals.add(src2.get(i));
+				}
+			}
+		}
+		trg.addAll(newArgVals);
+	}
+	
+	protected void patchItems(ScheduleInstanceDetails src1, ScheduleInstanceDetails src2,
+			SchedulePatchOperations pat, ScheduleInstanceDetails trg) {
+		ScheduleItemInstanceDetailsList newItems = new ScheduleItemInstanceDetailsList();
+		for (int i = 0; (null != pat.getScheduleItems()) && (i < pat.getScheduleItems().size()); ++i) {
+			PatchOperation pOp = pat.getScheduleItems().get(i);
+			ScheduleItemInstanceDetails item1 = src1.getScheduleItems().get(i);
+			ScheduleItemInstanceDetails item2 = src2.getScheduleItems().get(i);
+			//pat.getScheduleInstName()
+			if (PatchOperation.UPDATE == pOp) {
+				trg.getScheduleItems().add(item2);
+			} else if (PatchOperation.REMOVE == pOp) {
+				// do nothing
+			} else {
+				trg.getScheduleItems().add(item1);
+				if (PatchOperation.ADD == pOp) {
+					newItems.add(item2);
+				}
+			}
+		}
+		trg.getScheduleItems().addAll(newItems);
+	}
+	
+	protected void patch(ScheduleInstanceDetails src1, ScheduleInstanceDetails src2,
+			SchedulePatchOperations pat, ScheduleInstanceDetails trg) {
+		// pat.getScheduleInstName() - patch name? ignore
+		trg.setName(src2.getName());
+		trg.setComment(src2.getComment());
+		// patch triggers
+		trg.setTimingConstraints(new TriggerDetailsList());
+		patchTriggers(src1.getTimingConstraints(), src2.getTimingConstraints(),
+				pat.getTimingConstraints(), trg.getTimingConstraints());
+		// patch arg names
+		trg.setArgumentDefNames(new IdentifierList());
+		patchArgDefNames(src1.getArgumentDefNames(), src2.getArgumentDefNames(),
+				pat.getArgumentDefNames(), trg.getArgumentDefNames());
+		// patch arg values
+		trg.setArgumentValues(new AttributeValueList());
+		patchArgVals(src1.getArgumentValues(), src2.getArgumentValues(),
+				pat.getArgumentValues(), trg.getArgumentValues());
+		// patch items
+		trg.setScheduleItems(new ScheduleItemInstanceDetailsList());
+		patchItems(src1, src2, pat, trg);
+	}
+	
 	/**
 	 * Patch schedule instance (whatever that means).
 	 * @param defId
-	 * @param instId
+	 * @param srcId
 	 * @param schInst
 	 * @param patchOp
 	 * @param targetId
 	 * @return
 	 * @throws MALException
 	 */
-	public ScheduleStatusDetails patch(Long defId, Long instId, ScheduleInstanceDetails schInst,
+	public ScheduleStatusDetails patch(Long defId, Long srcId, ScheduleInstanceDetails schInst,
 			SchedulePatchOperations patchOp, Long targetId) throws MALException {
-		Item it = findItem(instId);
-		if (null == it) {
-			throw new MALException("schedule instance does not exist, id: " + instId);
+		Item srcIt = findItem(srcId);
+		if (null == srcIt) {
+			throw new MALException("source schedule instance does not exist, id: " + srcId);
 		}
-		if (instId != targetId) {
-			it = findItem(targetId);
-			if (null == it) {
-				// new one
-				it = new Item();
-				it.defId = defId;
-				it.instId = targetId;
-				it.inst = schInst;
-				it.stat = new ScheduleStatusDetails();
-				it.stat.setScheduleInstName(schInst.getName());
-				it.stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList());
-				items.add(it);
-			} else {
-				// TODO exists
+		if (srcId != targetId) {
+			Item trgIt = findItem(targetId);
+			if (null == trgIt) { // target is a new one - new id and instance
+				trgIt = new Item();
+				trgIt.defId = defId;
+				trgIt.instId = targetId;
+				trgIt.inst = new ScheduleInstanceDetails();
+				patch(srcIt.inst, schInst, patchOp, trgIt.inst);
+				trgIt.stat = new ScheduleStatusDetails();
+				trgIt.stat.setScheduleInstName(schInst.getName());
+				trgIt.stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList());
+				items.add(trgIt);
+			} else { // target already exists
+				if (srcIt.defId != trgIt.defId) {
+					throw new MALException("source and target have different definition ids: " + srcIt.defId + " vs " + trgIt.defId);
+				}
+				patch(srcIt.inst, schInst, patchOp, trgIt.inst);
 			}
-		} // else keep old
-		return it.stat;
+		} else { // source and target are same id, but new instance
+			ScheduleInstanceDetails old = srcIt.inst;
+			srcIt.inst = new ScheduleInstanceDetails();
+			patch(old, schInst, patchOp, srcIt.inst);
+		}
+		return srcIt.stat;
 	}
 	
 	// test support

@@ -162,8 +162,18 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			
 			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
 			taskStats.add(taskStat);
-			
-			taskPub.publish(updHdrs, objIds, taskStats);
+			try {
+				taskPub.publish(updHdrs, objIds, taskStats);
+			} catch (IllegalArgumentException e) {
+				LOG.log(Level.INFO, "task publish error: illegal argument: {0}", e);
+				throw e;
+			} catch (MALException e) {
+				LOG.log(Level.INFO, "task public error: mal: {0}", e);
+				throw e;
+			} catch (MALInteractionException e) {
+				LOG.log(Level.INFO, "task publish error: mal interaction: {0}", e);
+				throw e;
+			}
 		} else {
 			LOG.log(Level.INFO, "no task publisher set");
 		}
@@ -188,8 +198,18 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			
 			PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
 			prStats.add(prStat);
-			
-			prPub.publish(updHdrs, objIds, prStats);
+			try {
+				prPub.publish(updHdrs, objIds, prStats);
+			} catch (IllegalArgumentException e) {
+				LOG.log(Level.INFO, "pr publish error: illegal argument: {0}", e);
+				throw e;
+			} catch (MALException e) {
+				LOG.log(Level.INFO, "pr public error: mal: {0}", e);
+				throw e;
+			} catch (MALInteractionException e) {
+				LOG.log(Level.INFO, "pr publish error: mal interaction: {0}", e);
+				throw e;
+			}
 		} else {
 			LOG.log(Level.INFO, "no pr publisher set");
 		}
