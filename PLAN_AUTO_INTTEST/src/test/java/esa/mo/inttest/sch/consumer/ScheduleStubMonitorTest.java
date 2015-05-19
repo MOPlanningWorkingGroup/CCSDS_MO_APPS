@@ -109,22 +109,27 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		return schDef;
 	}
 	
-	protected ScheduleInstanceDetails createInst(String n) {
+	protected ScheduleInstanceDetails createInst() {
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-		schInst.setName(new Identifier(n));
+//		schInst.setName(new Identifier(n));
 		return schInst;
 	}
 	
 	protected Long createAndAddDef(String n) throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef(n);
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef(n));
+		schDefs.add(schDef);
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		return schDefIds.get(0);
 	}
 	
 	protected ScheduleInstanceDetails createAndSubmitInst(Long schDefId, Long schInstId, String n) throws MALException, MALInteractionException {
-		ScheduleInstanceDetails schInst = createInst(n);
-		schCons.submitSchedule(schDefId, schInstId, schInst);
+		ScheduleInstanceDetails schInst = createInst();
+		schInst.setId(schInstId);
+		schInst.setSchDefId(schDefId);
+		schCons.submitSchedule(schInst);
 		return schInst;
 	}
 	
@@ -181,7 +186,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schMon.clear(); // clear submit info
 		
-		schCons.updateSchedule(schInstId, schInst);
+		schCons.updateSchedule(schInst);
 		
 		waitForSch(schMon);
 		

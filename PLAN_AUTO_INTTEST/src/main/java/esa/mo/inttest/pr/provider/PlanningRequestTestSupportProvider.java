@@ -76,7 +76,7 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 			Long id = prIds.get(i);
 			PlanningRequestStatusDetails stat = prStats.get(i);
 			prov.getInstStore().setPrStatus(id, stat);
-			prov.publishPr(UpdateType.UPDATE, id, stat);
+			prov.publishPr(UpdateType.UPDATE, stat);
 		}
 		LOG.log(Level.INFO, "{0}.updatePrStatus() response: returning nothing", Dumper.sending(interaction));
 	}
@@ -117,7 +117,7 @@ public class PlanningRequestTestSupportProvider extends PlanningRequestTestInher
 			Long id = taskIds.get(i);
 			TaskStatusDetails stat = taskStats.get(i);
 			prov.getInstStore().setTaskStatus(id, stat);
-			prov.publishTask(UpdateType.UPDATE, id, stat);
+			prov.publishTask(UpdateType.UPDATE, stat);
 		}
 		LOG.log(Level.INFO, "{0}.updateTaskStatus() response: returning nothing", Dumper.sending(interaction));
 	}

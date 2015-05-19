@@ -128,19 +128,20 @@ public class Check {
 	 * @param instIds
 	 * @throws MALException
 	 */
-	public static void listElements(TaskInstanceDetailsList tasks, LongList defIds, LongList instIds) throws MALException {
+	public static void listElements(TaskInstanceDetailsList tasks, /*LongList defIds, LongList instIds*/Long prId) throws MALException {
 		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
 			TaskInstanceDetails taskInst = tasks.get(i);
 			if (null == taskInst) {
 				throw new MALException("task instance[" + i + "] is null");
 			}
-			Long defId = defIds.get(i);
-			if (null == defId) {
+			if (null == taskInst.getTaskDefId()) {
 				throw new MALException("task definition id[" + i + "] is null");
 			}
-			Long instId = instIds.get(i);
-			if (null == instId) {
+			if (null == taskInst.getId()) {
 				throw new MALException("task instance id[" + i + "] is null");
+			}
+			if (prId != taskInst.getPrInstId()) {
+				throw new MALException("task instance[" + i + "].prId doesn't match prInst.id");
 			}
 		}
 	}
@@ -168,8 +169,8 @@ public class Check {
 	 * @param inst
 	 * @throws MALException
 	 */
-	public static void prArgs(Long defId, PlanningRequestInstanceDetails inst, PrDefStore store) throws MALException {
-		PlanningRequestDefinitionDetails def = store.find(defId);
+	public static void prArgs(/*Long defId,*/ PlanningRequestInstanceDetails inst, PrDefStore store) throws MALException {
+		PlanningRequestDefinitionDetails def = store.find(/*defId*/inst.getPrDefId());
 		for (int i = 0; (null != inst.getArgumentValues()) && (i < inst.getArgumentValues().size()); ++i) {
 			Identifier argName = inst.getArgumentDefNames().get(i);
 			AttributeValue argVal = inst.getArgumentValues().get(i);
@@ -217,9 +218,9 @@ public class Check {
 	 * @param insts
 	 * @throws MALException
 	 */
-	public static void tasksArgs(TaskInstanceDetailsList insts, LongList defIds, TaskDefStore store) throws MALException {
+	public static void tasksArgs(TaskInstanceDetailsList insts, /*LongList defIds,*/ TaskDefStore store) throws MALException {
 		for (int i = 0; (null != insts) && (i < insts.size()); ++i) {
-			Long defId = defIds.get(i);
+			Long defId = /*defIds.get(i)*/insts.get(i).getTaskDefId();
 			TaskDefinitionDetails def = store.find(defId);
 			if (null == def) {
 				throw new MALException("task def id does not exist: " + defId);

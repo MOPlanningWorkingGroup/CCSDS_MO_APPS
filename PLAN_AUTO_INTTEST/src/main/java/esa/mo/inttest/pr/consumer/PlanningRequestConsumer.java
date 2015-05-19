@@ -113,11 +113,12 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	 * @param prName
 	 * @return
 	 */
-	public static TaskInstanceDetails createTaskInst(String name, String comm, String prName) {
+	public static TaskInstanceDetails createTaskInst(/*String name*/Long id, Long defId, String comm/*, String prName*/) {
 		TaskInstanceDetails inst = new TaskInstanceDetails();
-		inst.setName(new Identifier(name)); // mandatory
+		inst.setId(id);
+		inst.setTaskDefId(defId);
 		inst.setComment(comm);
-		inst.setPrName(new Identifier(prName)); // mandatory
+//		inst.setPrInstId(prId);
 		return inst;
 	}
 	
@@ -140,9 +141,10 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	 * @param comm
 	 * @return
 	 */
-	public static PlanningRequestInstanceDetails createPrInst(String name, String comm) {
+	public static PlanningRequestInstanceDetails createPrInst(/*String name*/Long id, Long defId, String comm) {
 		PlanningRequestInstanceDetails inst = new PlanningRequestInstanceDetails();
-		inst.setName(new Identifier(name)); // mandatory
+		inst.setId(id); // mandatory
+		inst.setPrDefId(defId); // mandatory
 		inst.setComment(comm);
 		return inst;
 	}
@@ -164,18 +166,18 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 		LongList prDefIds = stub.addDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefs);
 		
 		TaskInstanceDetails taskInst = new TaskInstanceDetails();
+		taskInst.setId(1L);
+		taskInst.setTaskDefId(taskDefIds.get(0));
 		
 		TaskInstanceDetailsList taskInsts = new TaskInstanceDetailsList();
 		taskInsts.add(taskInst);
 		
-		LongList taskInstIds = new LongList();
-		taskInstIds.add(new Long(1L));
-		
 		PlanningRequestInstanceDetails prInst = new PlanningRequestInstanceDetails();
+		prInst.setId(2L);
+		prInst.setPrDefId(prDefIds.get(0));
 		prInst.setTasks(taskInsts);
+		taskInst.setPrInstId(prInst.getId());
 		
-		Long prInstId = new Long(2L);
-		
-		stub.submitPlanningRequest(prDefIds.get(0), prInstId, prInst, taskDefIds, taskInstIds);
+		stub.submitPlanningRequest(prInst);
 	}
 }

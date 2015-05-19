@@ -34,10 +34,12 @@ public class BepiColomboConsumer {
 	}
 	
 	protected Long submitTaskDef(TaskDefinitionDetails def) throws MALException, MALInteractionException {
+		def.setId(0L);
 		TaskDefinitionDetailsList defs = new TaskDefinitionDetailsList();
 		defs.add(def);
 		LongList ids = cons.getStub().addDefinition(DefinitionType.TASK_DEF, defs);
-		return ids.get(0);
+		def.setId(ids.get(0));
+		return def.getId();
 	}
 	
 	protected IdentifierList taskDefNames(TaskDefinitionDetails... defs) {
@@ -49,10 +51,12 @@ public class BepiColomboConsumer {
 	}
 	
 	protected Long submitPrDef(PlanningRequestDefinitionDetails def) throws MALException, MALInteractionException {
+		def.setId(0L);
 		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
 		defs.add(def);
 		LongList ids = cons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
-		return ids.get(0);
+		def.setId(ids.get(0));
+		return def.getId();
 	}
 	
 	private AtomicLong lastId = new AtomicLong(0L);
@@ -61,21 +65,22 @@ public class BepiColomboConsumer {
 		return lastId.incrementAndGet();
 	}
 	
-	protected TaskInstanceDetailsList taskInsts(TaskInstanceDetails... tasks) {
+	protected void setTaskInsts(PlanningRequestInstanceDetails pr, TaskInstanceDetails... tasks) {
 		TaskInstanceDetailsList list = new TaskInstanceDetailsList();
 		for (TaskInstanceDetails task: tasks) {
+			task.setPrInstId(pr.getId());
 			list.add(task);
 		}
-		return list;
+		pr.setTasks(list);
 	}
 	
-	protected LongList ids(Long... ids) {
-		LongList list = new LongList();
-		for (Long id: ids) {
-			list.add(id);
-		}
-		return list;
-	}
+//	protected LongList ids(Long... ids) {
+//		LongList list = new LongList();
+//		for (Long id: ids) {
+//			list.add(id);
+//		}
+//		return list;
+//	}
 	
 	public PlanningRequestResponseInstanceDetailsList crf() throws MALException, MALInteractionException, ParseException {
 		CommandRequestFile crf = new CommandRequestFile();
@@ -96,26 +101,18 @@ public class BepiColomboConsumer {
 		prDef.setTaskDefNames(taskDefNames(taskDef1, taskDef2, taskDef3, taskDef4));
 		Long prDefId = submitPrDef(prDef);
 		
-		TaskInstanceDetails taskInst1 = crf.createPassTaskInst();
-		Long taskInstId1 = generateId();
+		TaskInstanceDetails taskInst1 = crf.createPassTaskInst(generateId(), taskDefId1, null);
 		
-		TaskInstanceDetails taskInst2 = crf.createExecTaskInst();
-		Long taskInstId2 = generateId();
+		TaskInstanceDetails taskInst2 = crf.createExecTaskInst(generateId(), taskDefId2, null);
 		
-		TaskInstanceDetails taskInst3 = crf.createMaesTaskInst();
-		Long taskInstId3 = generateId();
+		TaskInstanceDetails taskInst3 = crf.createMaesTaskInst(generateId(), taskDefId3, null);
 		
-		TaskInstanceDetails taskInst4 = crf.createSeqTaskInst();
-		Long taskInstId4 = generateId();
+		TaskInstanceDetails taskInst4 = crf.createSeqTaskInst(generateId(), taskDefId4, null);
 		
-		PlanningRequestInstanceDetails prInst = crf.createPrInst();
-		prInst.setTasks(taskInsts(taskInst1, taskInst2, taskInst3, taskInst4));
+		PlanningRequestInstanceDetails prInst = crf.createPrInst(generateId(), prDefId);
+		setTaskInsts(prInst, taskInst1, taskInst2, taskInst3, taskInst4);
 		
-		Long prInstId = generateId();
-		LongList taskDefIds = ids(taskDefId1, taskDefId2, taskDefId3, taskDefId4);
-		LongList taskInstIds = ids(taskInstId1, taskInstId2, taskInstId3, taskInstId4);
-		
-		return cons.getStub().submitPlanningRequest(prDefId, prInstId, prInst, taskDefIds, taskInstIds);
+		return cons.getStub().submitPlanningRequest(prInst);
 	}
 	
 	protected Long submitRespDef(PlanningRequestResponseDefinitionDetails def) throws MALException, MALInteractionException {
@@ -130,7 +127,7 @@ public class BepiColomboConsumer {
 		CommandRequestResponseFile crrf = new CommandRequestResponseFile();
 		
 		PlanningRequestResponseDefinitionDetails respDef = crrf.createRespDef(crf.getPrDefName());
-		Long respDefId = submitRespDef(respDef);
+		submitRespDef(respDef);
 		
 		return crf();
 	}

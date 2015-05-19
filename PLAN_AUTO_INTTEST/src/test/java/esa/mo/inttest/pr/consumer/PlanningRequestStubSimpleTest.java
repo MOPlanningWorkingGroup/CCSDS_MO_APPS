@@ -9,8 +9,11 @@ import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.Test;
@@ -83,10 +86,10 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
 		enter("testSubmitPlanningRequest");
 		
-		Object[] details = createAndSubmitPlanningRequest();
-		Long prInstId = (Long)details[2];
+		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequest();
+//		Long prInstId = (Long)details[2];
 		
-		verifyPrStat(prInstId);
+		verifyPrStat(prInst.getId());
 		
 		leave("testSubmitPlanningRequest");
 	}
@@ -95,17 +98,21 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testSubmitPlanningRequestWithTask() throws MALException, MALInteractionException {
 		enter("testSubmitPlanningRequestWithTask");
 		
-		Object[] details = createAndSubmitPlanningRequestWithTask();
-		Long prInstId = (Long)details[1];
-		LongList taskInstIds = (LongList)details[3];
+		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
+//		Long prInstId = (Long)details[1];
+//		LongList taskInstIds = (LongList)details[3];
 		
-		verifyPrStat(prInstId);
+		verifyPrStat(prInst.getId());
 		
-		TaskStatusDetailsList taskStats = prCons.getTaskStatus(taskInstIds);
+		LongList ids = new LongList();
+		ids.add(prInst.getTasks().get(0).getId());
+		
+		TaskStatusDetailsList taskStats = prCons.getTaskStatus(ids);
 		
 		assertNotNull(taskStats);
 		assertEquals(1, taskStats.size());
 		assertNotNull(taskStats.get(0));
+		assertEquals(prInst.getTasks().get(0).getId(), taskStats.get(0).getTaskInstId());
 		
 		leave("testSubmitPlanningRequestWithTask");
 	}
@@ -114,13 +121,13 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testUpdatePlanningRequest() throws MALException, MALInteractionException {
 		enter("testUpdatePlanningRequest");
 		
-		Object[] details = createAndSubmitPlanningRequest();
+		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequest();
 		
-		updatePlanningRequestWithTask(details);
+		updatePlanningRequestWithTask(prInst);
 		
-		Long prInstId = (Long)details[2];
+//		Long prInstId = (Long)details[2];
 		
-		verifyPrStat(prInstId);
+		verifyPrStat(prInst.getId());
 		
 		leave("testUpdatePlanningRequest");
 	}
@@ -129,10 +136,10 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testRemovePlanningRequest() throws MALException, MALInteractionException {
 		enter("testRemovePlanningRequest");
 		
-		Object[] details = createAndSubmitPlanningRequestWithTask();
-		Long prInstId = (Long)details[1];
+		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
+//		Long prInstId = (Long)details[1];
 		
-		removePlanningRequest(prInstId);
+		removePlanningRequest(prInst.getId());
 		
 		leave("testRemovePlanningRequest");
 	}
@@ -186,7 +193,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testListPrDefs");
 		
 		LongList ids = listPrDefs("*");
-		// non submitted yet
+		// none submitted yet
 		assertNotNull(ids);
 		assertEquals(0, ids.size());
 		
@@ -197,15 +204,16 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testAddPrDefinition() throws MALException, MALInteractionException {
 		enter("testAddPrDef");
 		
-		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
+		PlanningRequestDefinitionDetails def = addPrDef();
 		
-		assertNotNull(e.getKey());
-		assertEquals(1, e.getKey().size());
-		assertNotNull(e.getKey().get(0));
+		assertNotNull(def);
+		assertNotNull(def.getId());
+		assertFalse(0L == def.getId());
 		// added pr id is listed
 		LongList ids = listPrDefs("*");
 		
-		assertTrue(ids.contains(e.getKey().get(0)));
+		assertNotNull(ids);
+		assertTrue(ids.contains(def.getId()));
 		
 		leave("testAddPrDef");
 	}
@@ -214,15 +222,22 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testUpdatePrDefinition() throws MALException, MALInteractionException {
 		enter("testUpdatePrDef");
 		
-		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
+		PlanningRequestDefinitionDetails def = addPrDef();
 		
-		e.getValue().get(0).setDescription("updated desc");
+		def.setDescription("updated desc");
 		
-		prCons.updateDefinition(DefinitionType.PLANNING_REQUEST_DEF, e.getKey(), e.getValue());
+		LongList ids = new LongList();
+		ids.add(def.getId());
+		
+		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
+		defs.add(def);
+		
+		prCons.updateDefinition(DefinitionType.PLANNING_REQUEST_DEF, ids, defs);
 		// updated pr id is still listed, but cant verify description
-		LongList ids = listPrDefs("*");
+		LongList defIds = listPrDefs("*");
 		
-		assertTrue(ids.contains(e.getKey().get(0)));
+		assertNotNull(defIds);
+		assertTrue(defIds.contains(def.getId()));
 		
 		leave("testUpdatePrDef");
 	}
@@ -231,13 +246,17 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testRemovePrDefinition() throws MALException, MALInteractionException {
 		enter("testRemovePrDef");
 		
-		Map.Entry<LongList, PlanningRequestDefinitionDetailsList> e = addPrDef();
+		PlanningRequestDefinitionDetails def = addPrDef();
 		
-		prCons.removeDefinition(DefinitionType.PLANNING_REQUEST_DEF, e.getKey());
+		LongList ids = new LongList();
+		ids.add(def.getId());
+		
+		prCons.removeDefinition(DefinitionType.PLANNING_REQUEST_DEF, ids);
 		// removed pr id is not listed anymore
-		LongList ids = listPrDefs("*");
+		LongList defIds = listPrDefs("*");
 		
-		assertFalse(ids.contains(e.getKey().get(0)));
+		assertNotNull(defIds);
+		assertFalse(defIds.contains(def.getId()));
 		
 		leave("testRemovePrDef");
 	}
@@ -247,7 +266,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testListTaskDefs");
 		
 		LongList taskDefIdList = listTaskDefs("*");
-		
+		// none submitted
 		assertNotNull(taskDefIdList);
 		assertEquals(0, taskDefIdList.size());
 		
@@ -258,23 +277,24 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testAddTaskDefinition() throws MALException, MALInteractionException {
 		enter("testAddTaskDef");
 		
-		Object[] details = addTaskDef();
-		LongList taskDefIds = (LongList)details[0];
-		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
+		TaskDefinitionDetails taskDef = addTaskDef();
+//		LongList taskDefIds = (LongList)details[0];
+//		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
+		
+		assertNotNull(taskDef);
+//		assertEquals(1, taskDefIds.size());
+		assertNotNull(taskDef.getId());
+		assertFalse(0L == taskDef.getId());
+		
+//		assertNotNull(taskDefs);
+//		assertEquals(1, taskDefs.size());
+//		assertNotNull(taskDefs.get(0));
+		
+		LongList taskDefIds = listTaskDefs("*");
 		
 		assertNotNull(taskDefIds);
-		assertEquals(1, taskDefIds.size());
-		assertNotNull(taskDefIds.get(0));
-		
-		assertNotNull(taskDefs);
-		assertEquals(1, taskDefs.size());
-		assertNotNull(taskDefs.get(0));
-		
-		LongList taskDefIds2 = listTaskDefs("*");
-		
-		assertNotNull(taskDefIds2);
 		// id from add() is list()ed
-		assertTrue(taskDefIds2.contains(taskDefIds.get(0)));
+		assertTrue(taskDefIds.contains(taskDef.getId()));
 		
 		leave("testAddTaskDef");
 	}
@@ -283,20 +303,26 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testUpdateTaskDefinition() throws MALException, MALInteractionException {
 		enter("testUpdateTaskDef");
 		
-		Object[] details = addTaskDef();
-		LongList taskDefIds = (LongList)details[0];
-		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
+		TaskDefinitionDetails def = addTaskDef();
+//		LongList taskDefIds = (LongList)details[0];
+//		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
 		
-		taskDefs.get(0).setDescription("whoa");
+		def.setDescription("whoa");
 		
-		prCons.updateDefinition(DefinitionType.TASK_DEF, taskDefIds, taskDefs);
+		LongList ids = new LongList();
+		ids.add(def.getId());
 		
-		LongList taskDefIds2 = listTaskDefs("*");
+		TaskDefinitionDetailsList defs = new TaskDefinitionDetailsList();
+		defs.add(def);
 		
-		assertNotNull(taskDefIds2);
+		prCons.updateDefinition(DefinitionType.TASK_DEF, ids, defs);
+		
+		LongList defIds = listTaskDefs("*");
+		
+		assertNotNull(defIds);
 		// list() returns id, but unable to verify description
 		// update()d id is still list()ed
-		assertTrue(taskDefIds2.contains(taskDefIds.get(0)));
+		assertTrue(defIds.contains(def.getId()));
 		
 		leave("testUpdateTaskDef");
 	}
@@ -305,16 +331,19 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	public void testRemoveTaskDefinition() throws MALException, MALInteractionException {
 		enter("testRemoveTaskDef");
 		
-		Object[] details = addTaskDef();
-		LongList taskDefIds = (LongList)details[0];
+		TaskDefinitionDetails def = addTaskDef();
+//		LongList taskDefIds = (LongList)details[0];
 		
-		prCons.removeDefinition(DefinitionType.TASK_DEF, taskDefIds);
+		LongList ids = new LongList();
+		ids.add(def.getId());
 		
-		LongList taskDefIds2 = listTaskDefs("*");
+		prCons.removeDefinition(DefinitionType.TASK_DEF, ids);
 		
-		assertNotNull(taskDefIds2);
+		LongList defIds = listTaskDefs("*");
+		
+		assertNotNull(defIds);
 		// remove()d id is not list()ed anymore
-		assertFalse(taskDefIds2.contains(taskDefIds.get(0)));
+		assertFalse(defIds.contains(def.getId()));
 		
 		leave("testRemoveTaskDef");
 	}

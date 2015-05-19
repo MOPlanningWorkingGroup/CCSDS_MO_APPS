@@ -37,15 +37,15 @@ public class OperationsPlanningFile extends CommonFile {
 		return "OPF-1";
 	}
 	
-	public TaskInstanceDetails createTaskInst() throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MCDD10HZ", null, getPrName());
+	public TaskInstanceDetails createTaskInst(Long id, Long defId, Long prId) throws ParseException {
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCDD10HZ"*/id, defId, null/*, getPrName()*/);
 		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(0)));
 		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime("UTC=2007-01-02T12:10:00")));
 		return taskInst;
 	}
 	
-	public PlanningRequestInstanceDetails createPrInst(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(getPrName(), null);
+	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*getPrName()*/id, defId, null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

@@ -39,8 +39,8 @@ public class SkeletonPlanningFile extends CommonFile {
 		return prDef;
 	}
 	
-	public TaskInstanceDetails createTaskInst(int idx) {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("NODE-"+(idx+1), null, getPrName(idx));
+	public TaskInstanceDetails createTaskInst(int idx, Long id, Long defId, Long prId) {
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"NODE-"+(idx+1)*/id, defId, null/*, getPrName(idx)*/);
 		setTaskArg(taskInst, "EV_Parameters_count", new AttributeValue(new UShort(0)));
 		return taskInst;
 	}
@@ -53,8 +53,8 @@ public class SkeletonPlanningFile extends CommonFile {
 		return "EVRQ-"+ (idx+1);
 	}
 	
-	public PlanningRequestInstanceDetails createPrInst(int idx, TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(getPrName(idx), null);
+	public PlanningRequestInstanceDetails createPrInst(int idx, Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*getPrName(idx)*/id, defId, null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

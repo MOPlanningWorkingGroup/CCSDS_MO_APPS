@@ -119,6 +119,7 @@ public class ThreeSchedulersDemoTest {
 		LongList defIds = new LongList();
 		
 		ScheduleDefinitionDetails def = ScheduleConsumer.createDef("test schedule definition 1", "test 1");
+		def.setId(0L);
 		ScheduleDefinitionDetailsList defs = new ScheduleDefinitionDetailsList();
 		defs.add(def);
 		LongList ids = cons1.getStub().addDefinition(defs);
@@ -126,6 +127,7 @@ public class ThreeSchedulersDemoTest {
 		
 		ArgumentDefinitionDetailsList argDefs = ScheduleConsumer.addArgDef(null, "arg1", Util.attrType(Attribute.STRING_TYPE_SHORT_FORM), null);
 		def = ScheduleConsumer.createDef("test schedule definition 2", "test 2");
+		def.setId(0L);
 		def.setArgumentDefs(argDefs);
 		defs.clear();
 		defs.add(def);
@@ -134,6 +136,7 @@ public class ThreeSchedulersDemoTest {
 		
 		ObjectTypeList eTypes = ScheduleConsumer.addObjType(null, new ScheduleInstanceDetails());
 		def = ScheduleConsumer.createDef("test schedule definition 3", "test 3");
+		def.setId(0L);
 		def.setEventTypes(eTypes);
 		defs.clear();
 		defs.add(def);
@@ -166,25 +169,29 @@ public class ThreeSchedulersDemoTest {
 	private LongList addInstances(LongList defIds) throws MALException, MALInteractionException {
 		LongList instIds = new LongList();
 		
-		ScheduleInstanceDetails inst = ScheduleConsumer.createInst("test schedule instance 1", "test 1", null, null, null, null);
 		Long instId = generateId();
-		cons2.getStub().submitSchedule(defIds.get(0), instId, inst);
+		ScheduleInstanceDetails inst = ScheduleConsumer.createInst(instId, defIds.get(0), "test 1", null, null, null, null);
+		
+		cons2.getStub().submitSchedule(inst);
 		instIds.add(instId);
 		
 		IdentifierList argNames = ScheduleConsumer.addArgName(null, "arg1");
 		AttributeValueList argVals = ScheduleConsumer.addArgValue(null, new Union("desd"));
-		inst = ScheduleConsumer.createInst("test schedule instance 2", "test 2", argNames, argVals, null, null);
+		
 		instId = generateId();
-		cons2.getStub().submitSchedule(defIds.get(1), instId, inst);
+		inst = ScheduleConsumer.createInst(instId, defIds.get(1), "test 2", argNames, argVals, null, null);
+		
+		cons2.getStub().submitSchedule(inst);
 		instIds.add(instId);
 		
-		inst = ScheduleConsumer.createInst("test schedule instance 3", "test 3", null, null, null, null);
 		instId = generateId();
+		inst = ScheduleConsumer.createInst(instId, defIds.get(2), "test 3", null, null, null, null);
 		ObjectId objId = ScheduleConsumer.createObjId(new ScheduleInstanceDetails(), consFct.getDomain(), instId);
-		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, "schedule item", inst.getName().getValue(), null,
+		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, generateId(), inst.getId(), null,
 				null, new TriggerDetailsList(), objId);
 		inst.setScheduleItems(items);
-		cons2.getStub().submitSchedule(defIds.get(2), instId, inst);
+		
+		cons2.getStub().submitSchedule(inst);
 		instIds.add(instId);
 		
 		return instIds;

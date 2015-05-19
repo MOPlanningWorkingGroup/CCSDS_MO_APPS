@@ -10,7 +10,6 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
-import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
@@ -25,7 +24,6 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
-import esa.mo.inttest.Util;
 import esa.mo.inttest.sch.consumer.ScheduleConsumer;
 
 /**
@@ -88,19 +86,19 @@ public class StationScheduleIncrementFile extends CommonFile {
 	 * @return
 	 * @throws ParseException
 	 */
-	public ScheduleInstanceDetails createSchInst(int idx) throws ParseException {
+	public ScheduleInstanceDetails createSchInst(int idx, Long id, Long defId) throws ParseException {
 		TriggerDetailsList trigs = createTriggers(parseTime(START_TIMES[idx]), parseDelta("ST+00.00.00"));
 		IdentifierList argNames = new IdentifierList();
 		argNames.add(new Identifier("TEMPLATE"));
 		AttributeValueList argValues = createArgValues(TEMPLATES[idx]);
-		return ScheduleConsumer.createInst(NAMES[idx], null, argNames, argValues, null, trigs);
+		return ScheduleConsumer.createInst(/*NAMES[idx]*/id, defId, null, argNames, argValues, null, trigs);
 	}
 	
-	protected ScheduleItemInstanceDetails createItemInst(String itemName, String name, ObjectId delegate,
+	protected ScheduleItemInstanceDetails createItemInst(/*String itemName*/Long id, /*String name*/Long schId, ObjectId delegate,
 			ArgumentDefinitionDetailsList argDefs, AttributeValueList argVals, TriggerDetailsList triggers) {
 		ScheduleItemInstanceDetails schItem = new ScheduleItemInstanceDetails();
-		schItem.setScheduleInstName(new Identifier(name));
-		schItem.setScheduleItemInstName(new Identifier(itemName));
+		schItem.setId(id);
+		schItem.setSchInstId(schId);
 		schItem.setDelegateItem(delegate);
 		schItem.setArgumentTypes(argDefs);
 		schItem.setArgumentValues(argVals);
@@ -114,23 +112,22 @@ public class StationScheduleIncrementFile extends CommonFile {
 	 * @return
 	 * @throws ParseException
 	 */
-	public ScheduleInstanceDetails createSchInst2() throws ParseException {
+	public ScheduleInstanceDetails createSchInst2(Long id, Long defId, Long item1Id, Long item2Id) throws ParseException {
 		TriggerDetailsList trigs1 = createTriggers(parseTime(START_TIMES[0]), parseDelta("ST+00.00.00"));
 		ArgumentDefinitionDetailsList argDefs = createArgDefs();
 		AttributeValueList argValues1 = createArgValues(TEMPLATES[0]);
 		
-		ObjectId dummy = new ObjectId(Util.createObjType(new ScheduleItemInstanceDetails()), new ObjectKey(new IdentifierList(), 1L));
-		
-		ScheduleItemInstanceDetails item1 = createItemInst(NAMES[0], null, dummy, argDefs, argValues1, trigs1);
+		ScheduleItemInstanceDetails item1 = createItemInst(/*NAMES[0]*/item1Id, id, null, argDefs, argValues1, trigs1);
 		
 		TriggerDetailsList trigs2 = createTriggers(parseTime(START_TIMES[0]), parseDelta("ST+00.00.00"));
 		AttributeValueList argValues2 = createArgValues(TEMPLATES[0]);
-		ScheduleItemInstanceDetails item2 = createItemInst(NAMES[0], null, dummy, argDefs, argValues2, trigs2);
+		
+		ScheduleItemInstanceDetails item2 = createItemInst(/*NAMES[0]*/item2Id, id, null, argDefs, argValues2, trigs2);
 		
 		ScheduleItemInstanceDetailsList schItems = new ScheduleItemInstanceDetailsList();
 		schItems.add(item1);
 		schItems.add(item2);
 		
-		return ScheduleConsumer.createInst("SIST-1", null, null, null, schItems, null);
+		return ScheduleConsumer.createInst(/*"SIST-1"*/id, defId, null, null, null, schItems, null);
 	}
 }

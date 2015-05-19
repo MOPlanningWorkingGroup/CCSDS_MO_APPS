@@ -183,8 +183,8 @@ public class PlanIncrementFile extends CommonFile {
 	 * @return
 	 * @throws ParseException
 	 */
-	public TaskInstanceDetails createTaskInst() throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("MCEMON-1", null, getPrName());
+	public TaskInstanceDetails createTaskInst(Long id, Long defId, Long prId) throws ParseException {
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCEMON-1"*/id, defId, null/*, getPrName()*/);
 		taskInst.setTimingConstraints(createPifTaskTrigger(parseTime("UTC=2007-08-31T20:03:23")));
 		setTaskArg(taskInst, "Parent_Event_Name", new AttributeValue(new Union("MCEMON")));
 		setTaskArg(taskInst, "Parent_Event_Source", new AttributeValue(new Union("SPF")));
@@ -200,8 +200,8 @@ public class PlanIncrementFile extends CommonFile {
 	 * @return
 	 * @throws ParseException
 	 */
-	public PlanningRequestInstanceDetails createPrInst(TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(getPrName(), null);
+	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*getPrName()*/id, defId, null);
 		TriggerDetailsList trigs = new TriggerDetailsList();
 		trigs.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(parseTime("UTC=2008-04-07T00:00:00"))));
 		prInst.setTimingConstraints(trigs);

@@ -131,10 +131,12 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param trigs
 	 * @return
 	 */
-	public static ScheduleInstanceDetails createInst(String name, String comm, IdentifierList argNames,
+	public static ScheduleInstanceDetails createInst(/*String name*/Long id, Long defId, String comm, IdentifierList argNames,
 			AttributeValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
 		ScheduleInstanceDetails inst = new ScheduleInstanceDetails();
-		inst.setName(new Identifier(name));
+//		inst.setName(new Identifier(name));
+		inst.setId(id);
+		inst.setSchDefId(defId);
 		inst.setComment(comm);
 		inst.setArgumentDefNames(argNames);
 		inst.setArgumentValues(argVals);
@@ -178,11 +180,13 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param del
 	 * @return
 	 */
-	public static ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items, String name, String schName,
-			ArgumentDefinitionDetailsList argTypes, AttributeValueList argVals, TriggerDetailsList trigs, ObjectId del) {
+	public static ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items,
+			/*String name*/Long itemId, /*String schName*/Long schId, ArgumentDefinitionDetailsList argTypes,
+			AttributeValueList argVals, TriggerDetailsList trigs, ObjectId del) {
 		ScheduleItemInstanceDetailsList list = (null != items) ? items : new ScheduleItemInstanceDetailsList();
-		list.add(new ScheduleItemInstanceDetails(new Identifier(name), new Identifier(schName), argTypes, argVals,
-				trigs, del)); // trigs - mandatory, delegate - mandatory
+//		list.add(new ScheduleItemInstanceDetails(new Identifier(name), new Identifier(schName),
+		list.add(new ScheduleItemInstanceDetails(itemId, schId, argTypes, argVals, trigs, del));
+		// trigs - mandatory, delegate - mandatory
 		return list;
 	}
 	

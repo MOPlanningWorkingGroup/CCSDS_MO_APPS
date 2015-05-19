@@ -27,8 +27,6 @@ public class InstStore {
 	 * Schedule instance + definition + status info.
 	 */
 	protected static class Item {
-		protected Long defId;
-		protected Long instId;
 		protected ScheduleInstanceDetails inst;
 		protected ScheduleStatusDetails stat;
 	}
@@ -38,7 +36,7 @@ public class InstStore {
 	protected Item findItem(Long id) {
 		Item it = null;
 		for (Item i: items) {
-			if (id == i.instId) {
+			if (id == i.inst.getId()) {
 				it = i;
 				break;
 			}
@@ -74,15 +72,13 @@ public class InstStore {
 	 * @param stat
 	 * @throws MALException
 	 */
-	public void add(Long defId, Long instId, ScheduleInstanceDetails inst, ScheduleStatusDetails stat)
+	public void add(ScheduleInstanceDetails inst, ScheduleStatusDetails stat)
 			throws MALException {
-		Item it = findItem(instId);
+		Item it = findItem(inst.getId());
 		if (null != it) {
-			throw new MALException("schedule instance already exists, id: " + instId);
+			throw new MALException("schedule instance already exists, id: " + /*instId*/inst.getId());
 		}
 		it = new Item();
-		it.defId = defId;
-		it.instId = instId;
 		it.inst = inst;
 		it.stat = stat;
 		items.add(it);
@@ -95,10 +91,10 @@ public class InstStore {
 	 * @return
 	 * @throws MALException
 	 */
-	public ScheduleStatusDetails update(Long instId, ScheduleInstanceDetails inst) throws MALException {
-		Item it = findItem(instId);
+	public ScheduleStatusDetails update(ScheduleInstanceDetails inst) throws MALException {
+		Item it = findItem(inst.getId());
 		if (null == it) {
-			throw new MALException("schedule instance does not exist, id: " + instId);
+			throw new MALException("schedule instance does not exist, id: " + inst.getId());
 		}
 		it.inst = inst;
 		return it.stat;
@@ -208,7 +204,7 @@ public class InstStore {
 	protected void patch(ScheduleInstanceDetails src1, ScheduleInstanceDetails src2,
 			SchedulePatchOperations pat, ScheduleInstanceDetails trg) {
 		// pat.getScheduleInstName() - patch name? ignore
-		trg.setName(src2.getName());
+//		trg.setName(src2.getName());
 		trg.setComment(src2.getComment());
 		// patch triggers
 		trg.setTimingConstraints(new TriggerDetailsList());
@@ -247,23 +243,26 @@ public class InstStore {
 			Item trgIt = findItem(targetId);
 			if (null == trgIt) { // target is a new one - new id and instance
 				trgIt = new Item();
-				trgIt.defId = defId;
-				trgIt.instId = targetId;
 				trgIt.inst = new ScheduleInstanceDetails();
+				trgIt.inst.setId(targetId);
+				trgIt.inst.setSchDefId(defId);
 				patch(srcIt.inst, schInst, patchOp, trgIt.inst);
 				trgIt.stat = new ScheduleStatusDetails();
-				trgIt.stat.setScheduleInstName(schInst.getName());
+				trgIt.stat.setSchInstId(schInst.getId());
 				trgIt.stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList());
 				items.add(trgIt);
 			} else { // target already exists
-				if (srcIt.defId != trgIt.defId) {
-					throw new MALException("source and target have different definition ids: " + srcIt.defId + " vs " + trgIt.defId);
+				if (srcIt.inst.getSchDefId() != trgIt.inst.getSchDefId()) {
+					throw new MALException("source and target have different definition ids: " +
+							trgIt.inst.getSchDefId() + " vs " + trgIt.inst.getSchDefId());
 				}
 				patch(srcIt.inst, schInst, patchOp, trgIt.inst);
 			}
 		} else { // source and target are same id, but new instance
 			ScheduleInstanceDetails old = srcIt.inst;
 			srcIt.inst = new ScheduleInstanceDetails();
+			srcIt.inst.setId(old.getId());
+			srcIt.inst.setSchDefId(old.getSchDefId());
 			patch(old, schInst, patchOp, srcIt.inst);
 		}
 		return srcIt.stat;

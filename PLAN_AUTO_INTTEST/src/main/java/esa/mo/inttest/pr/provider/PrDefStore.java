@@ -2,6 +2,7 @@ package esa.mo.inttest.pr.provider;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -15,7 +16,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDef
  */
 public class PrDefStore {
 
-	private long lastPrId = 0L;
+	private AtomicLong lastId = new AtomicLong(0L);
 	private Map<Long, PlanningRequestDefinitionDetails> prDefs = new HashMap<Long, PlanningRequestDefinitionDetails>();
 	
 	/**
@@ -56,13 +57,18 @@ public class PrDefStore {
 		return list;
 	}
 	
+	private long generateId() {
+		return lastId.incrementAndGet();
+	}
+	
 	/**
 	 * Adds single PR def and returns id.
 	 * @param prDef
 	 * @return
 	 */
 	public Long add(PlanningRequestDefinitionDetails prDef) {
-		Long id = new Long(++lastPrId);
+		Long id = new Long(generateId());
+		prDef.setId(id);
 		prDefs.put(id, prDef);
 		return id;
 	}

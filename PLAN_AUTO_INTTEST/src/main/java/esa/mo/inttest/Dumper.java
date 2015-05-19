@@ -183,6 +183,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != td) {
 			s.append("{\n");
+			s.append(ind).append(STEP).append("id=").append(td.getId()).append(",\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(td.getName())).append(",\n");
 			s.append(ind).append(STEP).append("desc=").append(quote(td.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(td.getArgumentDefs(), ind+STEP)).append("\n");
@@ -217,7 +218,7 @@ public final class Dumper {
 		if (null != il) {
 			openList(s, il);
 			for (int i = 0; i < il.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": \"").append(il.get(i)).append("\",\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpId(il.get(i))).append(",\n");
 			}
 			closeList(s, il, ind);
 		} else {
@@ -239,6 +240,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != prd) {
 			s.append("{\n");
+			s.append(ind).append(STEP).append("id=").append(prd.getId()).append(",\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(prd.getName())).append(",\n");
 			s.append(ind).append(STEP).append("desc=").append(quote(prd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(prd.getArgumentDefs(), ind+STEP)).append(",\n");
@@ -387,8 +389,9 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != ti) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("name=").append(dumpId(ti.getName())).append(",\n");
-			s.append(ind).append(STEP).append("prName=").append(dumpId(ti.getPrName())).append(",\n");
+			s.append(ind).append(STEP).append("id=").append(ti.getId()).append(",\n");
+			s.append(ind).append(STEP).append("defId=").append(ti.getTaskDefId()).append(",\n");
+			s.append(ind).append(STEP).append("prId=").append(ti.getPrInstId()).append(",\n");
 			s.append(ind).append(STEP).append("comment=").append(quote(ti.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(ti.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(ti.getArgumentValues(), ind+STEP)).append(",\n");
@@ -418,7 +421,8 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != pri) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("name=").append(dumpId(pri.getName())).append(",\n");
+			s.append(ind).append(STEP).append("id=").append(pri.getId()).append(",\n");
+			s.append(ind).append(STEP).append("defId=").append(pri.getPrDefId()).append(",\n");
 			s.append(ind).append(STEP).append("comment=").append(quote(pri.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(pri.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(pri.getArgumentValues(), ind+STEP)).append(",\n");
@@ -524,10 +528,15 @@ public final class Dumper {
 	}
 	
 	private static String dumpObjId(ObjectId oi, String ind) {
-		StringBuilder s = new StringBuilder("{\n");
-		s.append(ind).append(STEP).append("key=").append(dumpObjKey(oi.getKey(), ind+STEP)).append(",\n");
-		s.append(ind).append(STEP).append("type=").append(objType(oi.getType())).append("\n");
-		s.append(ind).append("}");
+		StringBuilder s = new StringBuilder();
+		if (null != oi) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("key=").append(dumpObjKey(oi.getKey(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("type=").append(objType(oi.getType())).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
 		return s.toString();
 	}
 	
@@ -581,7 +590,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != ts) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("taskInstName=").append(dumpId(ts.getTaskInstName())).append(",\n");
+			s.append(ind).append(STEP).append("taskId=").append(ts.getTaskInstId()).append(",\n");
 			s.append(ind).append(STEP).append("status=").append(dumpStats(ts.getStatus(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
@@ -608,7 +617,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != prs) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prs.getPrInstName())).append(",\n");
+			s.append(ind).append(STEP).append("prId=").append(prs.getPrInstId()).append(",\n");
 			s.append(ind).append(STEP).append("status=").append(dumpStats(prs.getStatus(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("taskStatuses=").append(dumpTaskStats(prs.getTaskStatuses(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
@@ -812,6 +821,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != sd) {
 			s.append("{\n");
+			s.append(ind).append(STEP).append("id=").append(sd.getId()).append(",\n");
 			s.append(ind).append(STEP).append("name=").append(dumpId(sd.getName())).append(",\n");
 			s.append(ind).append(STEP).append("desc=").append(quote(sd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("eventTypes=").append(dumpEventTypes(sd.getEventTypes(), ind+STEP)).append(",\n");
@@ -849,8 +859,8 @@ public final class Dumper {
 	private static String dumpSchItem(ScheduleItemInstanceDetails sii, String ind) {
 		StringBuilder s = new StringBuilder();
 		s.append("{\n");
-		s.append(ind).append(STEP).append("scheduleItemName=").append(dumpId(sii.getScheduleItemInstName())).append(",\n");
-		s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(sii.getScheduleInstName())).append(",\n");
+		s.append(ind).append(STEP).append("id=").append(sii.getId()).append(",\n");
+		s.append(ind).append(STEP).append("schId=").append(sii.getId()).append(",\n");
 		s.append(ind).append(STEP).append("delegateItem=").append(dumpObjId(sii.getDelegateItem(), ind+STEP)).append(",\n");
 		s.append(ind).append(STEP).append("argTypes=").append(dumpArgDefs(sii.getArgumentTypes(), ind+STEP)).append(",\n");
 		s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(sii.getArgumentValues(), ind+STEP)).append(",\n");
@@ -877,7 +887,8 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != si) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("name=").append(dumpId(si.getName())).append(",\n");
+			s.append(ind).append(STEP).append("id=").append(si.getId()).append(",\n");
+			s.append(ind).append(STEP).append("defId=").append(si.getSchDefId()).append(",\n");
 			s.append(ind).append(STEP).append("comment=").append(quote(si.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argDefNames=").append(dumpNames(si.getArgumentDefNames(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpAttrVals(si.getArgumentValues(), ind+STEP)).append(",\n");
@@ -903,7 +914,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != sis) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("scheduleItemName=").append(dumpId(sis.getScheduleItemInstName())).append(",\n");
+			s.append(ind).append(STEP).append("schItemId=").append(sis.getSchItemId()).append(",\n");
 			s.append(ind).append(STEP).append("status=").append(dumpStats(sis.getStatus(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
@@ -930,7 +941,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != ss) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(ss.getScheduleInstName())).append(",\n");
+			s.append(ind).append(STEP).append("schId=").append(ss.getSchInstId()).append(",\n");
 			s.append(ind).append(STEP).append("status=").append(dumpStats(ss.getStatus(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("scheduleItemStatuses=").append(dumpSchItemStats(ss.getScheduleItemStatuses(), ind+STEP)).append("\n");
 			s.append(ind).append("}");

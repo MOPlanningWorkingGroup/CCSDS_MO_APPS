@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 
 /**
@@ -19,20 +19,11 @@ public class PrInstStore {
 	 */
 	public final class Item {
 		
-		public Long defId;
-		public Long instId;
 		public PlanningRequestInstanceDetails pr;
-		public LongList taskDefIds;
-		public LongList taskInstIds;
 		public PlanningRequestStatusDetails stat;
 		
-		public Item(Long defId, Long instId, PlanningRequestInstanceDetails pr, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails stat) {
-			this.defId = defId;
-			this.instId = instId;
+		public Item(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			this.pr = pr;
-			this.taskDefIds = taskDefIds;
-			this.taskInstIds = taskInstIds;
 			this.stat = stat;
 		}
 	}
@@ -48,9 +39,8 @@ public class PrInstStore {
 	 * @param taskInstIds
 	 * @param prStat
 	 */
-	public void addPr(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-			LongList taskInstIds, PlanningRequestStatusDetails prStat) {
-		prs.add(new Item(prDefId, prInstId, prInst, taskDefIds, taskInstIds, prStat));
+	public void addPr(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+		prs.add(new Item(prInst, prStat));
 	}
 	
 	/**
@@ -63,7 +53,7 @@ public class PrInstStore {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
 			Item item = it.next();
-			if (prInstId == item.instId) {
+			if (prInstId == item.pr.getId()) {
 				rval = item;
 				break;
 			}
@@ -80,7 +70,7 @@ public class PrInstStore {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
 			Item item = it.next();
-			if (prInstId == item.instId) {
+			if (prInstId == item.pr.getId()) {
 				item.stat = prStat;
 				break;
 			}
@@ -93,11 +83,11 @@ public class PrInstStore {
 	 * @param prInst
 	 * @param prStat
 	 */
-	public void updatePr(Long prInstId, PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+	public void updatePr(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
 			Item item = it.next();
-			if (prInstId == item.instId) {
+			if (prInst.getId() == item.pr.getId()) {
 				item.pr = prInst;
 				item.stat = prStat;
 				break;
@@ -113,7 +103,7 @@ public class PrInstStore {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
 			Item item = it.next();
-			if (prInstId == item.instId) {
+			if (prInstId == item.pr.getId()) {
 				it.remove();
 				break;
 			}
@@ -129,16 +119,16 @@ public class PrInstStore {
 		TaskStatusDetails taskStat = null;
 		Iterator<Item> it = prs.iterator();
 		// go through prs
-		while (it.hasNext()) {
+		while (it.hasNext() && (null == taskStat)) {
 			Item item = it.next();
-			// should have same amount of tasks instance ids and task statuses
-			Iterator<Long> idIt = item.taskInstIds.iterator();
+			// should have same amount of tasks instances and task statuses
+			Iterator<TaskInstanceDetails> taskIt = item.pr.getTasks().iterator();
 			Iterator<TaskStatusDetails> taskStatIt = item.stat.getTaskStatuses().iterator();
 			// go through task instance ids and task statuses
-			while (idIt.hasNext() && taskStatIt.hasNext()) {
-				Long id = idIt.next();
+			while (taskIt.hasNext() && taskStatIt.hasNext()) {
+				TaskInstanceDetails task = taskIt.next();
 				TaskStatusDetails ts = taskStatIt.next();
-				if (taskInstId == id) {
+				if (taskInstId == task.getId()) {
 					taskStat = ts;
 					break;
 				}
@@ -156,12 +146,12 @@ public class PrInstStore {
 		Iterator<Item> it = prs.iterator();
 		while (it.hasNext()) {
 			Item item = it.next();
-			Iterator<Long> idIt = item.taskInstIds.iterator();
+			Iterator<TaskInstanceDetails> taskIt = item.pr.getTasks().iterator();
 			Iterator<TaskStatusDetails> statIt = item.stat.getTaskStatuses().iterator();
-			while (idIt.hasNext() && statIt.hasNext()) {
-				Long id = idIt.next();
+			while (taskIt.hasNext() && statIt.hasNext()) {
+				TaskInstanceDetails task = taskIt.next();
 				TaskStatusDetails ts = statIt.next();
-				if (taskInstId == id) {
+				if (taskInstId == task.getId()) {
 					int idx = item.stat.getTaskStatuses().indexOf(ts);
 					item.stat.getTaskStatuses().set(idx, taskStat);
 					break;

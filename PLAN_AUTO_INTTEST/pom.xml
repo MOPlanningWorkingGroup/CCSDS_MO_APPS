@@ -112,6 +112,7 @@
       <plugin>
         <groupId>int.esa.ccsds.mo</groupId>
         <artifactId>StubGenerator</artifactId>
+<!--         <version>${esa.stubgen.version}</version> -->
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

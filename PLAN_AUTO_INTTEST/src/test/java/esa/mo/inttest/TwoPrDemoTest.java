@@ -1,5 +1,6 @@
 package esa.mo.inttest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,6 +30,11 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestIns
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
@@ -63,8 +69,10 @@ public class TwoPrDemoTest {
 		
 		private PlanningRequestStub gs;
 		private PlanningRequestProvider instr;
-		private Long gsPrDefId;
+		private Long gsPrDefId = null;
+		private LongList gsTaskDefIds = null;
 		private LongList prInstIds = new LongList();
+		private List<LongList> taskInstIds = new ArrayList<LongList>();
 		
 		/**
 		 * Ctor.
@@ -83,11 +91,19 @@ public class TwoPrDemoTest {
 		}
 		
 		/**
-		 * Set pr def id to use for submission to gs pr.
+		 * Set pr def id to use for submission to gs.
 		 * @param id
 		 */
 		public void setGsPrDefId(Long id) {
 			this.gsPrDefId = id;
+		}
+		
+		/**
+		 * Set task def ids to use for submission to gs.
+		 * @param ids
+		 */
+		public void setGsTaskDefIds(LongList ids) {
+			this.gsTaskDefIds = ids;
 		}
 		
 		// forward pr status update from gs to instr consumer
@@ -100,7 +116,7 @@ public class TwoPrDemoTest {
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
 				Util.addOrUpdateStatus(it.stat.getStatus(), is, t, c);
 				try {
-					instr.publishPr(UpdateType.UPDATE, id, it.stat);
+					instr.publishPr(UpdateType.UPDATE, it.stat);
 				} catch (MALException e) {
 					LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
 				} catch (MALInteractionException e) {
@@ -131,6 +147,24 @@ public class TwoPrDemoTest {
 			}
 		}
 		
+		private void forwardTask(Long id, TaskStatusDetails stat) {
+			TaskStatusDetails taskStat = instr.getInstStore().findTask(id);
+			if (null != taskStat) {
+				StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
+				InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
+				Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
+				String c = (null != sr) ? sr.getComment() : "planning conflict";
+				Util.addOrUpdateStatus(taskStat.getStatus(), is, t, c);
+				try {
+					instr.publishTask(UpdateType.UPDATE, taskStat);
+				} catch (MALException e) {
+					LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
+				} catch (MALInteractionException e) {
+					LOG.log(Level.INFO, "instr pr status forward error: mal interaction: {0}", e);
+				}
+			}
+		}
+		
 		/**
 		 * Task notifications from gs pr.
 		 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorTasksNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList, java.util.Map)
@@ -142,23 +176,37 @@ public class TwoPrDemoTest {
 			LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(id={0}, List:updHdrs, List:objIds, List:taskStats)" +
 					"\n  updHdrs[]={1}\n  objIds[]={2}\n  taskStats[]={3}", new Object[] { id, Dumper.updHdrs(updHdrs),
 					Dumper.objIds(objIds), Dumper.taskStats(taskStats), Dumper.fromBroker(PR_PROV2, msgHdr) });
+			for (int i = 0; i < updHdrs.size(); ++i) {
+				UpdateHeader uh = updHdrs.get(i);
+				if (UpdateType.UPDATE == uh.getUpdateType()) {
+					ObjectId oi = objIds.get(i);
+					TaskStatusDetails taskStat = taskStats.get(i);
+					forwardTask(oi.getKey().getInstId(), taskStat);
+				}
+			}
 		}
 		
 		/**
 		 * Pr submission notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrSubmit(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public 	void onPrSubmit(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails prStat) {
-			prInstIds.add(prInstId);
+		public 	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+			prInstIds.add(prInst.getId());
+			LongList taskIds = null;
+			if (null != prInst.getTasks() && !prInst.getTasks().isEmpty()) {
+				taskIds = new LongList();
+				for (TaskInstanceDetails t: prInst.getTasks()) {
+					taskIds.add(t.getId());
+				}
+			}
+			taskInstIds.add(taskIds);
 		}
 		
 		/**
 		 * Pr update notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrUpdate(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public void onPrUpdate(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 			// nothing
 		}
 		
@@ -177,10 +225,22 @@ public class TwoPrDemoTest {
 		 */
 		public void doPlanning() throws MALException, MALInteractionException {
 			// process submitted prs
-			for (Long id: prInstIds) {
-				PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst("instr pr requests gs", "instr pr requests gs");
+			for (int i = 0; i < prInstIds.size(); ++i) {
+				Long prInstId = prInstIds.get(i);
+				LongList taskInstIds = (null != this.taskInstIds && i < this.taskInstIds.size()) ? this.taskInstIds.get(i) : null;
 				
-				PlanningRequestResponseInstanceDetailsList prResps = gs.submitPlanningRequest(gsPrDefId, id, prInst, null, null);
+				PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prInstId, gsPrDefId, null);
+				
+				if (null != taskInstIds && null != gsTaskDefIds) {
+					TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(taskInstIds.get(0), gsTaskDefIds.get(0), null);
+					taskInst.setPrInstId(prInst.getId());
+					TaskInstanceDetails taskInst2 = PlanningRequestConsumer.createTaskInst(taskInstIds.get(1), gsTaskDefIds.get(1), null);
+					taskInst2.setPrInstId(prInst.getId());
+					prInst.setTasks(new TaskInstanceDetailsList());
+					prInst.getTasks().add(taskInst);
+					prInst.getTasks().add(taskInst2);
+				}
+				PlanningRequestResponseInstanceDetailsList prResps = gs.submitPlanningRequest(prInst);
 				
 				assertNotNull(prResps);
 				assertFalse(prResps.isEmpty());
@@ -209,17 +269,15 @@ public class TwoPrDemoTest {
 		 * Pr submission notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrSubmit(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public 	void onPrSubmit(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails prStat) {
-			prInstIds.add(prInstId);
+		public 	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+			prInstIds.add(prInst.getId());
 		}
 		
 		/**
 		 * Pr update notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrUpdate(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public void onPrUpdate(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 			// nothing
 		}
 		
@@ -243,7 +301,7 @@ public class TwoPrDemoTest {
 				if (null != it) {
 					Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.PLAN_CONFLICT,
 							Util.currentTime(), "planning conflict");
-					pr.publishPr(UpdateType.UPDATE, id, it.stat);
+					pr.publishPr(UpdateType.UPDATE, it.stat);
 				}
 			}
 		}
@@ -359,20 +417,30 @@ public class TwoPrDemoTest {
 	
 	private LongList gsAddPrDefs() throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("gs pr def 1", "gs pr def 1");
+		def.setId(0L);
 		
 		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
 		defs.add(def);
 		
-		return powerGsCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		LongList ids = powerGsCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		if (null != ids && !ids.isEmpty()) {
+			def.setId(ids.get(0));
+		}
+		return ids;
 	}
 	
 	private LongList instrAddPrDefs() throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("instr pr def 1", "instr pr def 1");
+		def.setId(0L);
 		
 		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
 		defs.add(def);
 		
-		return powerInstrCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		LongList ids = powerInstrCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		if (null != ids && !ids.isEmpty()) {
+			def.setId(ids.get(0));
+		}
+		return ids;
 	}
 	
 	private void registerTaskMonitor(String id, IdentifierList dom, PlanningRequestStub prs, PlanningRequestAdapter pra,
@@ -413,18 +481,16 @@ public class TwoPrDemoTest {
 		return lastId.incrementAndGet();
 	}
 	
-	private Object[] addPrInsts(Long prDefId) throws MALException, MALInteractionException {
-		String prName = "intrument pr instance 1";
+	private PlanningRequestInstanceDetails addPrInsts(Long prDefId) throws MALException, MALInteractionException {
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(generateId(), prDefId, "instrument pr instance 1");
 		
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prName, "instrument pr instance 1");
-		Long prInstId = generateId();
+		PlanningRequestResponseInstanceDetailsList resps = normalInstrCons.getStub().submitPlanningRequest(prInst);
 		
-		PlanningRequestResponseInstanceDetailsList resps = normalInstrCons.getStub().submitPlanningRequest(prDefId, prInstId, prInst, null, null);
 		assertNotNull(resps);
 		assertFalse(resps.isEmpty());
 		assertNotNull(resps.get(0));
 		
-		return new Object[] { prInstId, prInst };
+		return prInst;
 	}
 	
 	private void sleep(long ms) {
@@ -436,7 +502,7 @@ public class TwoPrDemoTest {
 	}
 	
 	@Test
-	public void test() throws MALException, MALInteractionException {
+	public void testPrWithoutTasks() throws MALException, MALInteractionException {
 		// instr pr plugin
 		InstrPrProcessor instrPrProc = new InstrPrProcessor(instrProv2GsProvCons);
 		prProvFct.setPlugin(instrPrProc);
@@ -478,12 +544,169 @@ public class TwoPrDemoTest {
 		registerPrMonitor(sub4Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
 		
 		// normal user submits instances
-		Object[] details = addPrInsts(instrPrDefIds.get(0));
+		PlanningRequestInstanceDetails prInst = addPrInsts(instrPrDefIds.get(0));
 		
-		assertNotNull(details);
-		assertTrue(1 < details.length);
-		assertNotNull(details[0]);
-		assertNotNull(details[1]);
+		assertNotNull(prInst);
+		assertNotNull(prInst.getId());
+		assertFalse(0L == prInst.getId());
+		
+		sleep(100);
+		
+		// at some point instr pr prov "does planning" and submits to gs pr prov
+		instrPrProc.doPlanning();
+		
+		sleep(100);
+		
+		// at some point gs pr prov "does planning" and notifies results
+		gsPrProc.doPlanning();
+		
+		sleep(100);
+		
+		// instr pr un-subscribes
+		deRegisterPrMonitor(sub4Id, instrProv2GsProvCons, PR_PROV1, PR_PROV2);
+		
+		deRegisterTaskMonitor(sub3Id, instrProv2GsProvCons, PR_PROV1, PR_PROV2);
+		// pr normal user un-subscribes
+		deRegisterPrMonitor(sub2Id, normalInstrCons.getStub(), CLIENT1, PR_PROV1);
+		
+		deRegisterTaskMonitor(sub1Id, normalInstrCons.getStub(), CLIENT1, PR_PROV1);
+	}
+	
+	private Object[] gsAddPrDefsWithTasks() throws MALException, MALInteractionException {
+		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("gs pr def 2", "gs pr def 2");
+		def.setId(0L);
+		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
+		defs.add(def);
+		
+		LongList prDefIds = powerGsCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		def.setId(prDefIds.get(0));
+		
+		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("gs task def 1", "gs task def 1");
+		taskDef.setId(0L);
+		TaskDefinitionDetails taskDef2 = PlanningRequestConsumer.createTaskDef("gs task def 2", "gs task def 2");
+		taskDef2.setId(0L);
+		
+		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
+		taskDefs.add(taskDef);
+		taskDefs.add(taskDef2);
+		
+		LongList taskDefIds = powerGsCons.getStub().addDefinition(DefinitionType.TASK_DEF, taskDefs);
+		taskDef.setId(taskDefIds.get(0));
+		taskDef2.setId(taskDefIds.get(1));
+		
+		return new Object[] { prDefIds, taskDefIds };
+	}
+	
+	private Object[] instrAddPrDefsWithTasks() throws MALException, MALInteractionException {
+		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("instr pr def 2", "instr pr def 2");
+		def.setId(0L);
+		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
+		defs.add(def);
+		
+		LongList prDefIds = powerInstrCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		def.setId(prDefIds.get(0));
+		
+		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("instr task def 1", "instr task def 1");
+		taskDef.setId(0L);
+		TaskDefinitionDetails taskDef2 = PlanningRequestConsumer.createTaskDef("instr task def 2", "instr task def 2");
+		taskDef2.setId(0L);
+		
+		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
+		taskDefs.add(taskDef);
+		taskDefs.add(taskDef2);
+		
+		LongList taskDefIds = powerInstrCons.getStub().addDefinition(DefinitionType.TASK_DEF, taskDefs);
+		taskDef.setId(taskDefIds.get(0));
+		taskDef2.setId(taskDefIds.get(1));
+		
+		return new Object[] { prDefIds, taskDefIds };
+	}
+	
+	private PlanningRequestInstanceDetails addPrInstsWithTasks(Long prDefId, LongList taskDefIds) throws MALException, MALInteractionException {
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(generateId(), prDefId, null);
+		
+		prInst.setTasks(new TaskInstanceDetailsList());
+		prInst.getTasks().add(PlanningRequestConsumer.createTaskInst(generateId(), taskDefIds.get(0), null));
+		prInst.getTasks().get(0).setPrInstId(prInst.getId());
+		prInst.getTasks().add(PlanningRequestConsumer.createTaskInst(generateId(), taskDefIds.get(1), null));
+		prInst.getTasks().get(1).setPrInstId(prInst.getId());
+		
+		PlanningRequestResponseInstanceDetailsList resps = normalInstrCons.getStub().submitPlanningRequest(prInst);
+		
+		assertNotNull(resps);
+		assertFalse(resps.isEmpty());
+		assertNotNull(resps.get(0));
+		
+		return prInst;
+	}
+	
+	@Test
+	public void testPrWith2Tasks() throws MALException, MALInteractionException {
+		// instr pr plugin
+		InstrPrProcessor instrPrProc = new InstrPrProcessor(instrProv2GsProvCons);
+		prProvFct.setPlugin(instrPrProc);
+		// gs pr plugin
+		GsPrProcessor gsPrProc = new GsPrProcessor();
+		gsPrProvFct.setPlugin(gsPrProc);
+		
+		// PR power user adds defs
+		Object[] gsDefs = gsAddPrDefsWithTasks();
+		
+		LongList gsPrDefIds = (LongList)gsDefs[0];
+		// one pr def
+		assertNotNull(gsPrDefIds);
+		assertFalse(gsPrDefIds.isEmpty());
+		assertNotNull(gsPrDefIds.get(0));
+		
+		LongList gsTaskDefIds = (LongList)gsDefs[1];
+		// two task defs
+		assertNotNull(gsTaskDefIds);
+		assertFalse(gsTaskDefIds.isEmpty());
+		assertNotNull(gsTaskDefIds.get(0));
+		assertNotNull(gsTaskDefIds.get(1));
+		
+		instrPrProc.setGsPrDefId(gsPrDefIds.get(0));
+		instrPrProc.setGsTaskDefIds(gsTaskDefIds);
+		
+		Object[] instrDefs = instrAddPrDefsWithTasks();
+		
+		LongList instrPrDefIds = (LongList)instrDefs[0];
+		// one pr def
+		assertNotNull(instrPrDefIds);
+		assertFalse(instrPrDefIds.isEmpty());
+		assertNotNull(instrPrDefIds.get(0));
+		
+		LongList instrTaskDefIds = (LongList)instrDefs[1];
+		// two ask defs
+		assertNotNull(instrTaskDefIds);
+		assertFalse(instrTaskDefIds.isEmpty());
+		assertNotNull(instrTaskDefIds.get(0));
+		assertNotNull(instrTaskDefIds.get(1));
+		
+		// PR normal user subscribes
+		IdentifierList instrDom = new IdentifierList();
+		instrDom.add(instrSubDom);
+		String sub1Id = "instrTaskSub";
+		registerTaskMonitor(sub1Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
+		
+		String sub2Id = "instrPrSub";
+		registerPrMonitor(sub2Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
+		
+		// instr pr subscribes to gs pr
+		IdentifierList gsDom = new IdentifierList();
+		gsDom.add(gsSubDom);
+		String sub3Id = "gsTaskSub";
+		registerTaskMonitor(sub3Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
+		
+		String sub4Id = "gsPrSub";
+		registerPrMonitor(sub4Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
+		
+		// normal user submits instances
+		PlanningRequestInstanceDetails prInst = addPrInstsWithTasks(instrPrDefIds.get(0), instrTaskDefIds);
+		
+		assertNotNull(prInst);
+		assertNotNull(prInst.getId());
+		assertFalse(0L == prInst.getId());
 		
 		sleep(100);
 		

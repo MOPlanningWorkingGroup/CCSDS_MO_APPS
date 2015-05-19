@@ -36,9 +36,11 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		return schDef;
 	}
 	
-	protected ScheduleInstanceDetails createInst(Long defId, String n) {
+	protected ScheduleInstanceDetails createInst(Long id, Long defId/*, String n*/) {
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-		schInst.setName(new Identifier(n));
+		schInst.setId(id);
+		schInst.setSchDefId(defId);
+//		schInst.setName(new Identifier(n));
 		return schInst;
 	}
 	
@@ -55,49 +57,58 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testSubmitSchedule() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schedule def"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
-		ScheduleInstanceDetails schInst = createInst(schDefIds.get(0), "test schedule inst");
 		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);
+		schCons.submitSchedule(schInst);
 		
 		verifySch(schInstId);
 	}
 	
 	@Test
 	public void testUpdateSchedule() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schedule definition");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schedule definition"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
-		ScheduleInstanceDetails schInst = createInst(schDefIds.get(0), "test schedule instance");
 		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);
+		schCons.submitSchedule(schInst);
 		
 		schInst.setComment("updated description");
 		
-		schCons.updateSchedule(schInstId, schInst);
+		schCons.updateSchedule(schInst);
 		
 		verifySch(schInstId);
 	}
 	
 	@Test
 	public void testRemoveSchedule() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schedule def 1");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schedule def 1"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
-		ScheduleInstanceDetails schInst = createInst(schDefIds.get(0), "test schedule instance");
 		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);
+		schCons.submitSchedule(schInst);
 		
 		schCons.removeSchedule(schInstId);
 		
@@ -113,15 +124,18 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testPatchSchedule() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schdule def 2");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schdule def 2"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
-		ScheduleInstanceDetails srcSchInst = createInst(schDefIds.get(0), "test schedule instance 1");
 		Long srcSchInstId = 1L;
+		ScheduleInstanceDetails srcSchInst = createInst(srcSchInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schDefIds.get(0), srcSchInstId, srcSchInst);
+		schCons.submitSchedule(srcSchInst);
 		
 		Long targetSchInstId = 2L;
 		
@@ -133,15 +147,18 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testGetScheduleStatus() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schedule def 3");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schedule def 3"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
-		ScheduleInstanceDetails schInst = createInst(schDefIds.get(0), "test schedule instance");
 		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schDefIds.get(0), schInstId, schInst);
+		schCons.submitSchedule(schInst);
 		
 		verifySch(schInstId);
 	}
@@ -173,9 +190,9 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	@Test
 	public void testStart() throws MALException, MALInteractionException {
 		Long schDefId = 1L;
-		ScheduleInstanceDetails schInst = createInst(schDefId, "test schedule instance");
 		Long schInstId = 2L;
-		schCons.submitSchedule(schDefId, schInstId, schInst);
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
+		schCons.submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -186,9 +203,9 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	@Test
 	public void testPause() throws MALException, MALInteractionException {
 		Long schDefId = 1L;
-		ScheduleInstanceDetails schInst = createInst(schDefId, "test schedule instance");
 		Long schInstId = 2L;
-		schCons.submitSchedule(schDefId, schInstId, schInst);
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
+		schCons.submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -199,9 +216,9 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	@Test
 	public void testResume() throws MALException, MALInteractionException {
 		Long schDefId = 1L;
-		ScheduleInstanceDetails schInst = createInst(schDefId, "test schedule instance");
 		Long schInstId = 2L;
-		schCons.submitSchedule(schDefId, schInstId, schInst);
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
+		schCons.submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -212,9 +229,9 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	@Test
 	public void testTerminate() throws MALException, MALInteractionException {
 		Long schDefId = 1L;
-		ScheduleInstanceDetails schInst = createInst(schDefId, "test schedule instance");
 		Long schInstId = 2L;
-		schCons.submitSchedule(schDefId, schInstId, schInst);
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
+		schCons.submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -235,14 +252,18 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testAddDefinition() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("schedule test def 4");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("schedule test def 4"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
 		assertNotNull(schDefIds);
 		assertEquals(1, schDefIds.size());
 		assertNotNull(schDefIds.get(0));
+		
+		schDef.setId(schDefIds.get(0));
 		
 		IdentifierList schNames = new IdentifierList();
 		schNames.add(new Identifier("*"));
@@ -256,12 +277,14 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testUpdateDefinition() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schedule def 5");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schedule def 5"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
-		
-		schDefs.get(0).setDescription("updated description");
+		schDef.setId(schDefIds.get(0));
+		schDef.setDescription("updated description");
 		
 		schCons.updateDefinition(schDefIds, schDefs);
 		
@@ -277,10 +300,13 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testRemoveDefinition() throws MALException, MALInteractionException {
+		ScheduleDefinitionDetails schDef = createDef("test schedule def 6");
+		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		schDefs.add(createDef("test schedule def 6"));
+		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
 		schCons.removeDefinition(schDefIds);
 		

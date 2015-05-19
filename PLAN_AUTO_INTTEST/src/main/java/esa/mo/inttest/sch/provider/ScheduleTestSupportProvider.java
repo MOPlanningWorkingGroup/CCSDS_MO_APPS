@@ -73,7 +73,7 @@ public class ScheduleTestSupportProvider extends ScheduleTestInheritanceSkeleton
 			Long id = schIds.get(i);
 			ScheduleStatusDetails stat = schStats.get(i);
 			prov.getInstStore().setStatus(id, stat);
-			prov.publish(UpdateType.UPDATE, id, stat);
+			prov.publish(UpdateType.UPDATE, stat);
 		}
 		LOG.log(Level.INFO, "{0}.updateScheduleStatus() response: returning nothing", Dumper.sending(interaction));
 	}

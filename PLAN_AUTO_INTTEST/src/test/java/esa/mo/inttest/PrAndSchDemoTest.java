@@ -90,7 +90,7 @@ public class PrAndSchDemoTest {
 			// add (or update) task status
 			stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), is, Util.currentTime(), comm));
 			try {
-				prProv.publishTask(UpdateType.UPDATE, id, stat);
+				prProv.publishTask(UpdateType.UPDATE, stat);
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "PrSchProcessor.setTaskStatus: {0}", e);
 				assertTrue(false);
@@ -99,13 +99,14 @@ public class PrAndSchDemoTest {
 				assertTrue(false);
 			}
 		}
-		protected void updateTask(Long id, Identifier name, StatusRecordList stats) {
+		protected void updateTask(Long id, StatusRecordList stats) {
 			TaskStatusDetails taskStat = prProv.getInstStore().findTask(id);
 			assertNotNull(taskStat);
 			// assuming task name matches schedule name
-			assertTrue(taskStat.getTaskInstName().equals(name));
+			assertTrue(taskStat.getTaskInstId() == id);
 			
-			InstanceState[] states = new InstanceState[] { InstanceState.INVALID, InstanceState.SCHEDULED, InstanceState.PLANNED, InstanceState.DISTRIBUTED_FOR_EXECUTION };
+			InstanceState[] states = new InstanceState[] { InstanceState.INVALID, InstanceState.SCHEDULED,
+					InstanceState.PLANNED, InstanceState.DISTRIBUTED_FOR_EXECUTION };
 			String[] comments = new String[] { "sch terminated", "sch resumed", "sch paused", "sch started" };
 			// assuming statuses come in order above
 			for (int i = 0; i < states.length; ++i) {
@@ -131,18 +132,19 @@ public class PrAndSchDemoTest {
 					ObjectId objId = objIds.get(i);
 					Long id2 = objId.getKey().getInstId(); // schedule id - same is task id
 					ScheduleStatusDetails schStat = schStats.get(i);
-					Identifier name = schStat.getScheduleInstName();
 					StatusRecordList stats = schStat.getStatus();
-					updateTask(id2, name, stats);
+					updateTask(id2, stats);
 				}
 			}
 		}
 		protected Long addSchDef(ScheduleDefinitionDetails def) {
 			Long id = null;
 			try {
+				def.setId(0L);
 				ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
 				schDefs.add(def);
 				LongList schDefIds = schStub.addDefinition(schDefs);
+				def.setId(schDefIds.get(0));
 				id = schDefIds.get(0);
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "add schedule def: {0}", e);
@@ -153,35 +155,34 @@ public class PrAndSchDemoTest {
 			}
 			return id;
 		}
-		protected void addSchInst(Long defId, Long instId, ScheduleInstanceDetails schInst) {
+		protected void addSchInst(/*Long defId, Long instId,*/ ScheduleInstanceDetails schInst) {
 			try {
-				schStub.submitSchedule(defId, instId, schInst);
+				schStub.submitSchedule(schInst);
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "add schedule inst: {0}", e);
 			} catch (MALInteractionException e) {
 				LOG.log(Level.INFO, "add schedule inst: {0}", e);
 			}
 		}
-		protected void createSchForEachTask(TaskInstanceDetailsList tasks, LongList taskInstIds) {
+		protected void createSchForEachTask(PlanningRequestInstanceDetails prInst) {
+			TaskInstanceDetailsList tasks = (null != prInst) ? prInst.getTasks() : null;
 			for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
 				TaskInstanceDetails taskInst = tasks.get(i);
 				// schdule def gets same name as task
-				ScheduleDefinitionDetails schDef = ScheduleConsumer.createDef(taskInst.getName().getValue(), null);
+				ScheduleDefinitionDetails schDef = ScheduleConsumer.createDef(""+taskInst.getId(), null);
 				Long schDefId = addSchDef(schDef);
 				// schedule inst gets same name as task
-				ScheduleInstanceDetails schInst = ScheduleConsumer.createInst(taskInst.getName().getValue(), taskInst.getComment(), null, null, null, null);
+				ScheduleInstanceDetails schInst = ScheduleConsumer.createInst(taskInst.getId(), schDefId, taskInst.getComment(), null, null, null, null);
 				// schedule id will be same as task id
-				addSchInst(schDefId, taskInstIds.get(i), schInst);
-				schInsts.put(taskInstIds.get(i), schInst);
+				addSchInst(/*schDefId, taskInstIds.get(i),*/ schInst);
+				schInsts.put(taskInst.getId(), schInst);
 			}
 		}
-		public void onPrSubmit(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails prStat) {
+		public void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 			// new pr - produce sch for each task
-			createSchForEachTask(prInst.getTasks(), taskInstIds);
+			createSchForEachTask(prInst);
 		}
-		public void onPrUpdate(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-				LongList taskInstIds, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
 			// nothing yet
 		}
 		public void onPrRemove(Long prInstId) {
@@ -277,25 +278,20 @@ public class PrAndSchDemoTest {
 	
 	private LongList addTaskDefs() throws MALException, MALInteractionException {
 		TaskDefinitionDetails def = PlanningRequestConsumer.createTaskDef("some task def 1", "demo task def 1");
-		
+		def.setId(0L);
 		TaskDefinitionDetailsList defs = new TaskDefinitionDetailsList();
 		defs.add(def);
 		
 		return prCons.getStub().addDefinition(DefinitionType.TASK_DEF, defs);
 	}
 	
-	private LongList addPrDefs() throws MALException, MALInteractionException {
-		LongList defIds = new LongList();
-		
+	private LongList addPrDef() throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("some pr def 1", "demo pr def 1");
-		
+		def.setId(0L);
 		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
 		defs.add(def);
 		
-		LongList ids = prCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
-		defIds.add(ids.get(0));
-		
-		return defIds;
+		return prCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
 	}
 	
 	private void registerTaskMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
@@ -346,27 +342,20 @@ public class PrAndSchDemoTest {
 		return lastId.incrementAndGet();
 	}
 	
-	private Object[] addPrInsts(LongList prDefIds, LongList taskDefIds) throws MALException, MALInteractionException {
-		String prName = "test pr instance 1";
-		
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst("test task instance 1", "demo task inst 1", prName);
+	private PlanningRequestInstanceDetails addPrInst(Long prDefId, LongList taskDefIds) throws MALException, MALInteractionException {
 		Long taskInstId = generateId();
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(taskInstId, taskDefIds.get(0), "demo task inst 1");
 		
-		LongList taskInstIds = new LongList();
-		taskInstIds.add(taskInstId);
-		
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prName, "demo pr inst 1");
-		prInst.setTasks(PlanningRequestConsumer.createTasksList(taskInst));
 		Long prInstId = generateId();
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prInstId, prDefId, "demo pr inst 1");
+		taskInst.setPrInstId(prInst.getId());
+		prInst.setTasks(PlanningRequestConsumer.createTasksList(taskInst));
 		
-		PlanningRequestResponseInstanceDetailsList resps = prCons.getStub().submitPlanningRequest(prDefIds.get(0), prInstId, prInst, taskDefIds, taskInstIds);
+		PlanningRequestResponseInstanceDetailsList resps = prCons.getStub().submitPlanningRequest(prInst);
 		PlanningRequestResponseInstanceDetails prr = resps.get(0);
 		assertNotNull(prr);
 		
-		LongList prInstIds = new LongList();
-		prInstIds.add(prInstId);
-		
-		return new Object[] { prInstIds, prInst, taskInstIds };
+		return prInst;
 	}
 	
 	private void sleep(long ms) {
@@ -390,7 +379,7 @@ public class PrAndSchDemoTest {
 		// normal PR user adds defs and instances
 		LongList taskDefIds = addTaskDefs();
 		
-		LongList prDefIds = addPrDefs();
+		LongList prDefIds = addPrDef();
 		
 		String sub1Id = "sub1Id";
 		registerTaskMonitor(sub1Id, prCons);
@@ -398,8 +387,9 @@ public class PrAndSchDemoTest {
 		String sub2Id = "sub2Id";
 		registerPrMonitor(sub2Id, prCons);
 		
-		Object[] details = addPrInsts(prDefIds, taskDefIds);
-		LongList taskInstIds = (LongList)details[2];
+		PlanningRequestInstanceDetails prInst = addPrInst(prDefIds.get(0), taskDefIds);
+		LongList taskInstIds = new LongList();
+		taskInstIds.add(prInst.getTasks().get(0).getId());
 		
 		// executor executes tasks
 		schCons.getStub().start(taskInstIds);

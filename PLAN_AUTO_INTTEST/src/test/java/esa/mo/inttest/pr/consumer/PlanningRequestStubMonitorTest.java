@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.junit.Test;
 
 import esa.mo.inttest.Util;
@@ -94,7 +95,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		String taskSubId = "subId5";
 		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
 		
-		Object[] details = createAndSubmitPlanningRequest();
+		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequest();
 		
 		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
@@ -114,7 +115,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		prMon.prStats = null;
 		taskMon.taskStats = null;
 		
-		updatePlanningRequestWithTask(details);
+		updatePlanningRequestWithTask(prInst);
 		
 		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override
@@ -147,14 +148,14 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		String taskSubId = "subId7";
 		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
 		
-		Object[] details = createAndSubmitPlanningRequestWithTask();
-		Long prInstId = (Long)details[1];
+		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
+//		Long prInstId = (Long)details[1];
 		
 		// reset notify helpers
 		prMon.prStats = null;
 		taskMon.taskStats = null;
 		
-		removePlanningRequest(prInstId);
+		removePlanningRequest(prInst.getId());
 		
 		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
 			@Override

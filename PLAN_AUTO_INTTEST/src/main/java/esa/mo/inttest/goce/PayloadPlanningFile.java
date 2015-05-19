@@ -69,10 +69,10 @@ public class PayloadPlanningFile extends CommonFile {
 		return TASK_TIMES[idx];
 	}
 	
-	public TaskInstanceDetails createTaskInst(int idx) throws ParseException {
-		String taskName = getTaskInstName(idx);
-		String prName = getPrInstName(idx);
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(taskName, null, prName);
+	public TaskInstanceDetails createTaskInst(int idx, Long id, Long defId, Long prId) throws ParseException {
+//		String taskName = getTaskInstName(idx);
+//		String prName = getPrInstName(idx);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*taskName*/id, defId, null/*, prName*/);
 		String taskTime = getTaskTime(idx);
 		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime(taskTime)));
 		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
@@ -80,9 +80,9 @@ public class PayloadPlanningFile extends CommonFile {
 		return taskInst;
 	}
 	
-	public PlanningRequestInstanceDetails createPrInst(int idx, TaskInstanceDetailsList taskInsts) throws ParseException {
-		String prName = getPrInstName(idx);
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prName, null);
+	public PlanningRequestInstanceDetails createPrInst(int idx, Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
+//		String prName = getPrInstName(idx);
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*prName*/id, defId, null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

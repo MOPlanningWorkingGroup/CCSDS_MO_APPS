@@ -1,6 +1,5 @@
 package esa.mo.inttest.pr.provider;
 
-import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 
@@ -24,8 +23,7 @@ public interface Plugin {
 	 * @param taskInstIds
 	 * @param prStat
 	 */
-	void onPrSubmit(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-			LongList taskInstIds, PlanningRequestStatusDetails prStat);
+	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat);
 	
 	/**
 	 * Called when PR has been updated.
@@ -36,8 +34,7 @@ public interface Plugin {
 	 * @param taskInstIds
 	 * @param prStat
 	 */
-	void onPrUpdate(Long prDefId, Long prInstId, PlanningRequestInstanceDetails prInst, LongList taskDefIds,
-			LongList taskInstIds, PlanningRequestStatusDetails prStat);
+	void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat);
 	
 	/**
 	 * Called when PR has been removed.

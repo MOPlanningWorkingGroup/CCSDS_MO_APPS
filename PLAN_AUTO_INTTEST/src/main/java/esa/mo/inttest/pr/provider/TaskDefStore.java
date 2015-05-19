@@ -2,6 +2,7 @@ package esa.mo.inttest.pr.provider;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -15,7 +16,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
  */
 public class TaskDefStore {
 
-	private long lastTaskId = 0L;
+	private AtomicLong lastId = new AtomicLong(0L);
 	private Map<Long, TaskDefinitionDetails> map = new HashMap<Long, TaskDefinitionDetails>();
 	
 	/**
@@ -56,13 +57,18 @@ public class TaskDefStore {
 		return list;
 	}
 	
+	private long generateId() {
+		return lastId.incrementAndGet();
+	}
+	
 	/**
 	 * Adds single Task def and returns id.
 	 * @param def
 	 * @return
 	 */
 	public Long add(TaskDefinitionDetails def) {
-		Long id = new Long(++lastTaskId);
+		Long id = new Long(generateId());
+		def.setId(id);
 		map.put(id, def);
 		return id;
 	}
