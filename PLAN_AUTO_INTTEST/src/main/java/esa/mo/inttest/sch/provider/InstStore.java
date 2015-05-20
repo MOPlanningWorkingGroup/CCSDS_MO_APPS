@@ -13,9 +13,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.mal.MALException;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 
 /**
@@ -137,30 +136,9 @@ public class InstStore {
 		trg.addAll(newTrigs);
 	}
 	
-	protected void patchArgDefNames(IdentifierList src1, IdentifierList src2,
-			PatchOperationList pat, IdentifierList trg) {
-		IdentifierList newArgNames = new IdentifierList();
-		for (int i = 0; (null != pat) && (i < pat.size()); ++i) {
-			PatchOperation pOp = pat.get(i);
-			if (PatchOperation.UPDATE == pOp) {
-				// copy value from src2 to target
-				trg.add(src2.get(i));
-			} else if (PatchOperation.REMOVE == pOp) {
-				// just dont copy it to target
-			} else {
-				// copy value from src1 to target
-				trg.add(src1.get(i));
-				if (PatchOperation.ADD == pOp) {
-					newArgNames.add(src2.get(i));
-				}
-			}
-		}
-		trg.addAll(newArgNames);
-	}
-	
-	protected void patchArgVals(AttributeValueList src1, AttributeValueList src2,
-			PatchOperationList pat, AttributeValueList trg) {
-		AttributeValueList newArgVals = new AttributeValueList();
+	protected void patchArgVals(ArgumentValueList src1, ArgumentValueList src2,
+			PatchOperationList pat, ArgumentValueList trg) {
+		ArgumentValueList newArgVals = new ArgumentValueList();
 		for (int i = 0; (null != pat) && (i < pat.size()); ++i) {
 			PatchOperation pOp = pat.get(i);
 			if (PatchOperation.UPDATE == pOp) {
@@ -210,12 +188,8 @@ public class InstStore {
 		trg.setTimingConstraints(new TriggerDetailsList());
 		patchTriggers(src1.getTimingConstraints(), src2.getTimingConstraints(),
 				pat.getTimingConstraints(), trg.getTimingConstraints());
-		// patch arg names
-		trg.setArgumentDefNames(new IdentifierList());
-		patchArgDefNames(src1.getArgumentDefNames(), src2.getArgumentDefNames(),
-				pat.getArgumentDefNames(), trg.getArgumentDefNames());
 		// patch arg values
-		trg.setArgumentValues(new AttributeValueList());
+		trg.setArgumentValues(new ArgumentValueList());
 		patchArgVals(src1.getArgumentValues(), src2.getArgumentValues(),
 				pat.getArgumentValues(), trg.getArgumentValues());
 		// patch items

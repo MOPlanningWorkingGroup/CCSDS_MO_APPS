@@ -33,8 +33,6 @@ import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
-//import org.ccsds.moims.mo.planning.PlanningHelper;
-//import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
@@ -50,13 +48,12 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetail
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.junit.After;
 import org.junit.Before;
 
 import java.math.BigInteger;
-import java.util.AbstractMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -322,55 +319,36 @@ public class PlanningRequestStubTestBase {
 		return prDefIdList.get(0);
 	}
 	
-	protected Map.Entry<IdentifierList, AttributeValueList> allAttrVals() {
-		IdentifierList names = new IdentifierList();
-		AttributeValueList vals = new AttributeValueList();
-		names.add(new Identifier("first"));
-		vals.add(new AttributeValue(new Blob(new byte[] { 1, 2, 3 })));
-		names.add(new Identifier("second"));
-		vals.add(new AttributeValue(new Union(true)));
-		names.add(new Identifier("third"));
-		vals.add(new AttributeValue(new Union((double)2.5)));
-		names.add(new Identifier("fourth"));
-		vals.add(new AttributeValue(new Duration(100)));
-		names.add(new Identifier("fifth"));
-		vals.add(new AttributeValue(new FineTime(500)));//5
-		names.add(new Identifier("sixth"));
-		vals.add(new AttributeValue(new Union(1.5f)));
-		names.add(new Identifier("seventh"));
-		vals.add(new AttributeValue(new Identifier("id")));
-		names.add(new Identifier("eighth"));
-		vals.add(new AttributeValue(new Union(1)));
-		names.add(new Identifier("ninth"));
-		vals.add(new AttributeValue(new Union(2L)));
-		names.add(new Identifier("tenth"));
-		vals.add(new AttributeValue(new Union((byte)3)));//10
-		names.add(new Identifier("eleventh"));
-		vals.add(new AttributeValue(new Union((short)4)));
-		names.add(new Identifier("twelvth"));
-		vals.add(new AttributeValue(new Union("text")));
-		names.add(new Identifier("thirteenth"));
-		vals.add(new AttributeValue(new Time(15000000)));
-		names.add(new Identifier("fourteenth"));
-		vals.add(new AttributeValue(new UInteger(15)));
-		names.add(new Identifier("fifteenth"));
-		vals.add(new AttributeValue(new ULong(new BigInteger("54325432"))));//15
-		names.add(new Identifier("sixteenth"));
-		vals.add(new AttributeValue(new UOctet((short)35)));
-		names.add(new Identifier("seventeenth"));
-		vals.add(new AttributeValue(new URI("uri")));
-		names.add(new Identifier("eigthteenth"));
-		vals.add(new AttributeValue(new UShort(75)));
-		return new AbstractMap.SimpleEntry<IdentifierList, AttributeValueList>(names, vals);
+	protected ArgumentValueList allArgVals() {
+		ArgumentValueList vals = new ArgumentValueList();
+		
+		vals.add(new ArgumentValue(new Identifier("first"), new Blob(new byte[] { 1, 2, 3 })));
+		vals.add(new ArgumentValue(new Identifier("second"), new Union(true)));
+		vals.add(new ArgumentValue(new Identifier("third"), new Union((double)2.5)));
+		vals.add(new ArgumentValue(new Identifier("fourth"), new Duration(100)));
+		vals.add(new ArgumentValue(new Identifier("fifth"), new FineTime(500)));//5
+		vals.add(new ArgumentValue(new Identifier("sixth"), new Union(1.5f)));
+		vals.add(new ArgumentValue(new Identifier("seventh"), new Identifier("id")));
+		vals.add(new ArgumentValue(new Identifier("eighth"), new Union(1)));
+		vals.add(new ArgumentValue(new Identifier("ninth"), new Union(2L)));
+		vals.add(new ArgumentValue(new Identifier("tenth"), new Union((byte)3)));//10
+		vals.add(new ArgumentValue(new Identifier("eleventh"), new Union((short)4)));
+		vals.add(new ArgumentValue(new Identifier("twelvth"), new Union("text")));
+		vals.add(new ArgumentValue(new Identifier("thirteenth"), new Time(15000000)));
+		vals.add(new ArgumentValue(new Identifier("fourteenth"), new UInteger(15)));
+		vals.add(new ArgumentValue(new Identifier("fifteenth"), new ULong(new BigInteger("54325432"))));//15
+		vals.add(new ArgumentValue(new Identifier("sixteenth"), new UOctet((short)35)));
+		vals.add(new ArgumentValue(new Identifier("seventeenth"), new URI("uri")));
+		vals.add(new ArgumentValue(new Identifier("eigthteenth"), new UShort(75)));
+		
+		return vals;
 	}
 	
-	protected PlanningRequestInstanceDetails createPrInst(/*String prName*/Long id, Long defId, TaskInstanceDetailsList taskInsts) {
+	protected PlanningRequestInstanceDetails createPrInst(Long id, Long defId, TaskInstanceDetailsList taskInsts) {
 		
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*prName*/id, defId, null);
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		prInst.setTasks(taskInsts);
-		Map.Entry<IdentifierList, AttributeValueList> pair = allAttrVals();
-		prInst.setArgumentDefNames(pair.getKey());
-		prInst.setArgumentValues(pair.getValue());
+		prInst.setArgumentValues(allArgVals());
 		return prInst;
 	}
 	
@@ -434,9 +412,7 @@ public class PlanningRequestStubTestBase {
 	
 	protected TaskInstanceDetails createTaskInst(Long id, Long defId) {
 		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(id, defId, null);
-		Map.Entry<IdentifierList, AttributeValueList> pair = allAttrVals();
-		taskInst.setArgumentDefNames(pair.getKey());
-		taskInst.setArgumentValues(pair.getValue());
+		taskInst.setArgumentValues(allArgVals());
 		return taskInst;
 	}
 	

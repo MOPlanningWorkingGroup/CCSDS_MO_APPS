@@ -25,8 +25,8 @@ import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 
 import esa.mo.inttest.Dumper;
@@ -131,14 +131,12 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param trigs
 	 * @return
 	 */
-	public static ScheduleInstanceDetails createInst(/*String name*/Long id, Long defId, String comm, IdentifierList argNames,
-			AttributeValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
+	public static ScheduleInstanceDetails createInst(Long id, Long defId, String comm,
+			ArgumentValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
 		ScheduleInstanceDetails inst = new ScheduleInstanceDetails();
-//		inst.setName(new Identifier(name));
 		inst.setId(id);
 		inst.setSchDefId(defId);
 		inst.setComment(comm);
-		inst.setArgumentDefNames(argNames);
 		inst.setArgumentValues(argVals);
 		inst.setScheduleItems(items);
 		inst.setTimingConstraints(trigs);
@@ -163,9 +161,9 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param val
 	 * @return
 	 */
-	public static AttributeValueList addArgValue(AttributeValueList vals, Attribute val) {
-		AttributeValueList list = (null != vals) ? vals : new AttributeValueList();
-		list.add(new AttributeValue(val));
+	public static ArgumentValueList addArgValue(ArgumentValueList vals, String name, Attribute val) {
+		ArgumentValueList list = (null != vals) ? vals : new ArgumentValueList();
+		list.add(new ArgumentValue(new Identifier(name), val));
 		return list;
 	}
 	
@@ -181,10 +179,9 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @return
 	 */
 	public static ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items,
-			/*String name*/Long itemId, /*String schName*/Long schId, ArgumentDefinitionDetailsList argTypes,
-			AttributeValueList argVals, TriggerDetailsList trigs, ObjectId del) {
+			Long itemId, Long schId, ArgumentDefinitionDetailsList argTypes,
+			ArgumentValueList argVals, TriggerDetailsList trigs, ObjectId del) {
 		ScheduleItemInstanceDetailsList list = (null != items) ? items : new ScheduleItemInstanceDetailsList();
-//		list.add(new ScheduleItemInstanceDetails(new Identifier(name), new Identifier(schName),
 		list.add(new ScheduleItemInstanceDetails(itemId, schId, argTypes, argVals, trigs, del));
 		// trigs - mandatory, delegate - mandatory
 		return list;

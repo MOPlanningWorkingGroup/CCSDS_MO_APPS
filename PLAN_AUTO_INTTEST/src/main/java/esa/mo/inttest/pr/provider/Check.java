@@ -15,7 +15,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetail
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 
 /**
  * Verification and validation of various PR fields.
@@ -169,20 +169,20 @@ public class Check {
 	 * @param inst
 	 * @throws MALException
 	 */
-	public static void prArgs(/*Long defId,*/ PlanningRequestInstanceDetails inst, PrDefStore store) throws MALException {
+	public static void prArgs(PlanningRequestInstanceDetails inst, PrDefStore store) throws MALException {
 		PlanningRequestDefinitionDetails def = store.find(/*defId*/inst.getPrDefId());
 		for (int i = 0; (null != inst.getArgumentValues()) && (i < inst.getArgumentValues().size()); ++i) {
-			Identifier argName = inst.getArgumentDefNames().get(i);
-			AttributeValue argVal = inst.getArgumentValues().get(i);
-			ArgumentDefinitionDetails argDef = findArg(def.getArgumentDefs(), argName);
+			ArgumentValue argVal = inst.getArgumentValues().get(i);
+			ArgumentDefinitionDetails argDef = findArg(def.getArgumentDefs(), argVal.getArgDefName());
 			if (null == argDef) {
-				throw new MALException("pr argument[" + i + "] has no definition, argName: " + argName);
+				throw new MALException("pr argument[" + i + "] has no definition, argName: " + argVal.getArgDefName());
 			}
-			if (null != argVal) {
+			if (null != argVal && null != argVal.getValue()) {
 				Byte type = (byte)(argVal.getValue().getTypeShortForm() & 0xff);
 				if (type != argDef.getAttributeType()) {
-					throw new MALException("pr argument[" + i + "] value (" + argName + ") type (" + argVal.getTypeShortForm()
-						+ ") does not match defined (" + argDef.getName() + ") type (" + argDef.getTypeShortForm() + ")");
+					throw new MALException("pr argument[" + i + "] value (" + argVal.getArgDefName() +
+							") type (" + argVal.getTypeShortForm() + ") does not match defined (" +
+							argDef.getName() + ") type (" + argDef.getTypeShortForm() + ")");
 				}
 			} // else null - no value - no type
 		}
@@ -196,17 +196,17 @@ public class Check {
 	 */
 	protected static void taskArgs(TaskDefinitionDetails def, TaskInstanceDetails inst) throws MALException {
 		for (int i = 0; (null != inst.getArgumentValues()) && (i < inst.getArgumentValues().size()); ++i) {
-			Identifier argName = inst.getArgumentDefNames().get(i);
-			AttributeValue argVal = inst.getArgumentValues().get(i);
-			ArgumentDefinitionDetails argDef = findArg(def.getArgumentDefs(), argName);
+			ArgumentValue argVal = inst.getArgumentValues().get(i);
+			ArgumentDefinitionDetails argDef = findArg(def.getArgumentDefs(), argVal.getArgDefName());
 			if (null == argDef) {
-				throw new MALException("task argument[" + i + "] has no definition: " + argName);
+				throw new MALException("task argument[" + i + "] has no definition: " + argVal.getArgDefName());
 			}
-			if (null != argVal) {
+			if (null != argVal && null != argVal.getValue()) {
 				Byte type = (byte)(argVal.getValue().getTypeShortForm() & 0xff);
 				if (type != argDef.getAttributeType()) {
-					throw new MALException("task argument[" + i + "] value (" + argName + ") type (" + argVal.getTypeShortForm()
-							+ ") does not match defined (" + argDef.getName() + ") type (" + argDef.getTypeShortForm() + ")");
+					throw new MALException("task argument[" + i + "] value (" + argVal.getArgDefName() +
+							") type (" + argVal.getTypeShortForm() + ") does not match defined (" +
+							argDef.getName() + ") type (" + argDef.getTypeShortForm() + ")");
 				}
 			} // else null
 		}

@@ -246,13 +246,12 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	
 	protected PlanningRequestResponseInstanceDetails createResponse(PlanningRequestInstanceDetails prInst) {
 		Identifier name = new Identifier("dummy");
-		return new PlanningRequestResponseInstanceDetails(/*prInst.getName()*/name, Util.currentTime(),
-				prInst.getArgumentValues(), prInst.getArgumentDefNames());
+		return new PlanningRequestResponseInstanceDetails(name, Util.currentTime(), prInst.getArgumentValues());
 	}
 	
 	public PlanningRequestResponseInstanceDetailsList submitPlanningRequest(
 			PlanningRequestInstanceDetails prInst, MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{5}.submitPlanningRequest(prInst)\n  prInst={2}",
+		LOG.log(Level.INFO, "{1}.submitPlanningRequest(prInst)\n  prInst={0}",
 				new Object[] { Dumper.prInst(prInst), Dumper.received(interaction) });
 		Check.prInst(prInst);
 		Check.prDefId(prInst.getPrDefId());

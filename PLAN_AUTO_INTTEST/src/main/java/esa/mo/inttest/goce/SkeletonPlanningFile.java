@@ -11,7 +11,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
 
@@ -40,8 +39,8 @@ public class SkeletonPlanningFile extends CommonFile {
 	}
 	
 	public TaskInstanceDetails createTaskInst(int idx, Long id, Long defId, Long prId) {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"NODE-"+(idx+1)*/id, defId, null/*, getPrName(idx)*/);
-		setTaskArg(taskInst, "EV_Parameters_count", new AttributeValue(new UShort(0)));
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"NODE-"+(idx+1)*/id, defId, null);
+		addTaskArg(taskInst, "EV_Parameters_count", new UShort(0));
 		return taskInst;
 	}
 	
@@ -54,7 +53,7 @@ public class SkeletonPlanningFile extends CommonFile {
 	}
 	
 	public PlanningRequestInstanceDetails createPrInst(int idx, Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*getPrName(idx)*/id, defId, null);
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

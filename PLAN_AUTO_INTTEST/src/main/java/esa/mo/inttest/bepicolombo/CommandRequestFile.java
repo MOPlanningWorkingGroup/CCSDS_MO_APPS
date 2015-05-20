@@ -7,7 +7,6 @@ import java.util.Date;
 
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.ULong;
 import org.ccsds.moims.mo.mal.structures.UShort;
@@ -18,8 +17,8 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.EventTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
@@ -131,14 +130,10 @@ public class CommandRequestFile {
 	}
 	
 	protected void addTaskArg(TaskInstanceDetails inst, String name, Attribute val) {
-		if (null == inst.getArgumentDefNames()) {
-			inst.setArgumentDefNames(new IdentifierList());
-		}
 		if (null == inst.getArgumentValues()) {
-			inst.setArgumentValues(new AttributeValueList());
+			inst.setArgumentValues(new ArgumentValueList());
 		}
-		inst.getArgumentDefNames().add(new Identifier(name));
-		inst.getArgumentValues().add((null != val) ? new AttributeValue(val) : null);
+		inst.getArgumentValues().add(new ArgumentValue(new Identifier(name), val));
 	}
 	
 	public TriggerDetails createEventTrig(TriggerName name, Time t) {
@@ -245,14 +240,10 @@ public class CommandRequestFile {
 	}
 	
 	protected void addPrArg(PlanningRequestInstanceDetails inst, String name, Attribute val) {
-		if (null == inst.getArgumentDefNames()) {
-			inst.setArgumentDefNames(new IdentifierList());
-		}
 		if (null == inst.getArgumentValues()) {
-			inst.setArgumentValues(new AttributeValueList());
+			inst.setArgumentValues(new ArgumentValueList());
 		}
-		inst.getArgumentDefNames().add(new Identifier(name));
-		inst.getArgumentValues().add((null != val) ? new AttributeValue(val) : null);
+		inst.getArgumentValues().add(new ArgumentValue(new Identifier(name), val));
 	}
 	
 	protected RelativeTime parseRelTime(String t) throws ParseException {

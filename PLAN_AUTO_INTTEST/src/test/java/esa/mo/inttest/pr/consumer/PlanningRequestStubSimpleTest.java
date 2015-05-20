@@ -2,7 +2,6 @@ package esa.mo.inttest.pr.consumer;
 
 import static org.junit.Assert.*;
 
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.mal.MALException;
@@ -87,7 +86,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testSubmitPlanningRequest");
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequest();
-//		Long prInstId = (Long)details[2];
 		
 		verifyPrStat(prInst.getId());
 		
@@ -99,8 +97,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testSubmitPlanningRequestWithTask");
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
-//		Long prInstId = (Long)details[1];
-//		LongList taskInstIds = (LongList)details[3];
 		
 		verifyPrStat(prInst.getId());
 		
@@ -125,8 +121,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		updatePlanningRequestWithTask(prInst);
 		
-//		Long prInstId = (Long)details[2];
-		
 		verifyPrStat(prInst.getId());
 		
 		leave("testUpdatePlanningRequest");
@@ -137,7 +131,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testRemovePlanningRequest");
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
-//		Long prInstId = (Long)details[1];
 		
 		removePlanningRequest(prInst.getId());
 		
@@ -278,17 +271,10 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testAddTaskDef");
 		
 		TaskDefinitionDetails taskDef = addTaskDef();
-//		LongList taskDefIds = (LongList)details[0];
-//		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
 		
 		assertNotNull(taskDef);
-//		assertEquals(1, taskDefIds.size());
 		assertNotNull(taskDef.getId());
 		assertFalse(0L == taskDef.getId());
-		
-//		assertNotNull(taskDefs);
-//		assertEquals(1, taskDefs.size());
-//		assertNotNull(taskDefs.get(0));
 		
 		LongList taskDefIds = listTaskDefs("*");
 		
@@ -304,8 +290,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testUpdateTaskDef");
 		
 		TaskDefinitionDetails def = addTaskDef();
-//		LongList taskDefIds = (LongList)details[0];
-//		TaskDefinitionDetailsList taskDefs = (TaskDefinitionDetailsList)details[1];
 		
 		def.setDescription("whoa");
 		
@@ -332,7 +316,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		enter("testRemoveTaskDef");
 		
 		TaskDefinitionDetails def = addTaskDef();
-//		LongList taskDefIds = (LongList)details[0];
 		
 		LongList ids = new LongList();
 		ids.add(def.getId());

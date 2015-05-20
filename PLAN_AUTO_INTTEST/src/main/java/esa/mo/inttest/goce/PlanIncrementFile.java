@@ -3,7 +3,6 @@ package esa.mo.inttest.goce;
 import java.text.ParseException;
 
 import org.ccsds.moims.mo.mal.structures.Attribute;
-import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UShort;
@@ -14,8 +13,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
@@ -82,23 +79,13 @@ public class PlanIncrementFile extends CommonFile {
 	 */
 	protected PlanningRequestInstanceDetails setPifPrArgs1(PlanningRequestInstanceDetails prInst, String fType,
 			Time start, String fVer, String stat, Time replan) {
-		prInst.setArgumentDefNames(new IdentifierList());
-		prInst.setArgumentValues(new AttributeValueList());
 		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_File_Type"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(fType)));
+		addPrArg(prInst, "PIF_File_Type", new Union(fType));
+		addPrArg(prInst, "PIF_Start", start);
+		addPrArg(prInst, "PIF_File_Version", new Union(fVer));
+		addPrArg(prInst, "PIF_Status", new Union(stat));
+		addPrArg(prInst, "PIF_Replan_Time", replan);
 		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_Start"));
-		prInst.getArgumentValues().add(new AttributeValue(start));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_File_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(fVer)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_Status"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(stat)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_Replan_Time"));
-		prInst.getArgumentValues().add((replan != null) ? new AttributeValue(replan) : null);
 		return prInst;
 	}
 	
@@ -118,29 +105,15 @@ public class PlanIncrementFile extends CommonFile {
 	protected PlanningRequestInstanceDetails setPifPrArgs2(PlanningRequestInstanceDetails prInst, String spf,
 			String ppf, String opf, String mtf, String wodb, String rc, String kup, String si) {
 		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_SPF_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(spf)));
+		addPrArg(prInst, "PIF_SPF_Version", new Union(spf));
+		addPrArg(prInst, "PIF_PPF_Version", new Union(ppf));
+		addPrArg(prInst, "PIF_OPF_Version", new Union(opf));
+		addPrArg(prInst, "PIF_MTF_Version", new Union(mtf));
+		addPrArg(prInst, "PIF_WODB_Version", new Union(wodb));
+		addPrArg(prInst, "PIF_RC_Version", new Union(rc));
+		addPrArg(prInst, "PIF_KUP_Version", new Union(kup));
+		addPrArg(prInst, "PIF_SI_Version", new Union(si));
 		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_PPF_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(ppf)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_OPF_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(opf)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_MTF_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(mtf)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_WODB_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(wodb)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_RC_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(rc)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_KUP_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(kup)));
-		
-		prInst.getArgumentDefNames().add(new Identifier("PIF_SI_Version"));
-		prInst.getArgumentValues().add(new AttributeValue(new Union(si)));
 		return prInst;
 	}
 
@@ -184,13 +157,15 @@ public class PlanIncrementFile extends CommonFile {
 	 * @throws ParseException
 	 */
 	public TaskInstanceDetails createTaskInst(Long id, Long defId, Long prId) throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCEMON-1"*/id, defId, null/*, getPrName()*/);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCEMON-1"*/id, defId, null);
 		taskInst.setTimingConstraints(createPifTaskTrigger(parseTime("UTC=2007-08-31T20:03:23")));
-		setTaskArg(taskInst, "Parent_Event_Name", new AttributeValue(new Union("MCEMON")));
-		setTaskArg(taskInst, "Parent_Event_Source", new AttributeValue(new Union("SPF")));
-		setTaskArg(taskInst, "Parent_Event_Time", new AttributeValue(parseTime("UTC=2008-04-09T15:00:00.000")));
-		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
-		setTaskArg(taskInst, "MON_ID", new AttributeValue(new Union(60000L))); // long
+		
+		addTaskArg(taskInst, "Parent_Event_Name", new Union("MCEMON"));
+		addTaskArg(taskInst, "Parent_Event_Source", new Union("SPF"));
+		addTaskArg(taskInst, "Parent_Event_Time", parseTime("UTC=2008-04-09T15:00:00.000"));
+		addTaskArg(taskInst, "RQ_Parameters_count", new UShort(1));
+		addTaskArg(taskInst, "MON_ID", new Union(60000L)); // long
+		
 		return taskInst;
 	}
 	
@@ -201,11 +176,11 @@ public class PlanIncrementFile extends CommonFile {
 	 * @throws ParseException
 	 */
 	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*getPrName()*/id, defId, null);
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		TriggerDetailsList trigs = new TriggerDetailsList();
 		trigs.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(parseTime("UTC=2008-04-07T00:00:00"))));
 		prInst.setTimingConstraints(trigs);
-		setPrArg(prInst, "PIF_Replan_Time", null);
+		addPrArg(prInst, "PIF_Replan_Time", null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

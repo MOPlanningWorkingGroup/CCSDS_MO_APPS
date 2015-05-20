@@ -14,7 +14,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
 
@@ -70,19 +69,16 @@ public class PayloadPlanningFile extends CommonFile {
 	}
 	
 	public TaskInstanceDetails createTaskInst(int idx, Long id, Long defId, Long prId) throws ParseException {
-//		String taskName = getTaskInstName(idx);
-//		String prName = getPrInstName(idx);
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*taskName*/id, defId, null/*, prName*/);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(id, defId, null);
 		String taskTime = getTaskTime(idx);
 		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime(taskTime)));
-		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(1)));
-		setTaskArg(taskInst, "SID", new AttributeValue(new Union(32L))); // long
+		addTaskArg(taskInst, "RQ_Parameters_count", new UShort(1));
+		addTaskArg(taskInst, "SID", new Union(32L)); // long
 		return taskInst;
 	}
 	
 	public PlanningRequestInstanceDetails createPrInst(int idx, Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
-//		String prName = getPrInstName(idx);
-		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*prName*/id, defId, null);
+		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		prInst.setTasks(taskInsts);
 		return prInst;
 	}

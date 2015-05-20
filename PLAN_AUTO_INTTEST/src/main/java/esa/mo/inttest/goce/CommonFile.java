@@ -7,15 +7,14 @@ import java.util.TimeZone;
 
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
@@ -71,15 +70,11 @@ public class CommonFile {
 	 * @param name
 	 * @param val
 	 */
-	protected void setTaskArg(TaskInstanceDetails taskInst, String name, AttributeValue val) {
-		if (null == taskInst.getArgumentDefNames()) {
-			taskInst.setArgumentDefNames(new IdentifierList());
-		}
+	protected void addTaskArg(TaskInstanceDetails taskInst, String name, Attribute val) {
 		if (null == taskInst.getArgumentValues()) {
-			taskInst.setArgumentValues(new AttributeValueList());
+			taskInst.setArgumentValues(new ArgumentValueList());
 		}
-		taskInst.getArgumentDefNames().add(new Identifier(name));
-		taskInst.getArgumentValues().add(val);
+		taskInst.getArgumentValues().add(new ArgumentValue(new Identifier(name), val));
 	}
 	
 	/**
@@ -88,15 +83,11 @@ public class CommonFile {
 	 * @param name
 	 * @param val
 	 */
-	protected void setPrArg(PlanningRequestInstanceDetails prInst, String name, AttributeValue val) {
-		if (null == prInst.getArgumentDefNames()) {
-			prInst.setArgumentDefNames(new IdentifierList());
-		}
+	protected void addPrArg(PlanningRequestInstanceDetails prInst, String name, Attribute val) {
 		if (null == prInst.getArgumentValues()) {
-			prInst.setArgumentValues(new AttributeValueList());
+			prInst.setArgumentValues(new ArgumentValueList());
 		}
-		prInst.getArgumentDefNames().add(new Identifier(name));
-		prInst.getArgumentValues().add(val);
+		prInst.getArgumentValues().add(new ArgumentValue(new Identifier(name), val));
 	}
 	
 	/**

@@ -10,7 +10,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValue;
 
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
 
@@ -39,7 +38,7 @@ public class OperationsPlanningFile extends CommonFile {
 	
 	public TaskInstanceDetails createTaskInst(Long id, Long defId, Long prId) throws ParseException {
 		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCDD10HZ"*/id, defId, null/*, getPrName()*/);
-		setTaskArg(taskInst, "RQ_Parameters_count", new AttributeValue(new UShort(0)));
+		addTaskArg(taskInst, "RQ_Parameters_count", new UShort(0));
 		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime("UTC=2007-01-02T12:10:00")));
 		return taskInst;
 	}

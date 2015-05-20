@@ -172,7 +172,7 @@ public class PrAndSchDemoTest {
 				ScheduleDefinitionDetails schDef = ScheduleConsumer.createDef(""+taskInst.getId(), null);
 				Long schDefId = addSchDef(schDef);
 				// schedule inst gets same name as task
-				ScheduleInstanceDetails schInst = ScheduleConsumer.createInst(taskInst.getId(), schDefId, taskInst.getComment(), null, null, null, null);
+				ScheduleInstanceDetails schInst = ScheduleConsumer.createInst(taskInst.getId(), schDefId, taskInst.getComment(), null, null, null);
 				// schedule id will be same as task id
 				addSchInst(/*schDefId, taskInstIds.get(i),*/ schInst);
 				schInsts.put(taskInst.getId(), schInst);

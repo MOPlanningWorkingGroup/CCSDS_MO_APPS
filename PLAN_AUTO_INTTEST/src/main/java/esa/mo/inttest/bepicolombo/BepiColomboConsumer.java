@@ -74,14 +74,6 @@ public class BepiColomboConsumer {
 		pr.setTasks(list);
 	}
 	
-//	protected LongList ids(Long... ids) {
-//		LongList list = new LongList();
-//		for (Long id: ids) {
-//			list.add(id);
-//		}
-//		return list;
-//	}
-	
 	public PlanningRequestResponseInstanceDetailsList crf() throws MALException, MALInteractionException, ParseException {
 		CommandRequestFile crf = new CommandRequestFile();
 		

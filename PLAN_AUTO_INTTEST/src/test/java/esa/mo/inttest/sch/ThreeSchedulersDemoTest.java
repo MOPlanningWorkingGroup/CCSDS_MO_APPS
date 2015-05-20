@@ -25,7 +25,7 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.AttributeValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
@@ -170,25 +170,23 @@ public class ThreeSchedulersDemoTest {
 		LongList instIds = new LongList();
 		
 		Long instId = generateId();
-		ScheduleInstanceDetails inst = ScheduleConsumer.createInst(instId, defIds.get(0), "test 1", null, null, null, null);
+		ScheduleInstanceDetails inst = ScheduleConsumer.createInst(instId, defIds.get(0), "test 1", null, null, null);
 		
 		cons2.getStub().submitSchedule(inst);
 		instIds.add(instId);
 		
-		IdentifierList argNames = ScheduleConsumer.addArgName(null, "arg1");
-		AttributeValueList argVals = ScheduleConsumer.addArgValue(null, new Union("desd"));
+		ArgumentValueList argVals = ScheduleConsumer.addArgValue(null, "arg1", new Union("desd"));
 		
 		instId = generateId();
-		inst = ScheduleConsumer.createInst(instId, defIds.get(1), "test 2", argNames, argVals, null, null);
+		inst = ScheduleConsumer.createInst(instId, defIds.get(1), "test 2", argVals, null, null);
 		
 		cons2.getStub().submitSchedule(inst);
 		instIds.add(instId);
 		
 		instId = generateId();
-		inst = ScheduleConsumer.createInst(instId, defIds.get(2), "test 3", null, null, null, null);
+		inst = ScheduleConsumer.createInst(instId, defIds.get(2), "test 3", null, null, null);
 		ObjectId objId = ScheduleConsumer.createObjId(new ScheduleInstanceDetails(), consFct.getDomain(), instId);
-		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, generateId(), inst.getId(), null,
-				null, new TriggerDetailsList(), objId);
+		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, generateId(), inst.getId(), null, null, new TriggerDetailsList(), objId);
 		inst.setScheduleItems(items);
 		
 		cons2.getStub().submitSchedule(inst);
