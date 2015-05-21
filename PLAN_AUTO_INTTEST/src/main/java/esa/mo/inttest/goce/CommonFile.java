@@ -17,8 +17,8 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
 /**
@@ -114,8 +114,8 @@ public class CommonFile {
 	 * @param value
 	 * @return
 	 */
-	protected TriggerDetails createTaskTrigger(TriggerName name, TimeTrigger tt) {
-		TriggerDetails trig = new TriggerDetails();
+	protected TimingDetails createTaskTiming(TriggerName name, TimeTrigger tt) {
+		TimingDetails trig = new TimingDetails();
 		trig.setTriggerName(name);
 		trig.setTimeTrigger(tt);
 		return trig;
@@ -141,10 +141,10 @@ public class CommonFile {
 	 * @param exec
 	 * @return
 	 */
-	protected TriggerDetailsList createPpfTaskTriggers(Time uplink, Time exec) {
-		TriggerDetailsList list = new TriggerDetailsList();
-		list.add(createTaskTrigger(TriggerName.UPLINK, createAbsTimeTrig(uplink)));
-		list.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(exec)));
+	protected TimingDetailsList createPpfTaskTriggers(Time uplink, Time exec) {
+		TimingDetailsList list = new TimingDetailsList();
+		list.add(createTaskTiming(TriggerName.UPLINK, createAbsTimeTrig(uplink)));
+		list.add(createTaskTiming(TriggerName.START, createAbsTimeTrig(exec)));
 		return list;
 	}
 }

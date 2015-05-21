@@ -61,8 +61,8 @@ import org.ccsds.moims.mo.planningdatatypes.structures.RelativeTime;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetails;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
 /**
@@ -354,7 +354,7 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	private static String dumpTrigger(TriggerDetails t, String ind) {
+	private static String dumpTiming(TimingDetails t, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
 			s.append("{\n");
@@ -372,12 +372,12 @@ public final class Dumper {
 		return s.toString();
 	}
 	
-	private static String dumpTriggers(TriggerDetailsList tl, String ind) {
+	private static String dumpTimings(TimingDetailsList tl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != tl) {
 			openList(s, tl);
 			for (int i = 0; i < tl.size(); ++i) {
-				s.append(ind).append(STEP).append(i).append(": ").append(dumpTrigger(tl.get(i), ind+STEP)).append(",\n");
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpTiming(tl.get(i), ind+STEP)).append(",\n");
 			}
 			closeList(s, tl, ind);
 		} else {
@@ -395,7 +395,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("prId=").append(ti.getPrInstId()).append(",\n");
 			s.append(ind).append(STEP).append("comment=").append(quote(ti.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpArgVals(ti.getArgumentValues(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(ti.getTimingConstraints(), ind+STEP)).append("\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTimings(ti.getTimingConstraints(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);
@@ -425,7 +425,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("defId=").append(pri.getPrDefId()).append(",\n");
 			s.append(ind).append(STEP).append("comment=").append(quote(pri.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpArgVals(pri.getArgumentValues(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(pri.getTimingConstraints(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTimings(pri.getTimingConstraints(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("tasks=").append(dumpTaskInsts(pri.getTasks(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
@@ -862,7 +862,7 @@ public final class Dumper {
 		s.append(ind).append(STEP).append("delegateItem=").append(dumpObjId(sii.getDelegateItem(), ind+STEP)).append(",\n");
 		s.append(ind).append(STEP).append("argTypes=").append(dumpArgDefs(sii.getArgumentTypes(), ind+STEP)).append(",\n");
 		s.append(ind).append(STEP).append("argValues=").append(dumpArgVals(sii.getArgumentValues(), ind+STEP)).append(",\n");
-		s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(sii.getTimingConstraints(), ind+STEP)).append("\n");
+		s.append(ind).append(STEP).append("timingConstraints=").append(dumpTimings(sii.getTimingConstraints(), ind+STEP)).append("\n");
 		s.append(ind).append("}");
 		return s.toString();
 	}
@@ -890,7 +890,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("comment=").append(quote(si.getComment())).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpArgVals(si.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("scheduleItems=").append(dumpSchItems(si.getScheduleItems(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTriggers(si.getTimingConstraints(), ind+STEP)).append("\n");
+			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTimings(si.getTimingConstraints(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);
@@ -911,7 +911,7 @@ public final class Dumper {
 		StringBuilder s = new StringBuilder();
 		if (null != sis) {
 			s.append("{\n");
-			s.append(ind).append(STEP).append("schItemId=").append(sis.getScheduleItemInstName()).append(",\n"); // TODO
+			s.append(ind).append(STEP).append("schItemId=").append(sis.getSchItemInstId()).append(",\n");
 			s.append(ind).append(STEP).append("status=").append(dumpStats(sis.getStatus(), ind+STEP)).append("\n");
 			s.append(ind).append("}");
 		} else {

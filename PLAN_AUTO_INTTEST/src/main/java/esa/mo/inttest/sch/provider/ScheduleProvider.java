@@ -92,7 +92,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	
 	private ScheduleItemStatusDetails createItemStat(ScheduleItemInstanceDetails inst) {
 		ScheduleItemStatusDetails stat = new ScheduleItemStatusDetails();
-		stat.setScheduleItemInstName(new Identifier(""+inst.getId())); // TODO
+		stat.setSchItemInstId(inst.getId());
 		stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.LAST_MODIFIED,
 				new Time(System.currentTimeMillis()), "created"));
 		return stat;

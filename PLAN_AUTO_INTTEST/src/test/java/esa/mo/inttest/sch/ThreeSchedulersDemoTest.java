@@ -28,7 +28,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -186,7 +186,8 @@ public class ThreeSchedulersDemoTest {
 		instId = generateId();
 		inst = ScheduleConsumer.createInst(instId, defIds.get(2), "test 3", null, null, null);
 		ObjectId objId = ScheduleConsumer.createObjId(new ScheduleInstanceDetails(), consFct.getDomain(), instId);
-		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, generateId(), inst.getId(), null, null, new TriggerDetailsList(), objId);
+		ScheduleItemInstanceDetailsList items = ScheduleConsumer.addItem(null, generateId(), inst.getId(),
+				null, null, new TimingDetailsList(), objId);
 		inst.setScheduleItems(items);
 		
 		cons2.getStub().submitSchedule(inst);

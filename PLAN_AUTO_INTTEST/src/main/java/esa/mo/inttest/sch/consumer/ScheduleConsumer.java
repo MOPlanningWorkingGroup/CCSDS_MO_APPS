@@ -27,7 +27,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 
 import esa.mo.inttest.Dumper;
 import esa.mo.inttest.Util;
@@ -132,14 +132,14 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @return
 	 */
 	public static ScheduleInstanceDetails createInst(Long id, Long defId, String comm,
-			ArgumentValueList argVals, ScheduleItemInstanceDetailsList items, TriggerDetailsList trigs) {
+			ArgumentValueList argVals, ScheduleItemInstanceDetailsList items, TimingDetailsList tims) {
 		ScheduleInstanceDetails inst = new ScheduleInstanceDetails();
 		inst.setId(id);
 		inst.setSchDefId(defId);
 		inst.setComment(comm);
 		inst.setArgumentValues(argVals);
 		inst.setScheduleItems(items);
-		inst.setTimingConstraints(trigs);
+		inst.setTimingConstraints(tims);
 		return inst;
 	}
 	
@@ -180,7 +180,7 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 */
 	public static ScheduleItemInstanceDetailsList addItem(ScheduleItemInstanceDetailsList items,
 			Long itemId, Long schId, ArgumentDefinitionDetailsList argTypes,
-			ArgumentValueList argVals, TriggerDetailsList trigs, ObjectId del) {
+			ArgumentValueList argVals, TimingDetailsList trigs, ObjectId del) {
 		ScheduleItemInstanceDetailsList list = (null != items) ? items : new ScheduleItemInstanceDetailsList();
 		list.add(new ScheduleItemInstanceDetails(itemId, schId, argTypes, argVals, trigs, del));
 		// trigs - mandatory, delegate - mandatory

@@ -21,7 +21,7 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.mal.transport.MALMessage;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.junit.Test;
 
 import esa.mo.inttest.Util;
@@ -379,8 +379,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 	
 	protected ScheduleInstanceDetails createInst() {
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-//		schInst.setName(new Identifier(n));
-		schInst.setTimingConstraints(new TriggerDetailsList());
+		schInst.setTimingConstraints(new TimingDetailsList());
 		return schInst;
 	}
 	

@@ -13,7 +13,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
@@ -61,9 +61,9 @@ public class PlanIncrementFile extends CommonFile {
 	 * @param exec
 	 * @return
 	 */
-	protected TriggerDetailsList createPifTaskTrigger(Time exec) {
-		TriggerDetailsList list = new TriggerDetailsList();
-		list.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(exec)));
+	protected TimingDetailsList createPifTaskTrigger(Time exec) {
+		TimingDetailsList list = new TimingDetailsList();
+		list.add(createTaskTiming(TriggerName.START, createAbsTimeTrig(exec)));
 		return list;
 	}
 
@@ -177,8 +177,8 @@ public class PlanIncrementFile extends CommonFile {
 	 */
 	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
 		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(id, defId, null);
-		TriggerDetailsList trigs = new TriggerDetailsList();
-		trigs.add(createTaskTrigger(TriggerName.START, createAbsTimeTrig(parseTime("UTC=2008-04-07T00:00:00"))));
+		TimingDetailsList trigs = new TimingDetailsList();
+		trigs.add(createTaskTiming(TriggerName.START, createAbsTimeTrig(parseTime("UTC=2008-04-07T00:00:00"))));
 		prInst.setTimingConstraints(trigs);
 		addPrArg(prInst, "PIF_Replan_Time", null);
 		prInst.setTasks(taskInsts);

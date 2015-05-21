@@ -15,7 +15,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsLi
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
-import org.ccsds.moims.mo.planningdatatypes.structures.TriggerDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 
 /**
  * Schedule instances storage for testing.
@@ -114,9 +114,9 @@ public class InstStore {
 		return it.stat;
 	}
 	
-	protected void patchTriggers(TriggerDetailsList src1, TriggerDetailsList src2,
-			PatchOperationList pat, TriggerDetailsList trg) {
-		TriggerDetailsList newTrigs = new TriggerDetailsList();
+	protected void patchTriggers(TimingDetailsList src1, TimingDetailsList src2,
+			PatchOperationList pat, TimingDetailsList trg) {
+		TimingDetailsList newTrigs = new TimingDetailsList();
 		for (int i = 0; (null != pat) && (i < pat.size()); ++i) {
 			PatchOperation pOp = pat.get(i);
 			if (PatchOperation.UPDATE == pOp) {
@@ -185,7 +185,7 @@ public class InstStore {
 //		trg.setName(src2.getName());
 		trg.setComment(src2.getComment());
 		// patch triggers
-		trg.setTimingConstraints(new TriggerDetailsList());
+		trg.setTimingConstraints(new TimingDetailsList());
 		patchTriggers(src1.getTimingConstraints(), src2.getTimingConstraints(),
 				pat.getTimingConstraints(), trg.getTimingConstraints());
 		// patch arg values
