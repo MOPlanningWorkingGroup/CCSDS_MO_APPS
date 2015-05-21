@@ -6,8 +6,7 @@ import java.util.logging.Handler;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.junit.After;
 import org.junit.AfterClass;
 
@@ -85,19 +84,15 @@ public class BepiColomboConsumerTest {
 
 	@Test
 	public void testCrf() throws MALException, MALInteractionException, ParseException {
-		PlanningRequestResponseInstanceDetailsList resps = bepi.crf();
-		assertNotNull(resps);
-		assertFalse(resps.isEmpty());
+		PlanningRequestStatusDetails prStat = bepi.crf();
+		assertNotNull(prStat);
 	}
 	
 	@Test
 	public void testCrrf() throws MALException, MALInteractionException, ParseException {
-		PlanningRequestResponseInstanceDetailsList resps = bepi.crrf();
-		assertNotNull(resps);
-		assertFalse(resps.isEmpty());
-		
-		PlanningRequestResponseInstanceDetails respInst = resps.get(0);
-//		CommandRequestFile crf = new CommandRequestFile();
-		assertEquals(/*crf.getPrInstName()*/"dummy", respInst.getPrInstName().getValue());
+		PlanningRequestStatusDetails prStat = bepi.crrf();
+		assertNotNull(prStat);
+		// TODO not sure what to test for
+		assertFalse(0L == prStat.getPrInstId());
 	}
 }

@@ -123,7 +123,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#submitSchedule(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void submitSchedule(ScheduleInstanceDetails schInst,
+	public ScheduleStatusDetails submitSchedule(ScheduleInstanceDetails schInst,
 			MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.submitSchedule(schInst)\n  schInst={0}",
 				new Object[] { Dumper.schInst(schInst), Dumper.received(interaction) });
@@ -148,7 +148,9 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		schInsts.add(schInst, schStat);
 		// notify
 		publish(UpdateType.CREATION, schStat);
-		LOG.log(Level.INFO, "{0}.submitSchedule() response: returning nothing", Dumper.sending(interaction));
+		LOG.log(Level.INFO, "{1}.submitSchedule() response: returning schStatus={0}",
+				new Object[] { Dumper.schStat(schStat), Dumper.sending(interaction) });
+		return schStat;
 	}
 
 	/**
@@ -156,7 +158,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#updateSchedule(java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void updateSchedule(ScheduleInstanceDetails schInst, MALInteraction interaction)
+	public ScheduleStatusDetails updateSchedule(ScheduleInstanceDetails schInst, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.updateSchedule(schInst)\n  schInst={1}",
 				new Object[] { Dumper.schInst(schInst), Dumper.received(interaction) });
@@ -180,7 +182,9 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			schStat.getScheduleItemStatuses().add(schItemStat);
 		}
 		publish(UpdateType.MODIFICATION, schStat);
-		LOG.log(Level.INFO, "{0}.updateSchedule() response: returning nothing", Dumper.sending(interaction));
+		LOG.log(Level.INFO, "{1}.updateSchedule() response: returning schStatus={0}",
+				new Object[] { Dumper.schStat(schStat), Dumper.sending(interaction) });
+		return schStat;
 	}
 
 	/**
@@ -188,7 +192,8 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#removeSchedule(java.lang.Long, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void removeSchedule(Long schInstId, MALInteraction interaction) throws MALInteractionException, MALException {
+	public ScheduleStatusDetails removeSchedule(Long schInstId, MALInteraction interaction)
+			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.removeSchedule(schInstId={0})",
 				new Object[] { schInstId, Dumper.received(interaction) });
 		if (null == schInstId) {
@@ -203,7 +208,9 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 					new Time(System.currentTimeMillis()), "deleted"));
 		}
 		publish(UpdateType.DELETION, schStat);
-		LOG.log(Level.INFO, "{0}.removeSchedule() response: returning nothing", Dumper.sending(interaction));
+		LOG.log(Level.INFO, "{1}.removeSchedule() response: returning schStatus={0}",
+				new Object[] { Dumper.schStat(schStat), Dumper.sending(interaction) });
+		return schStat;
 	}
 
 	/**

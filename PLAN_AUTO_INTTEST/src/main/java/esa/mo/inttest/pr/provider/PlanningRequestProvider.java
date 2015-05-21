@@ -9,7 +9,6 @@ import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
-import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Time;
@@ -23,9 +22,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -46,7 +42,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	
 	private TaskDefStore taskDefs = new TaskDefStore();
 	private PrDefStore prDefs = new PrDefStore();
-	private RespDefStore respDefs = new RespDefStore();
 	private PrInstStore prInsts = new PrInstStore();
 	private MonitorTasksPublisher taskPub = null;
 	private MonitorPlanningRequestsPublisher prPub = null;
@@ -244,13 +239,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return taskStat;
 	}
 	
-	protected PlanningRequestResponseInstanceDetails createResponse(PlanningRequestInstanceDetails prInst) {
-		Identifier name = new Identifier("dummy");
-		return new PlanningRequestResponseInstanceDetails(name, Util.currentTime(), prInst.getArgumentValues());
-	}
-	
-	public PlanningRequestResponseInstanceDetailsList submitPlanningRequest(
-			PlanningRequestInstanceDetails prInst, MALInteraction interaction) throws MALInteractionException, MALException {
+	public PlanningRequestStatusDetails submitPlanningRequest(PlanningRequestInstanceDetails prInst,
+			MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.submitPlanningRequest(prInst)\n  prInst={0}",
 				new Object[] { Dumper.prInst(prInst), Dumper.received(interaction) });
 		Check.prInst(prInst);
@@ -285,17 +275,12 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			publishTask(UpdateType.CREATION, taskStat);
 		}
 		// .. and respond
-		PlanningRequestResponseInstanceDetails prr = createResponse(prInst);
-		
-		PlanningRequestResponseInstanceDetailsList resp = new PlanningRequestResponseInstanceDetailsList();
-		resp.add(prr);
-		
-		LOG.log(Level.INFO, "{1}.submitPlanningRequest() response: returning prResponse={0}",
-				new Object[] { Dumper.prResps(resp), Dumper.sending(interaction) });
-		return resp;
+		LOG.log(Level.INFO, "{1}.submitPlanningRequest() response: returning prStatus={0}",
+				new Object[] { Dumper.prStat(prStat), Dumper.sending(interaction) });
+		return prStat;
 	}
 	
-	public void updatePlanningRequest(PlanningRequestInstanceDetails prInst,
+	public PlanningRequestStatusDetails updatePlanningRequest(PlanningRequestInstanceDetails prInst,
 			MALInteraction interaction) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.updatePlanningRequest(prInst)\n  prInst={0}",
 				new Object[] { Dumper.prInst(prInst), Dumper.received(interaction) });
@@ -341,10 +326,12 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 		publishPr(UpdateType.CREATION, prStatNew);
 		
-		LOG.log(Level.INFO, "{0}.updatePlanningRequest() response: returning nothing", Dumper.sending(interaction));
+		LOG.log(Level.INFO, "{1}.updatePlanningRequest() response: returning prStatus={0}",
+				new Object[] { Dumper.prStat(prStatNew), Dumper.sending(interaction) });
+		return prStatNew;
 	}
 
-	public void removePlanningRequest(Long prInstId, MALInteraction interaction)
+	public PlanningRequestStatusDetails removePlanningRequest(Long prInstId, MALInteraction interaction)
 			throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.removePlanningRequest(prInstId={0})",
 				new Object[] { prInstId, Dumper.received(interaction) });
@@ -366,7 +353,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Time(System.currentTimeMillis()), "deleted"));
 		
 		publishPr(UpdateType.DELETION, old.stat);
-		LOG.log(Level.INFO, "{0}.removePlanningRequest() response: returning nothing", Dumper.sending(interaction));
+		LOG.log(Level.INFO, "{1}.removePlanningRequest() response: returning prStatus={0}",
+				new Object[] { Dumper.prStat(old.stat), Dumper.sending(interaction) });
+		return old.stat;
 	}
 
 	public PlanningRequestStatusDetailsList getPlanningRequestStatus(LongList prIds, MALInteraction interaction)
@@ -397,8 +386,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			ids.addAll(taskDefs.listAll(names));
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			ids.addAll(prDefs.listAll(names));
-		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
-			ids.addAll(respDefs.listAll(names));
 		}
 		LOG.log(Level.INFO, "{1}.listDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
@@ -420,9 +407,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)defs;
 			ids.addAll(prDefs.addAll(defs2));
-		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
-			PlanningRequestResponseDefinitionDetailsList defs2 = (PlanningRequestResponseDefinitionDetailsList)defs;
-			ids.addAll(respDefs.addAll(defs2));
 		}
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
@@ -438,9 +422,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)baseDefs;
 			prDefs.updateAll(defIds, defs2);
-		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
-			PlanningRequestResponseDefinitionDetailsList defs2 = (PlanningRequestResponseDefinitionDetailsList)baseDefs;
-			respDefs.updateAll(defIds, defs2);
 		}
 	}
 	
@@ -453,7 +434,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.defIdList(defIds);
 		Check.baseDefList(baseDefs);
 		Check.defLists(defIds, baseDefs);
-		Check.defsExist(defIds, defType, prDefs, taskDefs, respDefs);
+		Check.defsExist(defIds, defType, prDefs, taskDefs);
 		Check.defTypes(baseDefs, defType);
 		updateBaseDefs(defType, defIds, baseDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
@@ -465,13 +446,11 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Object[] { defType, defIds, Dumper.received(interaction) });
 		Check.defType(defType);
 		Check.defIdList(defIds);
-		Check.defsExist(defIds, defType, prDefs, taskDefs, respDefs);
+		Check.defsExist(defIds, defType, prDefs, taskDefs);
 		if (DefinitionType.TASK_DEF == defType) {
 			taskDefs.removeAll(defIds);
 		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
 			prDefs.removeAll(defIds);
-		} else if (DefinitionType.PLANNING_REQUEST_RESPONSE_DEF == defType) {
-			respDefs.removeAll(defIds);
 		}
 		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
 	}

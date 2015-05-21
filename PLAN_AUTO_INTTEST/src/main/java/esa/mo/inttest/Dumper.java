@@ -41,9 +41,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
@@ -626,6 +623,15 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs PR Status.
+	 * @param prs
+	 * @return
+	 */
+	public static String prStat(PlanningRequestStatusDetails prs) {
+		return dumpPrStat(prs, STEP);
+	}
+	
 	private static String dumpPrStats(PlanningRequestStatusDetailsList prsl, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != prsl) {
@@ -658,21 +664,6 @@ public final class Dumper {
 		return dumpTaskStats(tsl, STEP);
 	}
 	
-	private static String dumpRespDef(PlanningRequestResponseDefinitionDetails rd, String ind) {
-		StringBuilder s = new StringBuilder();
-		if (null != rd) {
-			s.append("{\n");
-			s.append(ind).append(STEP).append("name=").append(rd.getName()).append(",\n");
-			s.append(ind).append(STEP).append("desc=").append(quote(rd.getDescription())).append(",\n");
-			s.append(ind).append(STEP).append("prDefName=").append(dumpId(rd.getPrDefName())).append(",\n");
-			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(rd.getArgumentDefs(), ind+STEP)).append("\n");
-			s.append(ind).append("}");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
 	private static String dumpBaseDef(BaseDefinition bd, String ind) {
 		StringBuilder s = new StringBuilder();
 		if (null != bd) {
@@ -682,9 +673,6 @@ public final class Dumper {
 			} else if (bd instanceof PlanningRequestDefinitionDetails) {
 				PlanningRequestDefinitionDetails prd = (PlanningRequestDefinitionDetails)bd;
 				s.append(dumpPrDef(prd, ind));
-			} else if (bd instanceof PlanningRequestResponseDefinitionDetails) {
-				PlanningRequestResponseDefinitionDetails rd = (PlanningRequestResponseDefinitionDetails)bd;
-				s.append(dumpRespDef(rd, ind));
 			} else {
 				s.append(bd);
 			}
@@ -717,39 +705,6 @@ public final class Dumper {
 	@SuppressWarnings("rawtypes")
 	public static String baseDefs(BaseDefinitionList bdl) {
 		return dumpBaseDefs(bdl, STEP);
-	}
-	
-	private static String dumpRespInst(PlanningRequestResponseInstanceDetails prr, String ind) {
-		StringBuilder s = new StringBuilder();
-		if (null != prr) {
-			s.append("{\n");
-			s.append(ind).append(STEP).append("prInstName=").append(dumpId(prr.getPrInstName())).append(",\n");
-			s.append(ind).append(STEP).append("timeStamp=").append(dumpTs(prr.getTimestamp())).append(",\n");
-			s.append(ind).append(STEP).append("argDefValues=").append(dumpArgVals(prr.getArgumentValues(), ind+STEP)).append("\n");
-			s.append(ind).append("}");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
-	}
-	
-	/**
-	 * Outputs PR Response list.
-	 * @param prrl
-	 * @return
-	 */
-	public static String prResps(PlanningRequestResponseInstanceDetailsList prrl) {
-		StringBuilder s = new StringBuilder();
-		if (null != prrl) {
-			openList(s, prrl);
-			for (int i = 0; i < prrl.size(); ++i) {
-				s.append(STEP).append(i).append(": ").append(dumpRespInst(prrl.get(i), STEP)).append(",\n");
-			}
-			closeList(s, prrl, "");
-		} else {
-			s.append(NULL);
-		}
-		return s.toString();
 	}
 	
 	/**
@@ -946,6 +901,15 @@ public final class Dumper {
 			s.append(NULL);
 		}
 		return s.toString();
+	}
+	
+	/**
+	 * Outputs ScheduleStatus.
+	 * @param ss
+	 * @return
+	 */
+	public static String schStat(ScheduleStatusDetails ss) {
+		return dumpSchStat(ss, STEP);
 	}
 	
 	private static String dumpSchStats(ScheduleStatusDetailsList ssl, String ind) {

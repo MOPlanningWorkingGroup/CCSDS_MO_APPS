@@ -11,9 +11,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseDefinitionDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
@@ -74,7 +72,7 @@ public class BepiColomboConsumer {
 		pr.setTasks(list);
 	}
 	
-	public PlanningRequestResponseInstanceDetailsList crf() throws MALException, MALInteractionException, ParseException {
+	public PlanningRequestStatusDetails crf() throws MALException, MALInteractionException, ParseException {
 		CommandRequestFile crf = new CommandRequestFile();
 		
 		TaskDefinitionDetails taskDef1 = crf.createPassTaskDef();
@@ -107,19 +105,9 @@ public class BepiColomboConsumer {
 		return cons.getStub().submitPlanningRequest(prInst);
 	}
 	
-	protected Long submitRespDef(PlanningRequestResponseDefinitionDetails def) throws MALException, MALInteractionException {
-		PlanningRequestResponseDefinitionDetailsList defs = new PlanningRequestResponseDefinitionDetailsList();
-		defs.add(def);
-		LongList ids = cons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_RESPONSE_DEF, defs);
-		return ids.get(0);
-	}
-	
-	public PlanningRequestResponseInstanceDetailsList crrf() throws MALException, MALInteractionException, ParseException {
+	public PlanningRequestStatusDetails crrf() throws MALException, MALInteractionException, ParseException {
 		CommandRequestFile crf = new CommandRequestFile();
 		CommandRequestResponseFile crrf = new CommandRequestResponseFile();
-		
-		PlanningRequestResponseDefinitionDetails respDef = crrf.createRespDef(crf.getPrDefName());
-		submitRespDef(respDef);
 		
 		return crf();
 	}

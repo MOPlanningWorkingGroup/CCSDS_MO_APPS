@@ -27,7 +27,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
@@ -240,11 +239,9 @@ public class TwoPrDemoTest {
 					prInst.getTasks().add(taskInst);
 					prInst.getTasks().add(taskInst2);
 				}
-				PlanningRequestResponseInstanceDetailsList prResps = gs.submitPlanningRequest(prInst);
+				PlanningRequestStatusDetails prStat = gs.submitPlanningRequest(prInst);
 				
-				assertNotNull(prResps);
-				assertFalse(prResps.isEmpty());
-				assertNotNull(prResps.get(0));
+				assertNotNull(prStat);
 			}
 		}
 	}
@@ -484,11 +481,9 @@ public class TwoPrDemoTest {
 	private PlanningRequestInstanceDetails addPrInsts(Long prDefId) throws MALException, MALInteractionException {
 		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(generateId(), prDefId, "instrument pr instance 1");
 		
-		PlanningRequestResponseInstanceDetailsList resps = normalInstrCons.getStub().submitPlanningRequest(prInst);
+		PlanningRequestStatusDetails prStat = normalInstrCons.getStub().submitPlanningRequest(prInst);
 		
-		assertNotNull(resps);
-		assertFalse(resps.isEmpty());
-		assertNotNull(resps.get(0));
+		assertNotNull(prStat);
 		
 		return prInst;
 	}
@@ -631,11 +626,9 @@ public class TwoPrDemoTest {
 		prInst.getTasks().add(PlanningRequestConsumer.createTaskInst(generateId(), taskDefIds.get(1), null));
 		prInst.getTasks().get(1).setPrInstId(prInst.getId());
 		
-		PlanningRequestResponseInstanceDetailsList resps = normalInstrCons.getStub().submitPlanningRequest(prInst);
+		PlanningRequestStatusDetails prStat = normalInstrCons.getStub().submitPlanningRequest(prInst);
 		
-		assertNotNull(resps);
-		assertFalse(resps.isEmpty());
-		assertNotNull(resps.get(0));
+		assertNotNull(prStat);
 		
 		return prInst;
 	}

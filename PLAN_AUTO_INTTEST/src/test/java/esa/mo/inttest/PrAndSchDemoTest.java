@@ -31,8 +31,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -351,9 +349,9 @@ public class PrAndSchDemoTest {
 		taskInst.setPrInstId(prInst.getId());
 		prInst.setTasks(PlanningRequestConsumer.createTasksList(taskInst));
 		
-		PlanningRequestResponseInstanceDetailsList resps = prCons.getStub().submitPlanningRequest(prInst);
-		PlanningRequestResponseInstanceDetails prr = resps.get(0);
-		assertNotNull(prr);
+		PlanningRequestStatusDetails prStat = prCons.getStub().submitPlanningRequest(prInst);
+		
+		assertNotNull(prStat);
 		
 		return prInst;
 	}

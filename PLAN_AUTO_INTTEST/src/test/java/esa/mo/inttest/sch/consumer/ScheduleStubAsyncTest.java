@@ -10,6 +10,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -54,7 +55,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		MALMessage msg = schCons.asyncSubmitSchedule(schInst, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void submitScheduleAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+			public void submitScheduleResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetails schStat, Map qosProperties) {
 				submitted[0] = true;
 				synchronized (submitted) {
 					submitted.notifyAll();
@@ -113,7 +115,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		MALMessage msg = schCons.asyncUpdateSchedule(schInst, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void updateScheduleAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			public void updateScheduleResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetails schStat, Map qosProps) {
 				updated[0] = true;
 				synchronized (updated) {
 					updated.notifyAll();
@@ -169,7 +172,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		MALMessage msg = schCons.asyncRemoveSchedule(schInstId, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void removeScheduleAckReceived(MALMessageHeader msgHeader, Map qosProps) {
+			public void removeScheduleResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetails schStat, Map qosProps) {
 				removed[0] = true;
 				synchronized (removed) {
 					removed.notifyAll();
@@ -188,6 +192,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 				return removed[0];
 			}
 		});
+		
+		assertTrue(removed[0]);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);

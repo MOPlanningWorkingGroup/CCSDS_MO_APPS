@@ -75,22 +75,6 @@ public class PlanningRequestHelperTest {
 		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(TaskStatusDetailsList.SHORT_FORM);
 		o = f.createElement();
 		assertTrue(o instanceof TaskStatusDetailsList);
-		
-		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(PlanningRequestResponseDefinitionDetails.SHORT_FORM);
-		o = f.createElement();
-		assertTrue(o instanceof PlanningRequestResponseDefinitionDetails);
-		
-		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(PlanningRequestResponseDefinitionDetailsList.SHORT_FORM);
-		o = f.createElement();
-		assertTrue(o instanceof PlanningRequestResponseDefinitionDetailsList);
-		
-		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(PlanningRequestResponseInstanceDetails.SHORT_FORM);
-		o = f.createElement();
-		assertTrue(o instanceof PlanningRequestResponseInstanceDetails);
-		
-		f = MALContextFactory.getElementFactoryRegistry().lookupElementFactory(PlanningRequestResponseInstanceDetailsList.SHORT_FORM);
-		o = f.createElement();
-		assertTrue(o instanceof PlanningRequestResponseInstanceDetailsList);
 	}
 
 }

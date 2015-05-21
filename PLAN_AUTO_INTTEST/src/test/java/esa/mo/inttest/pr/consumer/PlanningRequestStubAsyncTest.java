@@ -25,7 +25,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestResponseInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -34,6 +34,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetail
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.Test;
 
+import esa.mo.inttest.Dumper;
 import esa.mo.inttest.Util;
 
 public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
@@ -183,14 +184,13 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	protected MALMessage asyncSubmitPr(PlanningRequestInstanceDetails prInst,
-			final PlanningRequestResponseInstanceDetailsList[] resp)
-					throws MALException, MALInteractionException {
+			final PlanningRequestStatusDetails[] resp) throws MALException, MALInteractionException {
 		
 		return prCons.asyncSubmitPlanningRequest(prInst, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestResponseInstanceDetailsList resp2, Map qosProperties) {
+					PlanningRequestStatusDetails resp2, Map qosProperties) {
 				LOG.log(Level.INFO, "submit pr resp={0}", resp2);
 				resp[0] = resp2;
 				synchronized (resp) {
@@ -219,7 +219,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		storePrInst(prInst);
 		
-		final PlanningRequestResponseInstanceDetailsList[] response = { null };
+		final PlanningRequestStatusDetails[] response = { null };
 		
 		MALMessage malMsg = asyncSubmitPr(prInst, response);
 		
@@ -231,8 +231,6 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		});
 		
 		assertNotNull(response[0]);
-		assertEquals(1, response[0].size());
-		assertNotNull(response[0].get(0));
 		
 		verifyPrStat(prInst.getId());
 		
@@ -267,7 +265,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		storePrInst(prInst);
 		
-		final PlanningRequestResponseInstanceDetailsList[] response = { null };
+		final PlanningRequestStatusDetails[] response = { null };
 		
 		MALMessage malMsg = asyncSubmitPr(prInst, response);
 		
@@ -279,8 +277,6 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		});
 		
 		assertNotNull(response[0]);
-		assertEquals(1, response[0].size());
-		assertNotNull(response[0].get(0));
 		
 		verifyPrStat(prInst.getId());
 		
@@ -311,8 +307,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		MALMessage malMsg = prCons.asyncUpdatePlanningRequest(prInst, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void updatePlanningRequestAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				LOG.log(Level.INFO, "update pr ack");
+			public void updatePlanningRequestResponseReceived(MALMessageHeader msgHeader,
+					PlanningRequestStatusDetails prStat, Map qosProps) {
+				LOG.log(Level.INFO, "update pr response={0}", Dumper.prStat(prStat));
 				updated[0] = true;
 				synchronized (updated) {
 					updated.notifyAll();
@@ -362,8 +359,9 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		MALMessage malMsg = prCons.asyncRemovePlanningRequest(prInst.getId(), new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void removePlanningRequestAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				LOG.log(Level.INFO, "remove pr ack");
+			public void removePlanningRequestResponseReceived(MALMessageHeader msgHeader,
+					PlanningRequestStatusDetails prStat, Map qosProps) {
+				LOG.log(Level.INFO, "remove pr response={0}", Dumper.prStat(prStat));
 				removed[0] = true;
 				synchronized (removed) {
 					removed.notifyAll();
