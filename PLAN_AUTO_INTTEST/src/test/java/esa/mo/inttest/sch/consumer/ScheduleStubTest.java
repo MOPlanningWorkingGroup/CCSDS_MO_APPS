@@ -6,7 +6,7 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
-import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -124,7 +124,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testPatchSchedule() throws MALException, MALInteractionException {
-		ScheduleDefinitionDetails schDef = createDef("test schdule def 2");
+		ScheduleDefinitionDetails schDef = createDef("test schedule def 2");
 		schDef.setId(0L);
 		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
 		schDefs.add(schDef);
@@ -132,17 +132,20 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		schDef.setId(schDefIds.get(0));
 		
-		Long srcSchInstId = 1L;
-		ScheduleInstanceDetails srcSchInst = createInst(srcSchInstId, schDefIds.get(0));
+		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(srcSchInst);
+		schCons.submitSchedule(schInst);
 		
-		Long targetSchInstId = 2L;
+//		Long targetSchInstId = 2L;
+//		SchedulePatchOperations patchOp = new SchedulePatchOperations();
+//		patchOp.setScheduleInstName(new Identifier("patch schedule"));
+		schInst.setComment("new modified comment");
 		
-		SchedulePatchOperations patchOp = new SchedulePatchOperations();
-		patchOp.setScheduleInstName(new Identifier("patch schedule"));
+		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
+		update.add(schInst);
 		
-		schCons.patchSchedule(schDefIds.get(0), srcSchInstId, srcSchInst, patchOp, targetSchInstId);
+		schCons.patchSchedule(null, update, null);
 	}
 	
 	@Test

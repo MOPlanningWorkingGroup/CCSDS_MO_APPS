@@ -9,7 +9,7 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
-import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
@@ -216,21 +216,24 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
-		Long srcSchInstId = 1L;
-		ScheduleInstanceDetails srcSchInst = createInst();
-		srcSchInst.setId(srcSchInstId);
-		srcSchInst.setSchDefId(schDefIds.get(0));
+		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = createInst();
+		schInst.setId(schInstId);
+		schInst.setSchDefId(schDefIds.get(0));
 		
-		schCons.submitSchedule(srcSchInst);
+		schCons.submitSchedule(schInst);
 		
-		Long targetSchInstId = 2L;
+//		Long targetSchInstId = 2L;
+//		SchedulePatchOperations patchOp = new SchedulePatchOperations();
+//		patchOp.setScheduleInstName(new Identifier("patch schedule"));
+		schInst.setComment("new modified comment");
 		
-		SchedulePatchOperations patchOp = new SchedulePatchOperations();
-		patchOp.setScheduleInstName(new Identifier("patch schedule"));
+		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
+		update.add(schInst);
 		
 		final boolean[] patched = { false };
 		
-		MALMessage msg = schCons.asyncPatchSchedule(schDefIds.get(0), srcSchInstId, srcSchInst, patchOp, targetSchInstId, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncPatchSchedule(null, update, null, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void patchScheduleAckReceived(MALMessageHeader msgHeader, Map qosProps) {

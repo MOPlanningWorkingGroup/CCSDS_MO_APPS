@@ -7,10 +7,10 @@ import org.ccsds.moims.mo.automation.schedule.provider.MonitorSchedulesPublisher
 import org.ccsds.moims.mo.automation.schedule.provider.ScheduleInheritanceSkeleton;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
-import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
@@ -218,28 +218,17 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#patchSchedule(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations, java.lang.Long, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void patchSchedule(Long schDefId, Long schInstId, ScheduleInstanceDetails schInst,
-			SchedulePatchOperations patchOp, Long targetSchInstId, MALInteraction interaction)
-			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{5}.patchSchedule(schDefId={0}, schInstId={1}, schInst, patchOp, targetSchInstId={2})\n  schInst={3}\n  patchOp={4}",
-				new Object[] { schDefId, schInstId, targetSchInstId, Dumper.schInst(schInst), Dumper.schPatchOp(patchOp), Dumper.received(interaction) });
-		if (null == schDefId) {
-			throw new MALException("schedule definition id is null");
+	public void patchSchedule(ScheduleInstanceDetailsList toRemove, ScheduleInstanceDetailsList toUpdate,
+			ScheduleInstanceDetailsList toAdd, MALInteraction interaction) throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "{5}.patchSchedule(List:toRemove, List:toUpdate, List:toAdd)\n  toRemove={0}\n  toUpdate={1}\n  toAdd={2}",
+				new Object[] { Dumper.schInsts(toRemove), Dumper.schInsts(toUpdate), Dumper.schInsts(toAdd), Dumper.received(interaction) });
+		if (null == toRemove && null == toUpdate && null == toAdd) {
+			throw new MALException("schedule instance lists are null");
 		}
-		if (null == schInstId) {
-			throw new MALException("source schedule instance id is null");
+		ScheduleStatusDetailsList schStats = schInsts.patch(toRemove, toUpdate, toAdd);
+		for (ScheduleStatusDetails schStat: schStats) {
+			publish(UpdateType.MODIFICATION, schStat);
 		}
-		if (null == schInst) {
-			throw new MALException("source schedule instance is null");
-		}
-		if (null == patchOp) {
-			throw new MALException("patch operation is null");
-		}
-		if (null == targetSchInstId) {
-			throw new MALException("target schedule instance id is null");
-		}
-		ScheduleStatusDetails schStat = schInsts.patch(schDefId, schInstId, schInst, patchOp, targetSchInstId);
-		publish(UpdateType.MODIFICATION, schStat);
 		LOG.log(Level.INFO, "{0}.patchSchedule() response: returning nothing", Dumper.sending(interaction));
 	}
 

@@ -13,7 +13,7 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
-import org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
@@ -231,14 +231,17 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		waitForSch(schMon);
 		
-		SchedulePatchOperations patchOp = new SchedulePatchOperations();
-		patchOp.setScheduleInstName(new Identifier("patch schedule"));
-		
-		Long targetSchInstId = 2L;
+//		SchedulePatchOperations patchOp = new SchedulePatchOperations();
+//		patchOp.setScheduleInstName(new Identifier("patch schedule"));
+//		Long targetSchInstId = 2L;
 		
 		schMon.clear(); // clear submit info
+		schInst.setComment("new modified comment");
 		
-		schCons.patchSchedule(schDefId, schInstId, schInst, patchOp, targetSchInstId);
+		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
+		update.add(schInst);
+		
+		schCons.patchSchedule(null, update, null);
 		
 		waitForSch(schMon);
 		
