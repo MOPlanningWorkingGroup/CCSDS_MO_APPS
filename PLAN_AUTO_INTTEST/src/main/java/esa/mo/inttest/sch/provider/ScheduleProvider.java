@@ -154,6 +154,25 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	}
 
 	/**
+	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#getSchedule(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
+	public ScheduleInstanceDetailsList getSchedule(LongList schInstIds,
+			MALInteraction interaction) throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "{1}.getSchedule(List:schIds)\n  schIds[]={0}",
+				new Object[] { schInstIds, Dumper.received(interaction) });
+		if (null == schInstIds) {
+			throw new MALException("schedule instance ids list is null");
+		}
+		if (schInstIds.isEmpty()) {
+			throw new MALException("schedule instance ids list is empty");
+		}
+		ScheduleInstanceDetailsList insts = schInsts.listInsts(schInstIds);
+		LOG.log(Level.INFO, "{1}.getSchedule() response: schInsts[]={0}",
+				new Object[] { Dumper.schInsts(insts), Dumper.sending(interaction) });
+		return insts;
+	}
+
+	/**
 	 * Implements Schedule modification in the system.
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#updateSchedule(java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
@@ -247,7 +266,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		if (schIds.isEmpty()) {
 			throw new MALException("schedule instance ids list is empty");
 		}
-		ScheduleStatusDetailsList schStats = schInsts.list(schIds);
+		ScheduleStatusDetailsList schStats = schInsts.listStats(schIds);
 		LOG.log(Level.INFO, "{1}.getScheduleStatus() response: schStats[]={0}",
 				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
 		return schStats;

@@ -22,6 +22,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -239,6 +240,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return taskStat;
 	}
 	
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#submitPlanningRequest(org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public PlanningRequestStatusDetails submitPlanningRequest(PlanningRequestInstanceDetails prInst,
 			MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.submitPlanningRequest(prInst)\n  prInst={0}",
@@ -280,6 +284,29 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return prStat;
 	}
 	
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#getPlanningRequest(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
+	public PlanningRequestInstanceDetailsList getPlanningRequest(LongList prInstIds,
+			MALInteraction interaction) throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "{1}.getPlanningRequest(List:prIds)\n  prIds[]={0}",
+				new Object[] { prInstIds, Dumper.received(interaction) });
+		Check.prInstIdList(prInstIds);
+		Check.prInstIds(prInstIds);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList(); 
+		for (int i = 0; i < prInstIds.size(); ++i) {
+			PrInstStore.Item old = prInsts.findPr(prInstIds.get(i));
+			PlanningRequestInstanceDetails prInst = (null != old) ? old.pr : null;
+			insts.add(prInst);
+		}
+		LOG.log(Level.INFO, "{1}.getPlanningRequest() response: returning prInstances={0}",
+				new Object[] { Dumper.prInsts(insts), Dumper.sending(interaction) });
+		return insts;
+	}
+	
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#updatePlanningRequest(org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public PlanningRequestStatusDetails updatePlanningRequest(PlanningRequestInstanceDetails prInst,
 			MALInteraction interaction) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.updatePlanningRequest(prInst)\n  prInst={0}",
@@ -331,6 +358,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return prStatNew;
 	}
 
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#removePlanningRequest(java.lang.Long, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public PlanningRequestStatusDetails removePlanningRequest(Long prInstId, MALInteraction interaction)
 			throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.removePlanningRequest(prInstId={0})",
@@ -358,6 +388,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return old.stat;
 	}
 
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#getPlanningRequestStatus(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public PlanningRequestStatusDetailsList getPlanningRequestStatus(LongList prIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.getPlanningRequestStatus(List:prInstIds)\n  prInstIds[]={0}",
@@ -375,6 +408,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return stats;
 	}
 	
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#listDefinition(org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType, org.ccsds.moims.mo.mal.structures.IdentifierList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public LongList listDefinition(DefinitionType defType, IdentifierList names, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.listDefinition(defType={0}, List:names)\n  names[]={1}",
@@ -392,6 +428,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return ids;
 	}
 	
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#addDefinition(org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType, org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	@SuppressWarnings("rawtypes")
 	public LongList addDefinition(DefinitionType defType, BaseDefinitionList defs, MALInteraction interaction)
 			throws MALInteractionException, MALException {
@@ -425,6 +464,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		}
 	}
 	
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#updateDefinition(org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	@SuppressWarnings("rawtypes")
 	public void updateDefinition(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs,
 			MALInteraction interaction) throws MALInteractionException, MALException {
@@ -440,6 +482,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
 	}
 
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#removeDefinition(org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public void removeDefinition(DefinitionType defType, LongList defIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.removeDefinition(defType={0}, List:defIds)\n  defIds[]={1}",
@@ -455,6 +500,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
 	}
 
+	/**
+	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#getTaskStatus(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
+	 */
 	public TaskStatusDetailsList getTaskStatus(LongList taskIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.getTaskStatus(List:taskIds)\n  taskIds[]={0}",

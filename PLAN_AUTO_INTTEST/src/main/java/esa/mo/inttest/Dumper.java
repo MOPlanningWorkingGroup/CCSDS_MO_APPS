@@ -39,6 +39,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
@@ -446,6 +447,29 @@ public final class Dumper {
 		s.append(", fourth=").append(ek.getFourthSubKey());
 		s.append(" }");
 		return s.toString();
+	}
+	
+	private static String dumpPrInsts(PlanningRequestInstanceDetailsList pril, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != pril) {
+			openList(s, pril);
+			for (int i = 0; i < pril.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpPrInst(pril.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, pril, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	/**
+	 * Outputs PR Instances list.
+	 * @param pril
+	 * @return
+	 */
+	public static String prInsts(PlanningRequestInstanceDetailsList pril) {
+		return dumpPrInsts(pril, STEP);
 	}
 	
 	private static String dumpTs(Time t) {
