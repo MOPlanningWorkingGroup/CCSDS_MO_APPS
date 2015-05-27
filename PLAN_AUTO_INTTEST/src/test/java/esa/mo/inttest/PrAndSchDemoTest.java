@@ -56,6 +56,7 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 import esa.mo.inttest.pr.provider.Plugin;
+import esa.mo.inttest.pr.provider.PrInstStore;
 import esa.mo.inttest.sch.consumer.ScheduleConsumer;
 import esa.mo.inttest.sch.consumer.ScheduleConsumerFactory;
 import esa.mo.inttest.sch.provider.ScheduleProviderFactory;
@@ -84,11 +85,13 @@ public class PrAndSchDemoTest {
 		public void setProv(PlanningRequestProvider prov) {
 			prProv = prov;
 		}
-		protected void setTaskStatus(Long id, TaskStatusDetails stat, InstanceState is, String comm) {
+		protected void setTaskStatus(TaskStatusDetails stat, InstanceState is, String comm) {
 			// add (or update) task status
-			stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), is, Util.currentTime(), comm));
+			Util.addOrUpdateStatus(stat, is, Util.currentTime(), comm);
 			try {
-				prProv.publishTask(UpdateType.UPDATE, stat);
+				PrInstStore.TaskItem item = prProv.getInstStore().findTaskItem(stat.getTaskInstId());
+				PrInstStore.PrItem item2 = prProv.getInstStore().findPrItem(item.task.getPrInstId());
+				prProv.publishPr(UpdateType.UPDATE, item2.stat); // TODO only changed parts?
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "PrSchProcessor.setTaskStatus: {0}", e);
 				assertTrue(false);
@@ -98,10 +101,11 @@ public class PrAndSchDemoTest {
 			}
 		}
 		protected void updateTask(Long id, StatusRecordList stats) {
-			TaskStatusDetails taskStat = prProv.getInstStore().findTask(id);
-			assertNotNull(taskStat);
+			PrInstStore.TaskItem taskItem = prProv.getInstStore().findTaskItem(id);
+			assertNotNull(taskItem);
 			// assuming task name matches schedule name
-			assertTrue(taskStat.getTaskInstId() == id);
+			assertTrue(taskItem.stat.getTaskInstId() == id);
+			assertTrue(taskItem.task.getId() == id);
 			
 			InstanceState[] states = new InstanceState[] { InstanceState.INVALID, InstanceState.SCHEDULED,
 					InstanceState.PLANNED, InstanceState.DISTRIBUTED_FOR_EXECUTION };
@@ -110,7 +114,7 @@ public class PrAndSchDemoTest {
 			for (int i = 0; i < states.length; ++i) {
 				StatusRecord sr = Util.findStatus(stats, states[i]);
 				if (null != sr) {
-					setTaskStatus(id, taskStat, states[i], comments[i]);
+					setTaskStatus(taskItem.stat, states[i], comments[i]);
 					break;
 				}
 			}
@@ -292,20 +296,6 @@ public class PrAndSchDemoTest {
 		return prCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
 	}
 	
-	private void registerTaskMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
-		LOG.log(Level.INFO, "{1}.monitorTasksRegister(subId={0})", new Object[] { id, CLIENT + " -> " + PR_PROV });
-		pr.getStub().monitorTasksRegister(Util.createSub(id), pr);
-		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT + " <- " + PR_PROV);
-	}
-	
-	private void deRegisterTaskMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
-		IdentifierList subs = new IdentifierList();
-		subs.add(new Identifier(id));
-		LOG.log(Level.INFO, "{1}.monitorTasksDeregister(subId={0})", new Object[] { id, CLIENT + " -> " + PR_PROV });
-		pr.getStub().monitorTasksDeregister(subs);
-		LOG.log(Level.INFO, "{0}.monitorTasksDeregister() response: returning nothing", CLIENT + " <- " + PR_PROV);
-	}
-	
 	private void registerPrMonitor(String id, PlanningRequestConsumer pr) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsRegister(subId={0})", new Object[] { id, CLIENT + " -> " + PR_PROV });
 		pr.getStub().monitorPlanningRequestsRegister(Util.createSub(id), pr);
@@ -379,9 +369,6 @@ public class PrAndSchDemoTest {
 		
 		LongList prDefIds = addPrDef();
 		
-		String sub1Id = "sub1Id";
-		registerTaskMonitor(sub1Id, prCons);
-		
 		String sub2Id = "sub2Id";
 		registerPrMonitor(sub2Id, prCons);
 		
@@ -407,8 +394,6 @@ public class PrAndSchDemoTest {
 		sleep(100); // give async jobs a sec
 		
 		deRegisterPrMonitor(sub2Id, prCons);
-		
-		deRegisterTaskMonitor(sub1Id, prCons);
 		
 		deRegisterSchMonitor(sub6Id, schConsStub);
 	}

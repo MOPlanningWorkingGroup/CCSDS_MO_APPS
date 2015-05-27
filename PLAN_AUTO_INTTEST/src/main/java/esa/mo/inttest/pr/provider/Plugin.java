@@ -16,22 +16,14 @@ public interface Plugin {
 	
 	/**
 	 * Called when new PR is added.
-	 * @param prDefId
-	 * @param prInstId
 	 * @param prInst
-	 * @param taskDefIds
-	 * @param taskInstIds
 	 * @param prStat
 	 */
 	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat);
 	
 	/**
 	 * Called when PR has been updated.
-	 * @param prDefId
-	 * @param prInstId
 	 * @param prInst
-	 * @param taskDefIds
-	 * @param taskInstIds
 	 * @param prStat
 	 */
 	void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat);

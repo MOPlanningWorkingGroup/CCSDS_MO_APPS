@@ -18,7 +18,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <ccsds.specification.download.ref-skip>false</ccsds.specification.download.ref-skip>
-    <esa.stubgen.xmlDirectory>src/main/resources</esa.stubgen.xmlDirectory>
     <spring.version>3.1.1.RELEASE</spring.version>
     <junit.version>4.11</junit.version>
     <log2file.value>false</log2file.value>
@@ -34,16 +33,6 @@
     	<groupId>junit</groupId>
     	<artifactId>junit</artifactId>
     	<version>${junit.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.springframework</groupId>
-    	<artifactId>spring-core</artifactId>
-    	<version>${spring.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.springframework</groupId>
-    	<artifactId>spring-context</artifactId>
-    	<version>${spring.version}</version>
     </dependency>
     <dependency>
     	<groupId>int.esa.ccsds.mo</groupId>
@@ -70,22 +59,9 @@
     	<artifactId>API_PLANNING_DATA_TYPES</artifactId>
     	<version>1.0-SNAPSHOT</version>
     </dependency>
-    <dependency>
-    	<groupId>org.springframework</groupId>
-    	<artifactId>spring-test</artifactId>
-    	<version>3.1.1.RELEASE</version>
-    </dependency>
-  	<dependency>
-  		<groupId>int.esa.ccsds.mo</groupId>
-  		<artifactId>SUPPORT_LIB_COM</artifactId>
-  	</dependency>
   	<dependency>
   		<groupId>int.esa.ccsds.mo</groupId>
   		<artifactId>API_COM</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>int.esa.ccsds.mo</groupId>
-  		<artifactId>SUPPORT_LIB_MAL</artifactId>
   	</dependency>
   	<dependency>
   		<groupId>int.esa.ccsds.mo</groupId>
@@ -108,11 +84,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>int.esa.ccsds.mo</groupId>
-        <artifactId>StubGenerator</artifactId>
-<!--         <version>${esa.stubgen.version}</version> -->
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

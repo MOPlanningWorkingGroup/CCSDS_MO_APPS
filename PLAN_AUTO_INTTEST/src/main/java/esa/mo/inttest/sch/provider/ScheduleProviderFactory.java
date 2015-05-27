@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.automation.schedule.ScheduleHelper;
 import org.ccsds.moims.mo.automation.schedule.provider.MonitorSchedulesPublisher;
-import org.ccsds.moims.mo.automationprototype.scheduletest.ScheduleTestHelper;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALProvider;
@@ -34,9 +33,6 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 	private MALProviderManager malProvMgr = null;
 	private MALProvider malProv = null;
 	private MonitorSchedulesPublisher schPub = null;
-	// test support
-	private ScheduleTestSupportProvider testProv = null;
-	private MALProvider testMalProv = null;
 
 	/**
 	 * Set broker to use. If null, provider will create one itself.
@@ -63,16 +59,6 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 				authId, prov, expQos, priority, System.getProperties(), isPublisher, brokerUri);
 		
 		prov.setUri(malProv.getURI());
-		
-		// testing support
-		testProv = new ScheduleTestSupportProvider();
-		testProv.setProvider(prov);
-		
-		String testProvName = provName + "TestSupport";
-		
-		testMalProv = malProvMgr.createProvider(testProvName, proto,
-				ScheduleTestHelper.SCHEDULETEST_SERVICE, authId, testProv, expQos, priority,
-				System.getProperties(), false, (null==brokerUri) ? malProv.getBrokerURI() : brokerUri);
 		
 		LOG.exiting(getClass().getName(), "initProvider");
 	}
@@ -120,6 +106,15 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 	}
 
 	/**
+	 * Sets plugin to use to provider.
+	 * @param p
+	 */
+	public void setPlugin(Plugin p) {
+		p.setProv(prov);
+		prov.setPlugin(p);
+	}
+
+	/**
 	 * Returns provider URI for consumer to connect to.
 	 * @return
 	 */
@@ -133,14 +128,6 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 	 */
 	public URI getBrokerUri() {
 		return malProv.getBrokerURI();
-	}
-
-	/**
-	 * Returns testing support provider URI for consumer to connect to.
-	 * @return
-	 */
-	public URI getTestProviderUri() {
-		return testMalProv.getURI();
 	}
 
 	/**
@@ -160,11 +147,6 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 			schPub.close();
 		}
 		schPub = null;
-		// test support
-		if (testMalProv != null) {
-			testMalProv.close();
-		}
-		testMalProv = null;
 		
 		if (malProv != null) {
 			malProv.close();
@@ -174,8 +156,7 @@ public class ScheduleProviderFactory extends ScheduleFactory {
 			malProvMgr.close();
 		}
 		malProvMgr = null;
-		// test support
-		testProv = null;
+		
 		prov = null;
 		
 		super.close();

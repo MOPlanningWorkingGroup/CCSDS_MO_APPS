@@ -107,13 +107,13 @@ public class TwoPrDemoTest {
 		
 		// forward pr status update from gs to instr consumer
 		private void forward(Long id, PlanningRequestStatusDetails stat) {
-			PrInstStore.Item it = instr.getInstStore().findPr(id);
+			PrInstStore.PrItem it = instr.getInstStore().findPrItem(id);
 			if (null != it) {
 				StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
 				InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
 				Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
-				Util.addOrUpdateStatus(it.stat.getStatus(), is, t, c);
+				Util.addOrUpdateStatus(it.stat, is, t, c);
 				try {
 					instr.publishPr(UpdateType.UPDATE, it.stat);
 				} catch (MALException e) {
@@ -146,16 +146,17 @@ public class TwoPrDemoTest {
 			}
 		}
 		
-		private void forwardTask(Long id, TaskStatusDetails stat) {
-			TaskStatusDetails taskStat = instr.getInstStore().findTask(id);
-			if (null != taskStat) {
+		private void forwardTask(TaskStatusDetails stat) {
+			PrInstStore.TaskItem taskItem = instr.getInstStore().findTaskItem(stat.getTaskInstId());
+			if (null != taskItem) {
 				StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
 				InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
 				Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
-				Util.addOrUpdateStatus(taskStat.getStatus(), is, t, c);
+				Util.addOrUpdateStatus(taskItem.stat, is, t, c);
 				try {
-					instr.publishTask(UpdateType.UPDATE, taskStat);
+					PrInstStore.PrItem item2 = instr.getInstStore().findPrItem(taskItem.task.getPrInstId());
+					instr.publishPr(UpdateType.UPDATE, item2.stat); // TODO only changed parts?
 				} catch (MALException e) {
 					LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
 				} catch (MALInteractionException e) {
@@ -178,9 +179,8 @@ public class TwoPrDemoTest {
 			for (int i = 0; i < updHdrs.size(); ++i) {
 				UpdateHeader uh = updHdrs.get(i);
 				if (UpdateType.UPDATE == uh.getUpdateType()) {
-					ObjectId oi = objIds.get(i);
 					TaskStatusDetails taskStat = taskStats.get(i);
-					forwardTask(oi.getKey().getInstId(), taskStat);
+					forwardTask(taskStat);
 				}
 			}
 		}
@@ -294,9 +294,9 @@ public class TwoPrDemoTest {
 		public void doPlanning() throws MALException, MALInteractionException {
 			// process submitted prs
 			for (Long id: prInstIds) {
-				PrInstStore.Item it = pr.getInstStore().findPr(id);
+				PrInstStore.PrItem it = pr.getInstStore().findPrItem(id);
 				if (null != it) {
-					Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.PLAN_CONFLICT,
+					Util.addOrUpdateStatus(it.stat, InstanceState.PLAN_CONFLICT,
 							Util.currentTime(), "planning conflict");
 					pr.publishPr(UpdateType.UPDATE, it.stat);
 				}
@@ -440,22 +440,6 @@ public class TwoPrDemoTest {
 		return ids;
 	}
 	
-	private void registerTaskMonitor(String id, IdentifierList dom, PlanningRequestStub prs, PlanningRequestAdapter pra,
-			String cl, String pr) throws MALException, MALInteractionException {
-		LOG.log(Level.INFO, "{1}.monitorTasksRegister(subId={0})", new Object[] { id, cl + " -> " + pr });
-		prs.monitorTasksRegister(Util.createSub(id, dom), pra);
-		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", cl + " <- " + pr);
-	}
-	
-	private void deRegisterTaskMonitor(String id, PlanningRequestStub prs, String cl, String pr)
-			throws MALException, MALInteractionException {
-		IdentifierList subs = new IdentifierList();
-		subs.add(new Identifier(id));
-		LOG.log(Level.INFO, "{1}.monitorTasksDeregister(subId={0})", new Object[] { id, cl + " -> " + pr });
-		prs.monitorTasksDeregister(subs);
-		LOG.log(Level.INFO, "{0}.monitorTasksDeregister() response: returning nothing", cl + " <- " + pr);
-	}
-	
 	private void registerPrMonitor(String id, IdentifierList dom, PlanningRequestStub prs, PlanningRequestAdapter pra,
 			String cl, String pr) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsRegister(subId={0})", new Object[] { id, cl + " -> " + pr });
@@ -522,19 +506,11 @@ public class TwoPrDemoTest {
 		
 		// PR normal user subscribes
 		IdentifierList instrDom = new IdentifierList();
-		instrDom.add(instrSubDom);
-		String sub1Id = "instrTaskSub";
-		registerTaskMonitor(sub1Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
-		
 		String sub2Id = "instrPrSub";
 		registerPrMonitor(sub2Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
 		
 		// instr pr subscribes to gs pr
 		IdentifierList gsDom = new IdentifierList();
-		gsDom.add(gsSubDom);
-		String sub3Id = "gsTaskSub";
-		registerTaskMonitor(sub3Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
-		
 		String sub4Id = "gsPrSub";
 		registerPrMonitor(sub4Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
 		
@@ -560,11 +536,8 @@ public class TwoPrDemoTest {
 		// instr pr un-subscribes
 		deRegisterPrMonitor(sub4Id, instrProv2GsProvCons, PR_PROV1, PR_PROV2);
 		
-		deRegisterTaskMonitor(sub3Id, instrProv2GsProvCons, PR_PROV1, PR_PROV2);
 		// pr normal user un-subscribes
 		deRegisterPrMonitor(sub2Id, normalInstrCons.getStub(), CLIENT1, PR_PROV1);
-		
-		deRegisterTaskMonitor(sub1Id, normalInstrCons.getStub(), CLIENT1, PR_PROV1);
 	}
 	
 	private Object[] gsAddPrDefsWithTasks() throws MALException, MALInteractionException {
@@ -678,19 +651,11 @@ public class TwoPrDemoTest {
 		
 		// PR normal user subscribes
 		IdentifierList instrDom = new IdentifierList();
-		instrDom.add(instrSubDom);
-		String sub1Id = "instrTaskSub";
-		registerTaskMonitor(sub1Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
-		
 		String sub2Id = "instrPrSub";
 		registerPrMonitor(sub2Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
 		
 		// instr pr subscribes to gs pr
 		IdentifierList gsDom = new IdentifierList();
-		gsDom.add(gsSubDom);
-		String sub3Id = "gsTaskSub";
-		registerTaskMonitor(sub3Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
-		
 		String sub4Id = "gsPrSub";
 		registerPrMonitor(sub4Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
 		
@@ -716,10 +681,7 @@ public class TwoPrDemoTest {
 		// instr pr un-subscribes
 		deRegisterPrMonitor(sub4Id, instrProv2GsProvCons, PR_PROV1, PR_PROV2);
 		
-		deRegisterTaskMonitor(sub3Id, instrProv2GsProvCons, PR_PROV1, PR_PROV2);
 		// pr normal user un-subscribes
 		deRegisterPrMonitor(sub2Id, normalInstrCons.getStub(), CLIENT1, PR_PROV1);
-		
-		deRegisterTaskMonitor(sub1Id, normalInstrCons.getStub(), CLIENT1, PR_PROV1);
 	}
 }

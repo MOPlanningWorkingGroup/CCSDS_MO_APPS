@@ -3,6 +3,7 @@ package esa.mo.inttest.goce;
 import static org.junit.Assert.*;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -11,7 +12,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -24,21 +24,21 @@ import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
-import org.ccsds.moims.mo.mal.structures.Time;
-import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
-import org.ccsds.moims.mo.planningprototype.planningrequesttest.consumer.PlanningRequestTestStub;
+//import org.ccsds.moims.mo.planningprototype.planningrequesttest.consumer.PlanningRequestTestStub;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -47,9 +47,13 @@ import org.junit.Test;
 
 import esa.mo.inttest.DemoUtils;
 import esa.mo.inttest.Dumper;
+import esa.mo.inttest.Util;
 import esa.mo.inttest.goce.GoceConsumer;
 import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
+import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
+import esa.mo.inttest.pr.provider.Plugin;
+import esa.mo.inttest.pr.provider.PrInstStore;
 
 /**
  * Three consumers demo. One consumer managing defs, second managing instances, third only monitoring.
@@ -61,7 +65,7 @@ public class ThreeGoceConsumersTest {
 	 */
 	private final class PrMonitor extends PlanningRequestAdapter {
 		
-		protected PlanningRequestStatusDetailsList prStats = null;
+		protected List<PlanningRequestStatusDetailsList> prStats = new ArrayList<PlanningRequestStatusDetailsList>();
 		
 		@SuppressWarnings("rawtypes")
 		@Override
@@ -72,7 +76,7 @@ public class ThreeGoceConsumersTest {
 					"List:objectIds, List:prStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  prStatuses[]={3}",
 					new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
 					Dumper.fromBroker(PROVIDER, msgHdr) });
-			this.prStats = prStats;
+			this.prStats.add(prStats);
 		}
 		
 		@SuppressWarnings("rawtypes")
@@ -85,152 +89,33 @@ public class ThreeGoceConsumersTest {
 	}
 
 	/**
-	 * Class receiving Task notifications.
+	 * PR plugin - monitors new PRs and Tasks and add ACCEPTED statuses later.
 	 */
-	private final class TaskMonitor extends PlanningRequestAdapter {
+	private final class Processor implements Plugin {
 		
-		protected TaskStatusDetailsList taskStats = null;
+		private PlanningRequestProvider prov = null;
 		
-		@SuppressWarnings("rawtypes")
-		@Override
-		public void monitorTasksNotifyReceived(MALMessageHeader msgHdr, Identifier subId,
-				UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(subId={0}, List:updateHeaders, " +
-				"List:objectIds, List:taskStatuses)\n  updateHeaders[]={1}\n  objectIds[]={2}\n  taskStatuses[]={3}",
-				new Object[] { subId, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
-				Dumper.fromBroker(PROVIDER, msgHdr) });
-			this.taskStats = taskStats;
-		}
+		protected List<Long> newTasks = Collections.synchronizedList(new LongList());
+		protected List<Long> newPrs = Collections.synchronizedList(new LongList());
 		
-		@SuppressWarnings("rawtypes")
-		@Override
-		public void monitorTasksNotifyErrorReceived(MALMessageHeader msgHdr, MALStandardError error, Map qosProps) {
-			LOG.log(Level.INFO, "{1}.monitorTasksNotifyErrorReceived(error={0})",
-					new Object[] { error, Dumper.fromBroker(PROVIDER, msgHdr) });
-		}
-	}
-
-	/**
-	 * Goce1 worker thread - adds definitions to Provider.
-	 */
-	private final class Worker1Thread extends Thread {
-		
-		private GoceConsumer cons;
-		
-		private Worker1Thread(String name, GoceConsumer cons) {
-			super(name);
-			this.cons = cons;
-		}
-		
-		@Override
-		public void run() {
-			LOG.entering(getName(), "run");
-			boolean taskDefCreated = false;
-			boolean prDefCreated = false;
-			while (!isInterrupted() && !taskDefCreated && !prDefCreated) {
-				if (!taskDefCreated) {
-					sleeep(1000, 3000);
-					try {
-						taskDefCreated = cons.createPpfTaskDefIfMissing();
-					} catch (Exception e) {
-						taskDefCreated = false;
-						LOG.log(Level.WARNING, getName() + ": createPpfTaskDef: {0}", e);
-						throw new RuntimeException(e);
-					}
-				}
-				if (!prDefCreated) {
-					sleeep(1000, 3000);
-					try {
-						prDefCreated = cons.createPpfPrDefIfMissing();
-					} catch (Exception e) {
-						prDefCreated = false;
-						LOG.log(Level.WARNING, getName() + ": createPpfPrDef: {0}", e);
-						throw new RuntimeException(e);
-					}
-				}
-			}
-			LOG.exiting(getName(), "run");
-		}
-	}
-
-	/**
-	 * Goce2 worker thread - submits instances to Provider.
-	 */
-	private final class Worker2Thread extends Thread {
-		
-		private GoceConsumer cons;
-		
-		private Worker2Thread(String name, GoceConsumer cons) {
-			super(name);
-			this.cons = cons;
-		}
-
-		@Override
-		public void run() {
-			LOG.entering(getName(), "run");
-			boolean created = false;
-			while (!isInterrupted() && !created) {
-				sleeep(1000, 3000);
-				try {
-					created = cons.createPpfInstsIfMissingAndDefsExist();
-				} catch (Exception e) {
-					created = false;
-					LOG.log(Level.WARNING, getName() + ": createPpfInst: {0}", e);
-					throw new RuntimeException(e);
-				}
-			}
-			LOG.exiting(getName(), "run");
-		}
-	}
-
-	/**
-	 * Third worker - monitors PR and Task statuses and adds ACCEPT status to them.
-	 */
-	private final class Processor extends PlanningRequestAdapter {
-		
-		private PlanningRequestTestStub testProv;
-		private PlanningRequestStub prov;
-		
-		private List<Long> newTasks = Collections.synchronizedList(new LongList());
-		private List<Long> newPrs = Collections.synchronizedList(new LongList());
-		
-		private String clientName;
-		
-		private Processor(PlanningRequestTestStub testProv, PlanningRequestStub prov) {
-			this.testProv = testProv;
+		public void setProv(PlanningRequestProvider prov) {
 			this.prov = prov;
-			clientName = prov.getConsumer().getURI().getValue();
-			int i = clientName.indexOf('-');
-			clientName = clientName.substring(i+1);
 		}
 		
-		@SuppressWarnings("rawtypes")
-		@Override
-		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier subId,
-				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats,
-				Map qosProps) {
-			for (int i = 0; i < updHdrs.size(); ++i) {
-				UpdateHeader hdr = updHdrs.get(i);
-				if (UpdateType.CREATION == hdr.getUpdateType()) {
-					ObjectId obj = objIds.get(i);
-					Long id = obj.getKey().getInstId();
-					newPrs.add(id); // got new pr instance id to process later
-				}
+		public void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+			newPrs.add(prInst.getId());
+			for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
+				TaskInstanceDetails taskInst = prInst.getTasks().get(i);
+				newTasks.add(taskInst.getId());
 			}
 		}
 		
-		@SuppressWarnings("rawtypes")
-		@Override
-		public void monitorTasksNotifyReceived(MALMessageHeader msgHeader, Identifier subId,
-				UpdateHeaderList updHdrs, ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-			for (int i = 0; i < updHdrs.size(); ++i) {
-				UpdateHeader hdr = updHdrs.get(i);
-				if (UpdateType.CREATION == hdr.getUpdateType()) {
-					ObjectId obj = objIds.get(i);
-					Long id = obj.getKey().getInstId();
-					newTasks.add(id); // got new task instance id to process later
-				}
-			}
+		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+			// ignore
+		}
+		
+		public void onPrRemove(Long prId) {
+			// ignore
 		}
 		
 		protected StatusRecord findStatus(StatusRecordList srl, InstanceState stat) {
@@ -245,29 +130,26 @@ public class ThreeGoceConsumersTest {
 			return sr;
 		}
 		
-		private boolean checkTaskAccept(Long id, TaskStatusDetails stat) {
+		private boolean checkTaskAccept(Long prId, Long taskId, TaskStatusDetails stat)
+				throws MALException, MALInteractionException {
 			boolean doRemove = true;
 			StatusRecord asr = findStatus(stat.getStatus(), InstanceState.ACCEPTED);
 			if (null == asr) {
 				// wait a sec before accepting
-				StatusRecord csr = findStatus(stat.getStatus(), InstanceState.LAST_MODIFIED);
+				StatusRecord csr = findStatus(stat.getStatus(), InstanceState.SUBMITTED);
 				if ((null == csr) || (System.currentTimeMillis() >= (csr.getTimeStamp().getValue()+1000L))) {
-					asr = new StatusRecord(InstanceState.ACCEPTED, new Time(System.currentTimeMillis()), "accepted");
+					asr = new StatusRecord(InstanceState.ACCEPTED, Util.currentTime(), "accepted");
 					if (null == stat.getStatus()) {
 						stat.setStatus(new StatusRecordList());
 					}
 					stat.getStatus().add(asr);
-					LongList taskIds = new LongList();
-					taskIds.add(id);
+					// all statuses updated, now publish status change
+					StatusRecordList changes = new StatusRecordList();
+					changes.add(asr);
 					TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-					taskStats.add(stat);
-					try {
-						testProv.updateTaskStatus(taskIds, taskStats);
-					} catch (MALException e) {
-						LOG.log(Level.WARNING, "{1}: process: updateTaskStatus: err: {0}", new Object[] { e, clientName });
-					} catch (MALInteractionException e) {
-						LOG.log(Level.WARNING, "{1}: process: updateTaskStatus: err: {0}", new Object[] { e, clientName });
-					}
+					taskStats.add(new TaskStatusDetails(taskId, changes));
+					PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(prId, null, taskStats);
+					prov.publishPr(UpdateType.UPDATE, prStat);
 				} else {
 					doRemove = false; // wait before removing
 				} // csr
@@ -275,25 +157,13 @@ public class ThreeGoceConsumersTest {
 			return doRemove;
 		}
 		
-		private void processTasks() {
+		private void processTasks() throws MALException, MALInteractionException {
 			for (int i0 = 0; i0 < newTasks.size(); ++i0) {
-				Long id = newTasks.get(i0);
-				LongList taskIds = new LongList();
-				taskIds.add(id);
-				TaskStatusDetailsList taskStats = null;
-				try {
-					taskStats = prov.getTaskStatus(taskIds);
-				} catch (MALException e) {
-					LOG.log(Level.WARNING, "{1}: process: getTaskStatus: err: {0}", new Object[] { e, clientName });
-				} catch (MALInteractionException e) {
-					LOG.log(Level.WARNING, "{1}: process: getTaskStats: err: {0}", new Object[] { e, clientName });
-				}
+				Long taskId = newTasks.get(i0);
+				PrInstStore.TaskItem item = prov.getInstStore().findTaskItem(taskId);
 				boolean doRemove = true;
-				for (int i1 = 0; (null != taskStats) && (i1 < taskStats.size()); ++i1) {
-					TaskStatusDetails stat = taskStats.get(i1);
-					if (null != stat) {
-						doRemove = checkTaskAccept(id, stat);
-					} // stat
+				if (null != item) {
+					doRemove = checkTaskAccept(item.task.getPrInstId(), taskId, item.stat);
 				} // for taskStats
 				if (doRemove) {
 					newTasks.remove(i0);
@@ -314,7 +184,7 @@ public class ThreeGoceConsumersTest {
 			return ok;
 		}
 		
-		private boolean checkPrAccept(Long id, PlanningRequestStatusDetails stat) {
+		private boolean checkPrAccept(Long prId, PlanningRequestStatusDetails stat) throws MALException, MALInteractionException {
 			boolean doRemove = true;
 			StatusRecord asr = findStatus(stat.getStatus(), InstanceState.ACCEPTED);
 			if (null == asr) {
@@ -323,22 +193,16 @@ public class ThreeGoceConsumersTest {
 				// accept pr only after tasks are accepted
 				boolean tasksAcc = areTasksAccepted(stat);
 				if (tasksAcc && (null == csr || System.currentTimeMillis() >= (csr.getTimeStamp().getValue()+1000L))) {
-					asr = new StatusRecord(InstanceState.ACCEPTED, new Time(System.currentTimeMillis()), "accepted");
+					asr = new StatusRecord(InstanceState.ACCEPTED, Util.currentTime(), "accepted");
 					if (null == stat.getStatus()) {
 						stat.setStatus(new StatusRecordList());
 					}
 					stat.getStatus().add(asr);
-					LongList prIds = new LongList();
-					prIds.add(id);
-					PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
-					prStats.add(stat);
-					try {
-						testProv.updatePrStatus(prIds, prStats);
-					} catch (MALException e) {
-						LOG.log(Level.WARNING, "{1}: process: updPrStatus: err: {0}", new Object[] { e, clientName });
-					} catch (MALInteractionException e) {
-						LOG.log(Level.WARNING, "{1}: process: updPrStatus: err: {0}", new Object[] { e, clientName });
-					}
+					//  all statuses updated, now publish status change
+					StatusRecordList srl = new StatusRecordList();
+					srl.add(asr);
+					PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(prId, srl, null);
+					prov.publishPr(UpdateType.UPDATE, prStat);
 				} else {
 					doRemove = false; // wait before removing
 				} // csr
@@ -346,25 +210,13 @@ public class ThreeGoceConsumersTest {
 			return doRemove;
 		}
 		
-		private void processPrs() {
+		private void processPrs() throws MALException, MALInteractionException {
 			for (int i0 = 0; i0 < newPrs.size(); ++i0) {
-				Long id = newPrs.get(i0);
-				LongList prIds = new LongList();
-				prIds.add(id);
-				PlanningRequestStatusDetailsList prStats = null;
-				try {
-					prStats = prov.getPlanningRequestStatus(prIds);
-				} catch (MALException e) {
-					LOG.log(Level.WARNING, "{1}: process: getPrStatus: err: {0}", new Object[] { e, clientName });
-				} catch (MALInteractionException e) {
-					LOG.log(Level.WARNING, "{1}: process: getPrStatus: err: {0}", new Object[] { e, clientName });
-				}
+				Long prId = newPrs.get(i0);
+				PrInstStore.PrItem item = prov.getInstStore().findPrItem(prId);
 				boolean doRemove = true;
-				for (int i1 = 0; (null != prStats) && (i1 < prStats.size()); ++i1) {
-					PlanningRequestStatusDetails stat = prStats.get(i1);
-					if (null != stat) {
-						doRemove = checkPrAccept(id, stat);
-					} // stat
+				if (null != item) {
+					doRemove = checkPrAccept(prId, item.stat);
 				} // for
 				if (doRemove) {
 					newPrs.remove(i0);
@@ -375,32 +227,9 @@ public class ThreeGoceConsumersTest {
 		/**
 		 * Processes new Tasks and PRs.
 		 */
-		public void process() {
+		public void process() throws MALException, MALInteractionException {
 			processTasks();
 			processPrs();
-		}
-	}
-	
-	/**
-	 * Goce4 worker thread.
-	 */
-	private final class Worker3Thread extends Thread {
-		
-		private Processor proc;
-		
-		private Worker3Thread(String name, Processor proc) {
-			super(name);
-			this.proc = proc;
-		}
-		
-		@Override
-		public void run() {
-			LOG.entering(getName(), "run");
-			while (!isInterrupted()) {
-				sleeep(250, 0);
-				proc.process();
-			}
-			LOG.exiting(getName(), "run");
 		}
 	}
 	
@@ -419,7 +248,7 @@ public class ThreeGoceConsumersTest {
 	private GoceConsumer goce2;
 	private GoceConsumer goce3;
 	
-	private PlanningRequestTestStub procTestProv;
+//	private PlanningRequestTestStub procTestProv;
 	private PlanningRequestStub procProv;
 	
 	private static boolean log2file = false;
@@ -456,13 +285,13 @@ public class ThreeGoceConsumersTest {
 		consFct.setPropertyFile(props);
 		consFct.setProviderUri(provFct.getProviderUri());
 		consFct.setBrokerUri(provFct.getBrokerUri());
-		consFct.setTestProviderUri(provFct.getTestProviderUri()); // testSupport connection
+//		consFct.setTestProviderUri(provFct.getTestProviderUri()); // testSupport connection
 		
 		goce1 = new GoceConsumer(consFct.start(CLIENT1), null); // start a new instance of consumer
 		goce2 = new GoceConsumer(consFct.start(CLIENT2), null);
 		goce3 = new GoceConsumer(consFct.start(CLIENT3), null);
 		
-		procTestProv = consFct.startTest(PROVIDER+"0"); // cons/prov names need to be unique within RMI
+//		procTestProv = consFct.startTest(PROVIDER+"0"); // cons/prov names need to be unique within RMI
 		procProv = consFct.start(PROVIDER+"1");
 		
 		LOG.exiting(getClass().getName(), "setUp");
@@ -473,7 +302,7 @@ public class ThreeGoceConsumersTest {
 		LOG.entering(getClass().getName(), "tearDown");
 		if (consFct != null) {
 			consFct.stop(procProv);
-			consFct.stopTest(procTestProv);
+//			consFct.stopTest(procTestProv);
 			consFct.stop(goce3.getPrStub());
 			consFct.stop(goce2.getPrStub());
 			consFct.stop(goce1.getPrStub());
@@ -508,7 +337,7 @@ public class ThreeGoceConsumersTest {
 	 * @param n
 	 * @param x
 	 */
-	private void sleeep(long n, long x) {
+	private void sleep(long n, long x) {
 		try {
 			int d = (int)(x - n);
 			long t = (d > 0 ? new Random().nextInt(d) : 0) + n;
@@ -518,94 +347,64 @@ public class ThreeGoceConsumersTest {
 		}
 	}
 	
-	@Test
-	public void testPpf() throws MALException, MALInteractionException, ParseException {
-		LOG.entering(getClass().getName(), "testPpf");
-		
-		// goce1/worker1 submits definitions
-		Thread worker1 = new Worker1Thread("Goce1", goce1);
-		
-		// goce2/worker2 submits instances
-		Thread worker2 = new Worker2Thread("Goce2", goce2);
-		
-		// goce3 just monitors prs and tasks
-		String taskSubId = "prCons3taskSubId";
-		TaskMonitor taskMon = new TaskMonitor();
-		LOG.log(Level.INFO, "{1}.monitorTasksRegister(subId={0})",
-				new Object[] { taskSubId, CLIENT3+" -> "+PROVIDER });
-		goce3.getPrStub().monitorTasksRegister(createSub(taskSubId), taskMon);
-		LOG.log(Level.INFO, "{0}.monitorTasksRegister() response: returning nothing", CLIENT3+" <- "+PROVIDER);
-		
-		String prSubId = "prCons3prSubId";
-		PrMonitor prMon = new PrMonitor();
+	protected void registerMonitor(String id, PrMonitor mon) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsRegister(subId={0})",
-				new Object[] { prSubId, CLIENT3+" -> "+PROVIDER });
-		goce3.getPrStub().monitorPlanningRequestsRegister(createSub(prSubId), prMon);
-		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing", CLIENT3+" <- "+PROVIDER);
-		
-		// processor/worker3 monitors and changes task and pr statuses
-		Processor proc = new Processor(procTestProv, procProv);
-		
-		String taskSubId2 = "prCons4TaskSub";
-		procProv.monitorTasksRegister(createSub(taskSubId2), proc);
-		
-		String prSubId2 = "prCons4PrSub";
-		procProv.monitorPlanningRequestsRegister(createSub(prSubId2), proc);
-		
-		Thread worker3 = new Worker3Thread("TestProcessor", proc);
-		
-		worker1.start();
-		worker2.start();
-		worker3.start();
-		
-		sleeep(11*1000L, 0); // 10 sec
-		
-		worker1.interrupt();
-		worker2.interrupt();
-		worker3.interrupt();
-		
-		try {
-			worker1.join(4*1000L);
-		} catch (InterruptedException e) {
-			LOG.log(Level.WARNING, "worker1 interrupted: ", e);
-		}
-		try {
-			worker2.join(4*1000L);
-		} catch (InterruptedException e) {
-			LOG.log(Level.WARNING, "worker2 interrupted: ", e);
-		}
-		try {
-			worker3.join(4*1000L);
-		} catch (InterruptedException e) {
-			LOG.log(Level.WARNING, "worker3 interrupted: ", e);
-		}
-		
-		IdentifierList prSubs = new IdentifierList();
-		prSubs.add(new Identifier(prSubId2));
-		procProv.monitorPlanningRequestsDeregister(prSubs);
-		
-		IdentifierList taskSubs = new IdentifierList();
-		taskSubs.add(new Identifier(taskSubId2));
-		procProv.monitorTasksDeregister(taskSubs);
-		
-		prSubs.clear();
-		prSubs.add(new Identifier(prSubId));
+				new Object[] { id, CLIENT3+" -> "+PROVIDER });
+		goce3.getPrStub().monitorPlanningRequestsRegister(createSub(id), mon);
+		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsRegister() response: returning nothing",
+				CLIENT3+" <- "+PROVIDER);
+	}
+	
+	protected void unRegisterMonitor(String id) throws MALException, MALInteractionException {
+		IdentifierList subs = new IdentifierList();
+		subs.add(new Identifier(id));
 		LOG.log(Level.INFO, "{1}.monitorPlanningRequestsDeregister(subId={0})",
-				new Object[] { prSubId, CLIENT3+" -> "+PROVIDER });
-		goce3.getPrStub().monitorPlanningRequestsDeregister(prSubs);
+				new Object[] { id, CLIENT3+" -> "+PROVIDER });
+		goce3.getPrStub().monitorPlanningRequestsDeregister(subs);
 		LOG.log(Level.INFO, "{0}.monitorPlanningRequestsDeregister() response: returning nothing",
 				CLIENT3+" <- "+PROVIDER);
+	}
+	
+	@Test
+	public void testPpf() throws MALException, MALInteractionException, ParseException {
+		// goce3 just monitors prs
+		String prSubId = "prCons3prSubId";
+		PrMonitor prMon = new PrMonitor();
+		registerMonitor(prSubId, prMon);
 		
-		taskSubs.clear();
-		taskSubs.add(new Identifier(taskSubId));
-		LOG.log(Level.INFO, "{1}.monitorTasksDeregister(subId={0})",
-				new Object[] { taskSubId, CLIENT3+" -> "+PROVIDER });
-		goce3.getPrStub().monitorTasksDeregister(taskSubs);
-		LOG.log(Level.INFO, "{0}.monitorTasksDeregister() response: returning nothing", CLIENT3+" <- "+PROVIDER);
+		// processor/plugin monitors and changes task and pr statuses
+		Processor proc = new Processor();
+		provFct.setPlugin(proc);
 		
-		assertNotNull(taskMon.taskStats); // assuming 'goce3' received at least one pr and task notification
-		assertNotNull(prMon.prStats);
+		// super user registers definitions
+		goce1.createPpfTaskDefIfMissing();
+		goce1.createPpfPrDefIfMissing();
 		
-		LOG.exiting(getClass().getName(), "testPpf");
+		// normal user submits instances
+		goce2.createPpfInstsIfMissingAndDefsExist();
+		
+		// a sec later provider changes statuses
+		boolean b1 = false;
+		boolean b2 = false;
+		// give the loop 10 seconds before failing
+		long before = System.currentTimeMillis();
+		do {
+			sleep(100, 100);
+			proc.process();
+			b1 = proc.newTasks.isEmpty();
+			b2 = proc.newPrs.isEmpty();
+		} while (false == b1 && false == b2 && (System.currentTimeMillis() < before+10*1000L));
+		
+		assertTrue(proc.newTasks.isEmpty());
+		assertTrue(proc.newPrs.isEmpty());
+		
+		// slight delay for notifications to travel before de-registration
+		sleep(100, 100);
+		
+		unRegisterMonitor(prSubId);
+		
+		assertFalse(prMon.prStats.isEmpty());
+		// 2 submit notifications + 1 task notif + 1 pr notif + 1 task notif + 1 pr notif = 6
+		assertEquals(6, prMon.prStats.size());
 	}
 }

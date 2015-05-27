@@ -56,32 +56,6 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 	}
 	
 	@Test
-	public void testMonitorTasksRegister() throws MALException, MALInteractionException {
-		enter("testMonitorTasksRegister");
-		
-		String subId = "subId";
-		registerTaskMonitor(subId);
-		
-		assertTrue(true);
-		
-		leave("testMonitorTasksRegister");
-	}
-	
-	@Test
-	public void testMonitorTasksDeregister() throws MALException, MALInteractionException {
-		enter("testMonitorTasksDeregister");
-		
-		String subId = "subId2";
-		registerTaskMonitor(subId);
-		
-		deRegisterTaskMonitor(subId);
-		
-		assertTrue(true);
-		
-		leave("testMonitorTasksDeregister");
-	}
-	
-	@Test
 	public void testSubmitPlanningRequest() throws MALException, MALInteractionException {
 		enter("testSubmitPlanningRequest");
 		

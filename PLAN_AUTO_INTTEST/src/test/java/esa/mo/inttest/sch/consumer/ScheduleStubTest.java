@@ -40,7 +40,6 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
 		schInst.setId(id);
 		schInst.setSchDefId(defId);
-//		schInst.setName(new Identifier(n));
 		return schInst;
 	}
 	
@@ -137,9 +136,6 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schInst);
 		
-//		Long targetSchInstId = 2L;
-//		SchedulePatchOperations patchOp = new SchedulePatchOperations();
-//		patchOp.setScheduleInstName(new Identifier("patch schedule"));
 		schInst.setComment("new modified comment");
 		
 		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
@@ -192,7 +188,15 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testStart() throws MALException, MALInteractionException {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		schCons.submitSchedule(schInst);
@@ -205,7 +209,15 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testPause() throws MALException, MALInteractionException {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		schCons.submitSchedule(schInst);
@@ -218,7 +230,15 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testResume() throws MALException, MALInteractionException {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		schCons.submitSchedule(schInst);
@@ -231,7 +251,15 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testTerminate() throws MALException, MALInteractionException {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		schCons.submitSchedule(schInst);

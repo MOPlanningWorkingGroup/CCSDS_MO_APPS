@@ -1,5 +1,9 @@
 package esa.mo.inttest.sch.provider;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -9,6 +13,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
@@ -22,11 +27,12 @@ import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 
 import esa.mo.inttest.Dumper;
 import esa.mo.inttest.Util;
@@ -44,6 +50,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private InstStore schInsts = new InstStore();
 	private MonitorSchedulesPublisher schPub = null;
 	private URI uri = null;
+	private Plugin plugin = null;
 	
 	
 	/**
@@ -77,27 +84,141 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		schPub = pub;
 	}
 	
-	protected InstStore getInstStore() {
+	/**
+	 * @return instances storage
+	 */
+	public InstStore getInstStore() {
 		return schInsts;
 	}
 	
+	/**
+	 * Factory sets plugin to use.
+	 * @param plugin
+	 */
+	public void setPlugin(Plugin plugin) {
+		this.plugin = plugin;
+	}
+	
+	/**
+	 * Plugin check and invoke in case of submission.
+	 * @param sch
+	 * @param stat
+	 */
+	protected void plugSubmitted(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		if (null != plugin) {
+			plugin.onSubmit(sch, stat);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of update.
+	 * @param sch
+	 * @param stat
+	 */
+	protected void plugUpdated(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		if (null != plugin) {
+			plugin.onUpdate(sch, stat);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of removal.
+	 * @param schId
+	 */
+	protected void plugRemoved(Long schId) {
+		if (null != plugin) {
+			plugin.onRemove(schId);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of patching.
+	 * @param removed
+	 * @param updated
+	 * @param added
+	 * @param stats
+	 */
+	protected void plugPatched(ScheduleInstanceDetailsList removed, ScheduleInstanceDetailsList updated,
+			ScheduleInstanceDetailsList added, ScheduleStatusDetailsList stats) {
+		if (null != plugin) {
+			plugin.onPatch(removed, updated, added, stats);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of start.
+	 * @param sch
+	 * @param stat
+	 */
+	protected void plugStarted(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		if (null != plugin) {
+			plugin.onStart(sch, stat);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of pause.
+	 * @param sch
+	 * @param stat
+	 */
+	protected void plugPaused(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		if (null != plugin) {
+			plugin.onPause(sch, stat);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of resume.
+	 * @param sch
+	 * @param stat
+	 */
+	protected void plugResumed(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		if (null != plugin) {
+			plugin.onResume(sch, stat);
+		}
+	}
+	
+	/**
+	 * Plugin check and invoke in case of termination.
+	 * @param sch
+	 * @param stat
+	 */
+	protected void plugTerminated(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		if (null != plugin) {
+			plugin.onTerminate(sch, stat);
+		}
+	}
+	
+	/**
+	 * Creates new schedule status.
+	 * @param inst
+	 * @return
+	 */
 	private ScheduleStatusDetails createStat(ScheduleInstanceDetails inst) {
 		ScheduleStatusDetails stat = new ScheduleStatusDetails();
 		stat.setSchInstId(inst.getId());
-		stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "created"));
+		Util.addOrUpdateStatus(stat, InstanceState.SUBMITTED, Util.currentTime(), "created");
 		stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList()); // mandatory
 		return stat;
 	}
 	
+	/**
+	 * Creates new schedule item status.
+	 * @param inst
+	 * @return
+	 */
 	private ScheduleItemStatusDetails createItemStat(ScheduleItemInstanceDetails inst) {
 		ScheduleItemStatusDetails stat = new ScheduleItemStatusDetails();
 		stat.setSchItemInstId(inst.getId());
-		stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "created"));
+		Util.addOrUpdateStatus(stat, InstanceState.SUBMITTED, Util.currentTime(), "created");
 		return stat;
 	}
 	
+	/**
+	 * Creates new object id structure for publishing.
+	 * @param id
+	 * @return
+	 */
 	private ObjectId createObjId(Long id) {
 		ObjectId oi = new ObjectId();
 		oi.setKey(new ObjectKey(domain, id));
@@ -105,7 +226,14 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		return oi;
 	}
 	
-	protected void publish(UpdateType ut, ScheduleStatusDetails stat) throws MALException, MALInteractionException {
+	/**
+	 * Publishing.
+	 * @param ut
+	 * @param stat
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
+	public void publish(UpdateType ut, ScheduleStatusDetails stat) throws MALException, MALInteractionException {
 		if (null != schPub) {
 			UpdateHeaderList updHdrs = new UpdateHeaderList();
 			updHdrs.add(Util.createUpdateHeader(ut, uri));
@@ -128,15 +256,12 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		LOG.log(Level.INFO, "{1}.submitSchedule(schInst)\n  schInst={0}",
 				new Object[] { Dumper.schInst(schInst), Dumper.received(interaction) });
 		// for nullpointers check we will
-		if (null == schInst) {
-			throw new MALException("schedule instance is null");
-		}
-		if (null == schInst.getSchDefId()) {
-			throw new MALException("schedule definition id is null");
-		}
-		if (null == schInst.getId()) {
-			throw new MALException("schedule instance id is null");
-		}
+		Check.schInst(schInst);
+		Check.schInstId(schInst.getId());
+		Check.schDefId(schInst.getSchDefId());
+		Check.schDefExists(schInst.getSchDefId(), schDefs);
+		Check.schInstNoExist(schInst.getId(), schInsts);
+		Check.listElements(schInst.getScheduleItems(), schInst.getId());
 		// create statuses
 		ScheduleStatusDetails schStat = createStat(schInst);
 		// create item statuses
@@ -146,7 +271,9 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			schStat.getScheduleItemStatuses().add(schItemStat);
 		}
 		schInsts.add(schInst, schStat);
-		// notify
+		// notify plugin
+		plugSubmitted(schInst, schStat);
+		// and publish changes
 		publish(UpdateType.CREATION, schStat);
 		LOG.log(Level.INFO, "{1}.submitSchedule() response: returning schStatus={0}",
 				new Object[] { Dumper.schStat(schStat), Dumper.sending(interaction) });
@@ -160,18 +287,114 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.getSchedule(List:schIds)\n  schIds[]={0}",
 				new Object[] { schInstIds, Dumper.received(interaction) });
-		if (null == schInstIds) {
-			throw new MALException("schedule instance ids list is null");
-		}
-		if (schInstIds.isEmpty()) {
-			throw new MALException("schedule instance ids list is empty");
-		}
+		Check.schInstIdList(schInstIds);
+		Check.schInstIds(schInstIds);
 		ScheduleInstanceDetailsList insts = schInsts.listInsts(schInstIds);
 		LOG.log(Level.INFO, "{1}.getSchedule() response: schInsts[]={0}",
 				new Object[] { Dumper.schInsts(insts), Dumper.sending(interaction) });
 		return insts;
 	}
 
+	/**
+	 * Generates status changes for removed schedule items.
+	 * @param itemsOld
+	 * @param itemsNew
+	 * @return
+	 */
+	protected ScheduleItemStatusDetailsList removedItems(InstStore.Item itemsOld, ScheduleItemInstanceDetailsList itemsNew) {
+		ScheduleItemStatusDetailsList changes = null;
+		// put new item ids into list for easy lookup
+		List<Long> newItems = new ArrayList<Long>();
+		for (int i = 0; (null != itemsNew) && (i < itemsNew.size()); ++i) {
+			ScheduleItemInstanceDetails newItem = itemsNew.get(i);
+			newItems.add(newItem.getId());
+		}
+		ScheduleItemInstanceDetailsList oldItems = itemsOld.inst.getScheduleItems();
+		// go through old items and create change status for removed ones
+		for (int i = 0; (null != oldItems) && (i < oldItems.size()); ++i) {
+			ScheduleItemInstanceDetails oldItem = oldItems.get(i);
+			if (!newItems.contains(oldItem.getId())) {
+				// old id not present in new ids list - generate removed status
+				StatusRecordList srl = new StatusRecordList();
+				srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
+				if (null == changes) {
+					changes = new ScheduleItemStatusDetailsList();
+				}
+				changes.add(new ScheduleItemStatusDetails(oldItem.getId(), srl));
+				// old status is discarded
+				ScheduleItemStatusDetailsList oldStats = itemsOld.stat.getScheduleItemStatuses();
+				for (int j = 0; (null != oldStats) && (j < oldStats.size()); ++j) {
+					ScheduleItemStatusDetails oldStat = oldStats.get(j);
+					if (oldItem.getId() == oldStat.getSchItemInstId()) {
+						oldStats.remove(oldStat);
+						break;
+					}
+				}
+			}
+		}
+		return changes;
+	}
+	
+	/**
+	 * Generate status changes for added and updated schedule items.
+	 * @param stats
+	 * @param itemOld
+	 * @param itemsNew
+	 * @return
+	 */
+	protected ScheduleItemStatusDetailsList addedOrUpdatedItems(ScheduleItemStatusDetailsList stats,
+			InstStore.Item itemOld, ScheduleItemInstanceDetailsList itemsNew) {
+		ScheduleItemStatusDetailsList changes = stats;
+		ScheduleItemInstanceDetailsList itemsOld = itemOld.inst.getScheduleItems();
+		// put old items into map for easy lookup
+		Map<Long, ScheduleItemInstanceDetails> oldItems = new HashMap<Long, ScheduleItemInstanceDetails>();
+		for (int i = 0; (null != itemsOld) && (i < itemsOld.size()); ++i) {
+			ScheduleItemInstanceDetails oldItem = itemsOld.get(i);
+			oldItems.put(oldItem.getId(), oldItem);
+		}
+		// go through new items and create add or update status
+		for (int i = 0; (null != itemsNew) && (i < itemsNew.size()); ++i) {
+			ScheduleItemInstanceDetails newItem = itemsNew.get(i);
+			ScheduleItemInstanceDetails oldItem = oldItems.get(newItem.getId());
+			if (null == oldItem) {
+				// no such item in old items list - generate add status
+				StatusRecordList srl = new StatusRecordList();
+				srl.add(new StatusRecord(InstanceState.SUBMITTED, Util.currentTime(), "added"));
+				if (null == changes) {
+					changes = new ScheduleItemStatusDetailsList();
+				}
+				ScheduleItemStatusDetails itemStat = new ScheduleItemStatusDetails(newItem.getId(), srl);
+				changes.add(itemStat);
+				// and add status to other item statuses
+				if (null == itemOld.stat.getScheduleItemStatuses()) {
+					itemOld.stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList());
+				}
+				itemOld.stat.getScheduleItemStatuses().add(itemStat);
+			} else {
+				// update - did item actually change?
+				if (!oldItem.equals(newItem)) {
+					// find item statuses list and update it
+					ScheduleItemStatusDetailsList oldStats = itemOld.stat.getScheduleItemStatuses();
+					StatusRecord sr = null;
+					for (int j = 0; (null != oldStats) && (j < oldStats.size()); ++i) {
+						ScheduleItemStatusDetails oldStat = oldStats.get(j);
+						if (oldItem.getId() == oldStat.getSchItemInstId()) {
+							sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED, Util.currentTime(), "updated");
+						}
+					}
+					// generate status change
+					StatusRecordList srl = new StatusRecordList();
+					srl.add(sr);
+					if (null == changes) {
+						changes = new ScheduleItemStatusDetailsList();
+					}
+					changes.add(new ScheduleItemStatusDetails(oldItem.getId(), srl));
+				} // else no change
+			}
+		}
+		return changes;
+	}
+	
 	/**
 	 * Implements Schedule modification in the system.
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#updateSchedule(java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
@@ -181,25 +404,38 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{2}.updateSchedule(schInst)\n  schInst={1}",
 				new Object[] { Dumper.schInst(schInst), Dumper.received(interaction) });
-		if (null == schInst) {
-			throw new MALException("schedule instance is null");
+		Check.schInst(schInst);
+		Check.schInstId(schInst.getId());
+		Check.schDefId(schInst.getSchDefId());
+		Check.schDefExists(schInst.getSchDefId(), schDefs);
+		InstStore.Item itemOld = Check.schInstExists(schInst.getId(), schInsts);
+		Check.listElements(schInst.getScheduleItems(), schInst.getId());
+		// work through item differences
+		ScheduleItemStatusDetailsList itemStatChanges = removedItems(itemOld, schInst.getScheduleItems());
+		itemStatChanges = addedOrUpdatedItems(itemStatChanges, itemOld, schInst.getScheduleItems());
+		// has schedule itself changed?
+		ScheduleItemInstanceDetailsList oldItems = itemOld.inst.getScheduleItems();
+		ScheduleItemInstanceDetailsList newItems = schInst.getScheduleItems();
+		itemOld.inst.setScheduleItems(null);
+		schInst.setScheduleItems(null);
+		boolean schChanged = !itemOld.inst.equals(schInst);
+		itemOld.inst.setScheduleItems(oldItems);
+		schInst.setScheduleItems(newItems);
+		
+		schInsts.update(schInst);
+		
+		StatusRecordList srl = null;
+		if (schChanged) {
+			srl = new StatusRecordList();
+			srl.add(new StatusRecord(InstanceState.LAST_MODIFIED, Util.currentTime(), "updated"));
 		}
-		if (null == schInst.getId()) {
-			throw new MALException("schedule instance id is null");
+		if (null == itemStatChanges) { // FIXME temp workaround
+			itemStatChanges = new ScheduleItemStatusDetailsList();
 		}
-		if (null == schInst.getSchDefId()) {
-			throw new MALException("schedule definition id is null");
-		}
-		ScheduleStatusDetails schStat = schInsts.update(schInst);
-		schStat.setStatus(Util.addOrUpdateStatus(schStat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "modified"));
-		// keep it simple - delete old item statuses and create new ones
-		schStat.getScheduleItemStatuses().clear();
-		for (int i = 0; (null != schInst.getScheduleItems()) && (i < schInst.getScheduleItems().size()); ++i) {
-			ScheduleItemInstanceDetails schItem = schInst.getScheduleItems().get(i);
-			ScheduleItemStatusDetails schItemStat = createItemStat(schItem);
-			schStat.getScheduleItemStatuses().add(schItemStat);
-		}
+		ScheduleStatusDetails schStat = new ScheduleStatusDetails(schInst.getId(), srl, itemStatChanges);
+		// notify plugin
+		plugUpdated(schInst, schStat);
+		// and publish
 		publish(UpdateType.MODIFICATION, schStat);
 		LOG.log(Level.INFO, "{1}.updateSchedule() response: returning schStatus={0}",
 				new Object[] { Dumper.schStat(schStat), Dumper.sending(interaction) });
@@ -215,17 +451,29 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.removeSchedule(schInstId={0})",
 				new Object[] { schInstId, Dumper.received(interaction) });
-		if (null == schInstId) {
-			throw new MALException("schedule instance id is null");
+		// checks
+		Check.schInstId(schInstId);
+		InstStore.Item item = Check.schInstExists(schInstId, schInsts);
+		// remove
+		schInsts.remove(schInstId);
+		// notify plugin
+		plugRemoved(schInstId);
+		// gather changes
+		ScheduleItemStatusDetailsList itemStats = (null != item.inst.getScheduleItems() && !item.inst.getScheduleItems().isEmpty()) ?
+				new ScheduleItemStatusDetailsList() : null;
+		for (int i = 0; (null != item.inst.getScheduleItems()) && (i < item.inst.getScheduleItems().size()); ++i) {
+			ScheduleItemInstanceDetails schItem = item.inst.getScheduleItems().get(i);
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
+			itemStats.add(new ScheduleItemStatusDetails(schItem.getId(), srl));
 		}
-		ScheduleStatusDetails schStat = schInsts.remove(schInstId);
-		schStat.setStatus(Util.addOrUpdateStatus(schStat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "deleted"));
-		for (int i = 0; (null != schStat.getScheduleItemStatuses()) && (i < schStat.getScheduleItemStatuses().size()); ++i) {
-			ScheduleItemStatusDetails schItemStat = schStat.getScheduleItemStatuses().get(i);
-			schItemStat.setStatus(Util.addOrUpdateStatus(schItemStat.getStatus(), InstanceState.LAST_MODIFIED,
-					new Time(System.currentTimeMillis()), "deleted"));
+		StatusRecordList srl = new StatusRecordList();
+		srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
+		if (null == itemStats) { // FIXME temp workaround
+			itemStats = new ScheduleItemStatusDetailsList();
 		}
+		ScheduleStatusDetails schStat = new ScheduleStatusDetails(schInstId, srl, itemStats);
+		// and publish
 		publish(UpdateType.DELETION, schStat);
 		LOG.log(Level.INFO, "{1}.removeSchedule() response: returning schStatus={0}",
 				new Object[] { Dumper.schStat(schStat), Dumper.sending(interaction) });
@@ -241,10 +489,15 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			ScheduleInstanceDetailsList toAdd, MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{5}.patchSchedule(List:toRemove, List:toUpdate, List:toAdd)\n  toRemove={0}\n  toUpdate={1}\n  toAdd={2}",
 				new Object[] { Dumper.schInsts(toRemove), Dumper.schInsts(toUpdate), Dumper.schInsts(toAdd), Dumper.received(interaction) });
-		if (null == toRemove && null == toUpdate && null == toAdd) {
-			throw new MALException("schedule instance lists are null");
-		}
+		Check.patchLists(toRemove, toUpdate, toAdd);
+		Check.patchRemove(toRemove, schInsts);
+		Check.patchUpdate(toUpdate, schInsts);
+		Check.patchAdd(toAdd, schInsts);
+		
 		ScheduleStatusDetailsList schStats = schInsts.patch(toRemove, toUpdate, toAdd);
+		// notify plugin
+		plugPatched(toRemove, toUpdate, toAdd, schStats);
+		// and publish
 		for (ScheduleStatusDetails schStat: schStats) {
 			publish(UpdateType.MODIFICATION, schStat);
 		}
@@ -260,13 +513,10 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.getScheduleStatus(List:schIds)\n  schIds[]={0}",
 				new Object[] { schIds, Dumper.received(interaction) });
-		if (null == schIds) {
-			throw new MALException("schedule instance ids list is null");
-		}
-		if (schIds.isEmpty()) {
-			throw new MALException("schedule instance ids list is empty");
-		}
+		Check.schInstIdList(schIds);
+		
 		ScheduleStatusDetailsList schStats = schInsts.listStats(schIds);
+		
 		LOG.log(Level.INFO, "{1}.getScheduleStatus() response: schStats[]={0}",
 				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
 		return schStats;
@@ -275,32 +525,31 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private void start(LongList ids) throws MALException, MALInteractionException {
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule instance id[" + i + "] is null");
-			}
 			Item it = schInsts.findItem(id);
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.DISTRIBUTED_FOR_EXECUTION,
-					new Time(System.currentTimeMillis()), "started"));
-			publish(UpdateType.UPDATE, it.stat);
+			StatusRecord sr = Util.addOrUpdateStatus(it.stat,
+					InstanceState.DISTRIBUTED_FOR_EXECUTION, Util.currentTime(), "started");
+			// notify plugin
+			plugStarted(it.inst, it.stat);
+			// publish change
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(sr);
+			ScheduleStatusDetails schStat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList()); // FIXME
+			publish(UpdateType.UPDATE, schStat);
 		}
 	}
 	
 	/**
-	 * Implements service start?
+	 * Implements schedule start
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#start(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
 	public void start(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.start(schInstId={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		if (null == schInstIds) {
-			throw new MALException("schedule instance ids list is null");
-		}
-		if (schInstIds.isEmpty()) {
-			throw new MALException("schedule instance ids list is empty");
-		}
+		Check.schInstIdList(schInstIds);
+		Check.schInstIds(schInstIds);
 		start(schInstIds);
 		LOG.log(Level.INFO, "{0}.start() response: returning nothing", Dumper.sending(interaction));
 	}
@@ -308,16 +557,19 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private void pause(LongList ids) throws MALException, MALInteractionException {
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule instance id[" + i + "] is null");
-			}
 			Item it = schInsts.findItem(id);
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.PLANNED,
-					new Time(System.currentTimeMillis()), "paused"));
-			publish(UpdateType.UPDATE, it.stat);
+			StatusRecord sr = Util.addOrUpdateStatus(it.stat, InstanceState.PLANNED,
+					Util.currentTime(), "paused");
+			// notify plugin
+			plugPaused(it.inst, it.stat);
+			// publish changes
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(sr);
+			ScheduleStatusDetails schStat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList()); // FIXME
+			publish(UpdateType.UPDATE, schStat);
 		}
 	}
 	
@@ -328,12 +580,8 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	@Override
 	public void pause(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.pause(schInstId={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		if (null == schInstIds) {
-			throw new MALException("schedule instance ids list is null");
-		}
-		if (schInstIds.isEmpty()) {
-			throw new MALException("schedule instance ids list is empty");
-		}
+		Check.schInstIdList(schInstIds);
+		Check.schInstIds(schInstIds);
 		pause(schInstIds);
 		LOG.log(Level.INFO, "{0}.pause() response: returning nothing", Dumper.sending(interaction));
 	}
@@ -341,16 +589,19 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private void resume(LongList ids) throws MALException, MALInteractionException {
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule instance id[" + i + "] is null");
-			}
 			Item it = schInsts.findItem(id);
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.SCHEDULED,
-					new Time(System.currentTimeMillis()), "resumed"));
-			publish(UpdateType.UPDATE, it.stat);
+			StatusRecord sr = Util.addOrUpdateStatus(it.stat, InstanceState.SCHEDULED,
+					Util.currentTime(), "resumed");
+			// notify plugin
+			plugResumed(it.inst, it.stat);
+			// publish
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(sr);
+			ScheduleStatusDetails schStat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList()); // FIXME
+			publish(UpdateType.UPDATE, schStat);
 		}
 	}
 	
@@ -361,12 +612,8 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	@Override
 	public void resume(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.resume(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		if (null == schInstIds) {
-			throw new MALException("schedule instance ids list is null");
-		}
-		if (schInstIds.isEmpty()) {
-			throw new MALException("schedule instance ids list is empty");
-		}
+		Check.schInstIdList(schInstIds);
+		Check.schInstIds(schInstIds);
 		resume(schInstIds);
 		LOG.log(Level.INFO, "{0}.resume() response: returning nothing", Dumper.sending(interaction));
 	}
@@ -374,16 +621,19 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	private void terminate(LongList ids) throws MALException, MALInteractionException {
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule instance id[" + i + "] is null");
-			}
 			Item it = schInsts.findItem(id);
 			if (null == it) {
 				throw new MALException("no schedule instance with id: " + id);
 			}
-			it.stat.setStatus(Util.addOrUpdateStatus(it.stat.getStatus(), InstanceState.INVALID,
-					new Time(System.currentTimeMillis()), "terminated"));
-			publish(UpdateType.UPDATE, it.stat);
+			StatusRecord sr = Util.addOrUpdateStatus(it.stat, InstanceState.INVALID,
+					Util.currentTime(), "terminated");
+			// notify plugin
+			plugTerminated(it.inst, it.stat);
+			// publish
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(sr);
+			ScheduleStatusDetails schStat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList()); // FIXME
+			publish(UpdateType.UPDATE, schStat);
 		}
 	}
 	
@@ -394,12 +644,8 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	@Override
 	public void terminate(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.terminate(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		if (null == schInstIds) {
-			throw new MALException("schedule instance ids list is null");
-		}
-		if (schInstIds.isEmpty()) {
-			throw new MALException("schedule instance ids list is empty");
-		}
+		Check.schInstIdList(schInstIds);
+		Check.schInstIds(schInstIds);
 		terminate(schInstIds);
 		LOG.log(Level.INFO, "{0}.terminate() response: returning nothing", Dumper.sending(interaction));
 	}
@@ -413,12 +659,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			MALException {
 		LOG.log(Level.INFO, "{1}.listDefinition(List:schNames)\n  schNames[]={0}",
 				new Object[] { Dumper.names(schNames), Dumper.received(interaction) });
-		if (null == schNames) {
-			throw new MALException("schedule names list is null");
-		}
-		if (schNames.isEmpty()) {
-			throw new MALException("schedule names list is empty");
-		}
+		Check.namesList(schNames);
 		LongList schDefIds = schDefs.list(schNames);
 		LOG.log(Level.INFO, "{1}.listDefinition() response: returning ids={0}",
 				new Object[] { schDefIds, Dumper.sending(interaction) });
@@ -434,12 +675,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.addDefinition(List:schDefs)\n  schDefs[]={0}",
 				new Object[] { Dumper.schDefs(schDefs), Dumper.received(interaction) });
-		if (null == schDefs) {
-			throw new MALException("schedule definitions list is null");
-		}
-		if (schDefs.isEmpty()) {
-			throw new MALException("schedule definitions list is empty");
-		}
+		Check.defsList(schDefs);
 		LongList schDefIds = this.schDefs.addAll(schDefs);
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning ids={0}",
 				new Object[] { schDefIds, Dumper.sending(interaction) });
@@ -486,5 +722,4 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		schDefs.removeAll(schInstIds);
 		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
 	}
-
 }

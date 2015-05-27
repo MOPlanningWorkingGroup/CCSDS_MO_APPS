@@ -26,16 +26,16 @@ import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 public class InstStore {
 
 	/**
-	 * Schedule instance + definition + status info.
+	 * Schedule instance + status info.
 	 */
-	protected static class Item {
-		protected ScheduleInstanceDetails inst;
-		protected ScheduleStatusDetails stat;
+	public static final class Item {
+		public ScheduleInstanceDetails inst;
+		public ScheduleStatusDetails stat;
 	}
 	
 	List<Item> items = new ArrayList<InstStore.Item>();
 	
-	protected Item findItem(Long id) {
+	public Item findItem(Long id) {
 		Item it = null;
 		for (Item i: items) {
 			if (id == i.inst.getId()) {
@@ -56,9 +56,6 @@ public class InstStore {
 		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule instance id[" + i + "] is null");
-			}
 			Item it = findItem(id);
 			ScheduleInstanceDetails inst = (null != it) ? it.inst : null;
 			insts.add(inst);
@@ -94,13 +91,8 @@ public class InstStore {
 	 * @param stat
 	 * @throws MALException
 	 */
-	public void add(ScheduleInstanceDetails inst, ScheduleStatusDetails stat)
-			throws MALException {
-		Item it = findItem(inst.getId());
-		if (null != it) {
-			throw new MALException("schedule instance already exists, id: " + /*instId*/inst.getId());
-		}
-		it = new Item();
+	public void add(ScheduleInstanceDetails inst, ScheduleStatusDetails stat) {
+		Item it = new Item();
 		it.inst = inst;
 		it.stat = stat;
 		items.add(it);
@@ -113,13 +105,9 @@ public class InstStore {
 	 * @return
 	 * @throws MALException
 	 */
-	public ScheduleStatusDetails update(ScheduleInstanceDetails inst) throws MALException {
+	public void update(ScheduleInstanceDetails inst) {
 		Item it = findItem(inst.getId());
-		if (null == it) {
-			throw new MALException("schedule instance does not exist, id: " + inst.getId());
-		}
 		it.inst = inst;
-		return it.stat;
 	}
 	
 	/**
@@ -128,15 +116,18 @@ public class InstStore {
 	 * @return
 	 * @throws MALException
 	 */
-	public ScheduleStatusDetails remove(Long instId) throws MALException {
+	public Item remove(Long instId) {
 		Item it = findItem(instId);
-		if (null == it) {
-			throw new MALException("schedule instance does not exist, id: " + instId);
-		}
 		items.remove(it);
-		return it.stat;
+		return it;
 	}
 	
+	/**
+	 * Find argument by name.
+	 * @param name
+	 * @param list
+	 * @return
+	 */
 	protected ArgumentValue findArg(Identifier name, ArgumentValueList list) {
 		ArgumentValue av = null;
 		for (int i = 0; (null != list) && (i < list.size()); ++i) {
@@ -149,6 +140,12 @@ public class InstStore {
 		return av;
 	}
 	
+	/**
+	 * Find timing by name.
+	 * @param name
+	 * @param timings
+	 * @return
+	 */
 	protected TimingDetails findTiming(TriggerName name, TimingDetailsList timings) {
 		TimingDetails t = null;
 		for (int i = 0; (null != timings) && (i < timings.size()); ++i) {
@@ -161,6 +158,12 @@ public class InstStore {
 		return t;
 	}
 	
+	/**
+	 * Find item by id.
+	 * @param id
+	 * @param items
+	 * @return
+	 */
 	protected ScheduleItemInstanceDetails findItem(Long id, ScheduleItemInstanceDetailsList items) {
 		ScheduleItemInstanceDetails it = null;
 		for (int i = 0; (items != null) && (i < items.size()); ++i) {
@@ -173,6 +176,13 @@ public class InstStore {
 		return it;
 	}
 	
+	/**
+	 * Update argument values.
+	 * @param idx
+	 * @param src
+	 * @param trg
+	 * @throws MALException
+	 */
 	protected void updateArgs(int idx, ArgumentValueList src, ArgumentValueList trg) throws MALException {
 		for (int j = 0; j < src.size(); ++j) {
 			ArgumentValue argVal = src.get(j);
@@ -188,6 +198,13 @@ public class InstStore {
 		}
 	}
 	
+	/**
+	 * Update timings.
+	 * @param idx
+	 * @param src
+	 * @param trg
+	 * @throws MALException
+	 */
 	protected void updateTimings(int idx, TimingDetailsList src, TimingDetailsList trg) throws MALException {
 		for (int j = 0; (j < src.size()); ++j) {
 			TimingDetails tim = src.get(j);
@@ -208,6 +225,13 @@ public class InstStore {
 		}
 	}
 	
+	/**
+	 * Update schedule items.
+	 * @param idx
+	 * @param src
+	 * @param trg
+	 * @throws MALException
+	 */
 	protected void updateItems(int idx, ScheduleItemInstanceDetailsList src,
 			ScheduleItemInstanceDetailsList trg) throws MALException {
 		for (int j = 0; j < src.size(); ++j) {
@@ -289,16 +313,7 @@ public class InstStore {
 		// removals
 		for (int i = 0; (null != remove) && (i < remove.size()); ++i) {
 			ScheduleInstanceDetails srcSch = remove.get(i);
-			if (null == srcSch) {
-				throw new MALException("remove schedule instance[" + i + "] is null");
-			}
-			if (null == srcSch.getId()) {
-				throw new MALException("remove schedule intance[" + i + "].id is null");
-			}
 			Item it = findItem(srcSch.getId());
-			if (null == it) {
-				throw new MALException("no such schedule to remove from, instance[" + i + "]: " + srcSch.getId());
-			}
 			// remove field values
 			// can't remove def id
 			if (null != srcSch.getComment()) {
@@ -435,13 +450,5 @@ public class InstStore {
 			schStats.add(schStat);
 		}
 		return schStats;
-	}
-	
-	// test support
-	protected void setStatus(Long id, ScheduleStatusDetails stat) {
-		Item it = findItem(id);
-		if (null != it) {
-			it.stat = stat;
-		}
 	}
 }

@@ -1,5 +1,6 @@
 package esa.mo.inttest.sch;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Handler;
@@ -10,10 +11,11 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleStub;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
-import org.ccsds.moims.mo.automationprototype.scheduletest.consumer.ScheduleTestStub;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -22,12 +24,13 @@ import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.Union;
+import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -39,10 +42,71 @@ import esa.mo.inttest.DemoUtils;
 import esa.mo.inttest.Util;
 import esa.mo.inttest.sch.consumer.ScheduleConsumer;
 import esa.mo.inttest.sch.consumer.ScheduleConsumerFactory;
+import esa.mo.inttest.sch.provider.InstStore;
+import esa.mo.inttest.sch.provider.Plugin;
+import esa.mo.inttest.sch.provider.ScheduleProvider;
 import esa.mo.inttest.sch.provider.ScheduleProviderFactory;
 
 public class ThreeSchedulersDemoTest {
 
+	public static class Processor implements Plugin {
+		
+		protected ScheduleProvider prov = null;
+		protected List<Long> submitted = new ArrayList<Long>();
+		
+		public void setProv(ScheduleProvider prov) {
+			this.prov = prov;
+		}
+		
+		public void onSubmit(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+			submitted.add(sch.getId());
+		}
+		
+		public void onUpdate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+			// ignore
+		}
+		
+		public void onRemove(Long id) {
+			// ignore
+		}
+		public void onPatch(ScheduleInstanceDetailsList removed, ScheduleInstanceDetailsList updated,
+				ScheduleInstanceDetailsList added, ScheduleStatusDetailsList stats) {
+			// ignore
+		}
+		
+		public void onStart(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+			// ignore
+		}
+		
+		public void onPause(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+			// ignore
+		}
+		
+		public void onResume(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+			// ignore
+		}
+		
+		public void onTerminate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+			// ignore
+		}
+		
+		public void acceptSubmitted() throws MALException, MALInteractionException {
+			for (Long id: submitted) {
+				InstStore.Item item = prov.getInstStore().findItem(id);
+				StatusRecord asr = Util.findStatus(item.stat.getStatus(), InstanceState.ACCEPTED);
+				if (null == asr) {
+					asr = new StatusRecord(InstanceState.ACCEPTED, Util.currentTime(), "accepted");
+					item.stat.getStatus().add(asr);
+					// all statuses list was updated, now publish changed status
+					StatusRecordList srl = new StatusRecordList();
+					srl.add(asr);
+					ScheduleStatusDetails stat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList());
+					prov.publish(UpdateType.UPDATE, stat);
+				}
+			}
+		}
+	}
+	
 	private static final Logger LOG = Logger.getLogger(ThreeSchedulersDemoTest.class.getName());
 	
 	private static final String PROVIDER = "SchProvider";
@@ -56,8 +120,6 @@ public class ThreeSchedulersDemoTest {
 	private ScheduleConsumer cons1;
 	private ScheduleConsumer cons2;
 	private ScheduleConsumer cons3;
-	// test support
-	private ScheduleTestStub testConsStub;
 	private ScheduleStub consStub;
 	
 	private static boolean log2file = false;
@@ -97,16 +159,11 @@ public class ThreeSchedulersDemoTest {
 		cons2 = new ScheduleConsumer(consFct.start(CLIENT2));
 		cons3 = new ScheduleConsumer(consFct.start(CLIENT3));
 		
-		// test support for updating schedule statuses
-		consFct.setTestProviderUri(provFct.getTestProviderUri());
-		testConsStub = consFct.startTest(PROVIDER+"0");
 		consStub = consFct.start(PROVIDER+"1");
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		// test support
-		consFct.stopTest(testConsStub);
 		consFct.stop(consStub);
 		
 		consFct.stop(cons3.getStub());
@@ -196,21 +253,11 @@ public class ThreeSchedulersDemoTest {
 		return instIds;
 	}
 	
-	private void updateStatuses(final LongList created) throws MALException, MALInteractionException {
-		ScheduleStatusDetailsList stats = consStub.getScheduleStatus(created);
-		for (int i = 0; (null != stats) && (i < stats.size()); ++i) {
-			ScheduleStatusDetails stat = stats.get(i);
-			StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.ACCEPTED);
-			if (null == sr) {
-				stat.setStatus(Util.addOrUpdateStatus(stat.getStatus(), InstanceState.ACCEPTED,
-						new Time(System.currentTimeMillis()), "accepted"));
-			}
-		}
-		testConsStub.updateScheduleStatus(created, stats);
-	}
-	
 	@Test
 	public void test() throws MALException, MALInteractionException {
+		Processor p = new Processor();
+		provFct.setPlugin(p);
+		
 		LongList defIds = addDefinitions();
 		
 		String sub2Id = "sub2Id";
@@ -221,7 +268,7 @@ public class ThreeSchedulersDemoTest {
 		
 		LongList instIds = addInstances(defIds);
 		
-		updateStatuses(instIds);
+		p.acceptSubmitted();
 		
 		// start all three
 		consStub.start(instIds);

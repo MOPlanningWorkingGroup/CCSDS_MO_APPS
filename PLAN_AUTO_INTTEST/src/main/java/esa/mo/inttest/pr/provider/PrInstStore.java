@@ -1,13 +1,16 @@
 package esa.mo.inttest.pr.provider;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 
 /**
  * PR instances storage.
@@ -15,20 +18,44 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 public class PrInstStore {
 
 	/**
-	 * Structure to hold PR def Id, PR inst Id, PR instance, PR status, task def Ids, task inst Ids.
+	 * Structure to hold PR instance, PR status.
 	 */
-	public final class Item {
+	public static final class PrItem {
 		
 		public PlanningRequestInstanceDetails pr;
 		public PlanningRequestStatusDetails stat;
 		
-		public Item(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
+		public PrItem(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			this.pr = pr;
 			this.stat = stat;
 		}
 	}
 	
-	private List<Item> prs = new ArrayList<Item>();
+	public static final class TaskItem {
+		
+		public TaskInstanceDetails task;
+		public TaskStatusDetails stat;
+		
+		public TaskItem(TaskInstanceDetails task, TaskStatusDetails stat) {
+			this.task = task;
+			this.stat = stat;
+		}
+	}
+	
+	private Map<Long, PrItem> prs = new HashMap<Long, PrItem>();
+	private Map<Long, TaskItem> tasks = new HashMap<Long, PrInstStore.TaskItem>();
+	
+	protected void addTask(TaskInstanceDetails task, TaskStatusDetails stat) {
+		tasks.put(task.getId(), new TaskItem(task, stat));
+	}
+	
+	protected void addTasks(TaskInstanceDetailsList tasks, TaskStatusDetailsList stats) {
+		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
+			TaskInstanceDetails t = tasks.get(i);
+			TaskStatusDetails s = stats.get(i);
+			addTask(t, s);
+		}
+	}
 	
 	/**
 	 * Adds PR instance.
@@ -40,7 +67,8 @@ public class PrInstStore {
 	 * @param prStat
 	 */
 	public void addPr(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
-		prs.add(new Item(prInst, prStat));
+		prs.put(prInst.getId(), new PrItem(prInst, prStat));
+		addTasks(prInst.getTasks(), prStat.getTaskStatuses());
 	}
 	
 	/**
@@ -48,17 +76,8 @@ public class PrInstStore {
 	 * @param prInstId
 	 * @return
 	 */
-	public Item findPr(Long prInstId) {
-		Item rval = null;
-		Iterator<Item> it = prs.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			if (prInstId == item.pr.getId()) {
-				rval = item;
-				break;
-			}
-		}
-		return rval;
+	public PrItem findPrItem(Long prInstId) {
+		return prs.get(prInstId);
 	}
 	
 	/**
@@ -67,12 +86,42 @@ public class PrInstStore {
 	 * @param prStat
 	 */
 	public void setPrStatus(Long prInstId, PlanningRequestStatusDetails prStat) {
-		Iterator<Item> it = prs.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			if (prInstId == item.pr.getId()) {
-				item.stat = prStat;
-				break;
+		PrItem item = findPrItem(prInstId);
+		if (null != item) {
+			item.stat = prStat;
+		}
+	}
+	
+	public TaskItem findTaskItem(Long taskInstId) {
+		return tasks.get(taskInstId);
+	}
+	
+	protected void removeTasks(PlanningRequestInstanceDetails prOld, PlanningRequestInstanceDetails prNew) {
+		List<Long> newTasks = new ArrayList<Long>();
+		// create lookup list of new tasks
+		for (int i = 0; (null != prNew.getTasks()) && (i < prNew.getTasks().size()); ++i) {
+			TaskInstanceDetails task = prNew.getTasks().get(i);
+			newTasks.add(task.getId());
+		}
+		// old task is not present in new tasks list - remove it
+		for (int i = 0; (null != prOld.getTasks()) && (i < prOld.getTasks().size()); ++i) {
+			TaskInstanceDetails task = prOld.getTasks().get(i);
+			if (!newTasks.contains(task.getId())) {
+				removeTask(task.getId());
+			}
+		}
+	}
+	
+	protected void updateTasks(TaskInstanceDetailsList tasks, TaskStatusDetailsList stats) {
+		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
+			TaskInstanceDetails t = tasks.get(i);
+			TaskStatusDetails s = stats.get(i);
+			TaskItem item = findTaskItem(t.getId());
+			if (null != item) {
+				item.task = t;
+				item.stat = s;
+			} else { // new one
+				addTask(t, s);
 			}
 		}
 	}
@@ -84,14 +133,23 @@ public class PrInstStore {
 	 * @param prStat
 	 */
 	public void updatePr(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
-		Iterator<Item> it = prs.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			if (prInst.getId() == item.pr.getId()) {
-				item.pr = prInst;
-				item.stat = prStat;
-				break;
-			}
+		PrItem item = findPrItem(prInst.getId());
+		if (null != item) {
+			removeTasks(item.pr, prInst);
+			item.pr = prInst;
+			item.stat = prStat;
+			updateTasks(prInst.getTasks(), prStat.getTaskStatuses()); // add or update
+		}
+	}
+	
+	protected void removeTask(Long taskId) {
+		tasks.remove(taskId);
+	}
+	
+	protected void removeTasks(TaskInstanceDetailsList tasks) {
+		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
+			TaskInstanceDetails t = tasks.get(i);
+			removeTask(t.getId());
 		}
 	}
 	
@@ -99,42 +157,12 @@ public class PrInstStore {
 	 * Removes PR (Item) by id.
 	 * @param prInstId
 	 */
-	public void removePr(Long prInstId) {
-		Iterator<Item> it = prs.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			if (prInstId == item.pr.getId()) {
-				it.remove();
-				break;
-			}
+	public PrItem removePr(Long prInstId) {
+		PrItem item = prs.remove(prInstId);
+		if (null != item) {
+			removeTasks(item.pr.getTasks());
 		}
-	}
-	
-	/**
-	 * Looks up Task by id.
-	 * @param taskInstId
-	 * @return
-	 */
-	public TaskStatusDetails findTask(Long taskInstId) {
-		TaskStatusDetails taskStat = null;
-		Iterator<Item> it = prs.iterator();
-		// go through prs
-		while (it.hasNext() && (null == taskStat)) {
-			Item item = it.next();
-			// should have same amount of tasks instances and task statuses
-			Iterator<TaskInstanceDetails> taskIt = item.pr.getTasks().iterator();
-			Iterator<TaskStatusDetails> taskStatIt = item.stat.getTaskStatuses().iterator();
-			// go through task instance ids and task statuses
-			while (taskIt.hasNext() && taskStatIt.hasNext()) {
-				TaskInstanceDetails task = taskIt.next();
-				TaskStatusDetails ts = taskStatIt.next();
-				if (taskInstId == task.getId()) {
-					taskStat = ts;
-					break;
-				}
-			}
-		}
-		return taskStat;
+		return item;
 	}
 	
 	/**
@@ -143,20 +171,9 @@ public class PrInstStore {
 	 * @param taskStat
 	 */
 	public void setTaskStatus(Long taskInstId, TaskStatusDetails taskStat) {
-		Iterator<Item> it = prs.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			Iterator<TaskInstanceDetails> taskIt = item.pr.getTasks().iterator();
-			Iterator<TaskStatusDetails> statIt = item.stat.getTaskStatuses().iterator();
-			while (taskIt.hasNext() && statIt.hasNext()) {
-				TaskInstanceDetails task = taskIt.next();
-				TaskStatusDetails ts = statIt.next();
-				if (taskInstId == task.getId()) {
-					int idx = item.stat.getTaskStatuses().indexOf(ts);
-					item.stat.getTaskStatuses().set(idx, taskStat);
-					break;
-				}
-			}
+		TaskItem item = findTaskItem(taskInstId);
+		if (null != item) {
+			item.stat = taskStat;
 		}
 	}
 }

@@ -28,13 +28,16 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
-				return null != prMon.prStats;
+				boolean b = prMon.haveData();
+				System.out.println(System.currentTimeMillis() + " call " + b);
+				return b;
 			}
 		});
 		// verify that we got pr notification
 		assertNotNull(prMon.prStats);
 		assertEquals(1, prMon.prStats.size());
 		assertNotNull(prMon.prStats.get(0));
+		assertFalse(prMon.prStats.get(0).isEmpty());
 	}
 	
 	@Test
@@ -60,26 +63,10 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		String prSubId = "subId2";
 		final PrMonitor prMon = registerPrMonitor(prSubId);
 		
-		String taskSubId = "subId3";
-		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
-		
 		createAndSubmitPlanningRequestWithTask();
-		
-		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != taskMon.taskStats;
-			}
-		});
 		
 		waitAndVerifyPr(prMon);
 		
-		// verify that we got task notification
-		assertNotNull(taskMon.taskStats);
-		assertEquals(1, taskMon.taskStats.size());
-		assertNotNull(taskMon.taskStats.get(0));
-		
-		deRegisterPrMonitor(taskSubId);
 		deRegisterPrMonitor(prSubId);
 		
 		leave("testSubmitPlanningRequestWithTask");
@@ -92,46 +79,21 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		String prSubId = "subId4";
 		final PrMonitor prMon = registerPrMonitor(prSubId);
 		
-		String taskSubId = "subId5";
-		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
-		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequest();
-		
-		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != taskMon.taskStats;
-			}
-		});
 		
 		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
-				return null != prMon.prStats;
+				return prMon.haveData();
 			}
 		});
 		
 		// reset notify helpers
-		prMon.prStats = null;
-		taskMon.taskStats = null;
+		prMon.clearData();
 		
 		updatePlanningRequestWithTask(prInst);
 		
-		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != taskMon.taskStats;
-			}
-		});
-		
 		waitAndVerifyPr(prMon);
-		
-		// verify that we got task notification
-		assertNotNull(taskMon.taskStats);
-		assertEquals(1, taskMon.taskStats.size());
-		assertNotNull(taskMon.taskStats.get(0));
-		
-		deRegisterTaskMonitor(taskSubId);
 		
 		deRegisterPrMonitor(prSubId);
 		
@@ -143,35 +105,22 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		enter("testRemovePlanningRequest");
 		
 		String prSubId = "subId6";
-		PrMonitor prMon = registerPrMonitor(prSubId);
-		
-		String taskSubId = "subId7";
-		final TaskMonitor taskMon = registerTaskMonitor(taskSubId);
+		final PrMonitor prMon = registerPrMonitor(prSubId);
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
-//		Long prInstId = (Long)details[1];
 		
+		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
+			@Override
+			public Boolean call() {
+				return prMon.haveData();
+			}
+		});
 		// reset notify helpers
-		prMon.prStats = null;
-		taskMon.taskStats = null;
+		prMon.clearData();
 		
 		removePlanningRequest(prInst.getId());
 		
-		Util.waitFor(taskMon, 1000, new Callable<Boolean>() {
-			@Override
-			public Boolean call() {
-				return null != taskMon.taskStats;
-			}
-		});
-		
 		waitAndVerifyPr(prMon);
-		
-		// verify that we got task notification
-		assertNotNull(taskMon.taskStats);
-		assertEquals(1, taskMon.taskStats.size());
-		assertNotNull(taskMon.taskStats.get(0));
-		
-		deRegisterTaskMonitor(taskSubId);
 		
 		deRegisterPrMonitor(prSubId);
 		

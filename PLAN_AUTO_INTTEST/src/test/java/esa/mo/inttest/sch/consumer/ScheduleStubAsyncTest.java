@@ -223,9 +223,6 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schInst);
 		
-//		Long targetSchInstId = 2L;
-//		SchedulePatchOperations patchOp = new SchedulePatchOperations();
-//		patchOp.setScheduleInstName(new Identifier("patch schedule"));
 		schInst.setComment("new modified comment");
 		
 		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
@@ -394,7 +391,15 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testAsyncStart() throws MALException, MALInteractionException, InterruptedException, Exception {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst();
 		schInst.setId(schInstId);
@@ -437,7 +442,15 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testAsyncPause() throws MALException, MALInteractionException, InterruptedException, Exception {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst();
 		schInst.setId(schInstId);
@@ -480,7 +493,15 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testAsyncResume() throws MALException, MALInteractionException, InterruptedException, Exception {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst();
 		schInst.setId(schInstId);
@@ -523,7 +544,15 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 	
 	@Test
 	public void testAsyncTerminate() throws MALException, MALInteractionException, InterruptedException, Exception {
-		Long schDefId = 1L;
+		ScheduleDefinitionDetails schDef = createDef("test schedule def");
+		schDef.setId(0L);
+		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
+		schDefs.add(schDef);
+		
+		LongList schDefIds = schCons.addDefinition(schDefs);
+		Long schDefId = schDefIds.get(0);
+		schDef.setId(schDefId);
+		
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst();
 		schInst.setId(schInstId);

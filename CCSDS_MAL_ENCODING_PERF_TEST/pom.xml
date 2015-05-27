@@ -96,6 +96,11 @@
       <artifactId>mal-joram-malencoding</artifactId>
       <version>3.1.1</version>
     </dependency>-->
+    <dependency>
+    	<groupId>int.esa.ccsds.mo</groupId>
+    	<artifactId>MAL_DEMO</artifactId>
+    	<version>1.0.1</version>
+    </dependency>
   </dependencies>
   
   <build>

@@ -11,12 +11,10 @@ import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALInteraction;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
-import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
-import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorTasksPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
 import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
@@ -27,9 +25,12 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestSta
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 
 import esa.mo.inttest.Dumper;
 import esa.mo.inttest.Util;
@@ -44,7 +45,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	private TaskDefStore taskDefs = new TaskDefStore();
 	private PrDefStore prDefs = new PrDefStore();
 	private PrInstStore prInsts = new PrInstStore();
-	private MonitorTasksPublisher taskPub = null;
 	private MonitorPlanningRequestsPublisher prPub = null;
 	private IdentifierList domain = null;
 	private URI uri = null;
@@ -80,14 +80,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	 */
 	public void setPlugin(Plugin p) {
 		plugin = p;
-	}
-	
-	/**
-	 * Set provider task publisher.
-	 * @param taskPub
-	 */
-	public void setTaskPub(MonitorTasksPublisher taskPub) {
-		this.taskPub = taskPub;
 	}
 	
 	/**
@@ -135,42 +127,6 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	protected void plugPrRemoved(Long prInstId) {
 		if (null != plugin) {
 			plugin.onPrRemove(prInstId);
-		}
-	}
-	
-	/**
-	 * Publish Task event.
-	 * @param updType
-	 * @param taskInstId
-	 * @param taskStat
-	 * @throws MALException
-	 * @throws MALInteractionException
-	 */
-	public void publishTask(UpdateType updType, TaskStatusDetails taskStat)
-			throws MALException, MALInteractionException {
-		if (taskPub != null) {
-			UpdateHeaderList updHdrs = new UpdateHeaderList();
-			updHdrs.add(Util.createUpdateHeader(updType, uri));
-			
-			ObjectIdList objIds = new ObjectIdList();
-			objIds.add(createTaskObjectId(taskStat.getTaskInstId()));
-			
-			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-			taskStats.add(taskStat);
-			try {
-				taskPub.publish(updHdrs, objIds, taskStats);
-			} catch (IllegalArgumentException e) {
-				LOG.log(Level.INFO, "task publish error: illegal argument: {0}", e);
-				throw e;
-			} catch (MALException e) {
-				LOG.log(Level.INFO, "task public error: mal: {0}", e);
-				throw e;
-			} catch (MALInteractionException e) {
-				LOG.log(Level.INFO, "task publish error: mal interaction: {0}", e);
-				throw e;
-			}
-		} else {
-			LOG.log(Level.INFO, "no task publisher set");
 		}
 	}
 	
@@ -227,16 +183,14 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	private PlanningRequestStatusDetails createPrStatus(PlanningRequestInstanceDetails prInst) {
 		PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails();
 		prStat.setPrInstId(prInst.getId());
-		prStat.setStatus(Util.addOrUpdateStatus(prStat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "created"));
+		Util.addOrUpdateStatus(prStat, InstanceState.SUBMITTED, Util.currentTime(), "created");
 		return prStat;
 	}
 	
 	private TaskStatusDetails createTaskStatus(TaskInstanceDetails taskInst) {
 		TaskStatusDetails taskStat = new TaskStatusDetails();
 		taskStat.setTaskInstId(taskInst.getId());
-		taskStat.setStatus(Util.addOrUpdateStatus(taskStat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "created"));
+		Util.addOrUpdateStatus(taskStat, InstanceState.SUBMITTED, Util.currentTime(), "created");
 		return taskStat;
 	}
 	
@@ -271,13 +225,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		prInsts.addPr(prInst, prStat);
 		// notify plugin
 		plugPrSubmitted(prInst, prStat);
-		// .. and publish
+		// .. and publish changes
 		publishPr(UpdateType.CREATION, prStat);
-		
-		for (int i = 0; (null != prStat.getTaskStatuses()) && (i < prStat.getTaskStatuses().size()); ++i) {
-			TaskStatusDetails taskStat = prStat.getTaskStatuses().get(i);
-			publishTask(UpdateType.CREATION, taskStat);
-		}
 		// .. and respond
 		LOG.log(Level.INFO, "{1}.submitPlanningRequest() response: returning prStatus={0}",
 				new Object[] { Dumper.prStat(prStat), Dumper.sending(interaction) });
@@ -295,8 +244,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.prInstIds(prInstIds);
 		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList(); 
 		for (int i = 0; i < prInstIds.size(); ++i) {
-			PrInstStore.Item old = prInsts.findPr(prInstIds.get(i));
-			PlanningRequestInstanceDetails prInst = (null != old) ? old.pr : null;
+			PrInstStore.PrItem item = prInsts.findPrItem(prInstIds.get(i));
+			PlanningRequestInstanceDetails prInst = (null != item) ? item.pr : null;
 			insts.add(prInst);
 		}
 		LOG.log(Level.INFO, "{1}.getPlanningRequest() response: returning prInstances={0}",
@@ -304,6 +253,121 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		return insts;
 	}
 	
+	/**
+	 * Generates list of statuses for removed tasks - exist in old, but not in new list.
+	 * Discards old statuses.
+	 * @param prNew
+	 * @param prOld
+	 * @return
+	 */
+	protected TaskStatusDetailsList removedTasks(PrInstStore.PrItem itemNew, PrInstStore.PrItem itemOld) {
+		TaskStatusDetailsList change = null;
+		for (int i = 0; (null != itemOld.pr.getTasks()) && (i < itemOld.pr.getTasks().size()); ++i) {
+			TaskInstanceDetails taskOld = itemOld.pr.getTasks().get(i);
+			int j = 0;
+			for ( ; (null != itemNew.pr.getTasks()) && (j < itemNew.pr.getTasks().size()); ++j) {
+				TaskInstanceDetails taskNew = itemNew.pr.getTasks().get(j);
+				if (taskNew.getId() == taskOld.getId()) {
+					break;
+				}
+			}
+			if ((null == itemNew.pr.getTasks()) || (j >= itemNew.pr.getTasks().size())) {
+				// doesn't exist in new list - removed
+				if (null == change) {
+					change = new TaskStatusDetailsList();
+				}
+				// changed status
+				StatusRecordList srl = new StatusRecordList();
+				srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
+				change.add(new TaskStatusDetails(taskOld.getId(), srl));
+				// old statuses are discarded
+			}
+		}
+		return change;
+	}
+	
+	/**
+	 * Generates list of statuses for updated tasks - exist in both lists.
+	 * All statuses from old ones are copied to new ones.
+	 * @param stats
+	 * @param itemNew
+	 * @param itemOld
+	 * @return
+	 */
+	protected TaskStatusDetailsList updatedTasks(TaskStatusDetailsList stats,
+			PrInstStore.PrItem itemNew, PrInstStore.PrItem itemOld) {
+		TaskStatusDetailsList change = stats;
+		for (int i = 0; (null != itemOld.pr.getTasks()) && (i < itemOld.pr.getTasks().size()); ++i) {
+			TaskInstanceDetails taskOld = itemOld.pr.getTasks().get(i);
+			int j = 0;
+			for ( ; (null != itemNew.pr.getTasks()) && (j < itemNew.pr.getTasks().size()); ++j) {
+				TaskInstanceDetails taskNew = itemNew.pr.getTasks().get(j);
+				if (taskNew.getId() == taskOld.getId()) {
+					// exists in both
+					if (null == itemNew.stat.getTaskStatuses()) {
+						itemNew.stat.setTaskStatuses(new TaskStatusDetailsList());
+					}
+					// copy task status
+					PrInstStore.TaskItem taskItem = getInstStore().findTaskItem(taskNew.getId());
+					itemNew.stat.getTaskStatuses().add(taskItem.stat);
+					if (!taskNew.equals(taskOld)) {
+						// modified
+						if (null == change) {
+							change = new TaskStatusDetailsList();
+						}
+						// modify all statuses list
+						StatusRecord sr = Util.addOrUpdateStatus(taskItem.stat,
+								InstanceState.LAST_MODIFIED, Util.currentTime(), "updated");
+						// changed status
+						StatusRecordList srl = new StatusRecordList();
+						srl.add(sr);
+						change.add(new TaskStatusDetails(taskOld.getId(), srl));
+					}
+					break;
+				}
+			}
+		}
+		return change;
+	}
+	
+	/**
+	 * Generates list of statuses for new tasks.
+	 * Creates statuses for new tasks.
+	 * @param stats
+	 * @param itemNew
+	 * @param itemOld
+	 * @return
+	 */
+	protected TaskStatusDetailsList addedTasks(TaskStatusDetailsList stats,
+			PrInstStore.PrItem itemNew, PrInstStore.PrItem itemOld) {
+		TaskStatusDetailsList change = stats;
+		for (int i = 0; (null != itemNew.pr.getTasks()) && (i < itemNew.pr.getTasks().size()); ++i) {
+			TaskInstanceDetails taskNew = itemNew.pr.getTasks().get(i);
+			int j = 0;
+			for ( ; (null != itemOld.pr.getTasks()) && (j < itemOld.pr.getTasks().size()); ++j) {
+				TaskInstanceDetails taskOld = itemOld.pr.getTasks().get(j);
+				if (taskNew.getId() == taskOld.getId()) {
+					break;
+				}
+			}
+			if ((null == itemOld.pr.getTasks()) || (j >= itemOld.pr.getTasks().size())) {
+				// doesn't exist in old list - added
+				if (null == change) {
+					change = new TaskStatusDetailsList();
+				}
+				// changed status
+				StatusRecordList srl = new StatusRecordList();
+				srl.add(new StatusRecord(InstanceState.SUBMITTED, Util.currentTime(), "added"));
+				change.add(new TaskStatusDetails(taskNew.getId(), srl));
+				// .. is the only one
+				if (null == itemNew.stat.getTaskStatuses()) {
+					itemNew.stat.setTaskStatuses(new TaskStatusDetailsList());
+				}
+				itemNew.stat.getTaskStatuses().add(new TaskStatusDetails(taskNew.getId(), srl));
+			}
+		}
+		return change;
+	}
 	/**
 	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#updatePlanningRequest(org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
@@ -315,47 +379,53 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.prDefId(prInst.getPrDefId());
 		Check.prDefExists(prInst.getPrDefId(), prDefs);
 		Check.prInstId(prInst.getId());
-		PrInstStore.Item old = Check.prInstExists(prInst.getId(), prInsts);
+		PrInstStore.PrItem itemOld = Check.prInstExists(prInst.getId(), prInsts);
 		Check.listElements(prInst.getTasks(), prInst.getId());
-		// straightforward replace - delete old items, add new items
-		PlanningRequestStatusDetails prStatNew = createPrStatus(prInst);
-		if (null != prInst.getTasks()) {
-			prStatNew.setTaskStatuses(new TaskStatusDetailsList()); // init list
+		
+		// generate status for pr
+		PlanningRequestStatusDetails prStatNew = new PlanningRequestStatusDetails();
+		prStatNew.setPrInstId(prInst.getId());
+		prStatNew.setStatus(itemOld.stat.getStatus()); // copy all from old
+		PrInstStore.PrItem itemNew = new PrInstStore.PrItem(prInst, prStatNew);
+		// clear tasks for equal() call without tasks
+		TaskInstanceDetailsList oldTasks = itemOld.pr.getTasks();
+		itemOld.pr.setTasks(null);
+		TaskInstanceDetailsList newTasks = prInst.getTasks();
+		prInst.setTasks(null);
+		boolean prChanged = !prInst.equals(itemOld.pr);
+		// and restore tasks
+		itemOld.pr.setTasks(oldTasks);
+		prInst.setTasks(newTasks);
+		
+		// generate changed statuses for tasks
+		TaskStatusDetailsList taskStats = removedTasks(itemNew, itemOld);
+		taskStats = updatedTasks(taskStats, itemNew, itemOld);
+		taskStats = addedTasks(taskStats, itemNew, itemOld);
+		// changed statuses
+		PlanningRequestStatusDetails prChange = new PlanningRequestStatusDetails(prInst.getId(), null, taskStats);
+		
+		if (prChanged) {
+			// copy pr status from old to new
+			itemNew.stat.setStatus(itemOld.stat.getStatus());
+			// and update one
+			StatusRecord sr = Util.addOrUpdateStatus(itemNew.stat,
+					InstanceState.LAST_MODIFIED, Util.currentTime(), "updated");
+			// publish changed one
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(sr);
+			prChange.setStatus(srl);
 		}
 		
-		for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
-			TaskInstanceDetails taskInst = prInst.getTasks().get(i);
-			TaskStatusDetails taskStat = createTaskStatus(taskInst);
-			// just add task status'es to pr status - they will be stored all together at once
-			prStatNew.getTaskStatuses().add(taskStat);
-		}
-		
-		// publish deletion of old stuff
-		for (int i = 0; (null != old.stat.getTaskStatuses()) && (i < old.stat.getTaskStatuses().size()); ++i) {
-			TaskStatusDetails taskStat = old.stat.getTaskStatuses().get(i);
-			taskStat.setStatus(Util.addOrUpdateStatus(taskStat.getStatus(), InstanceState.LAST_MODIFIED,
-					new Time(System.currentTimeMillis()), "deleted"));
-			publishTask(UpdateType.DELETION, taskStat);
-		}
-		
-		old.stat.setStatus(Util.addOrUpdateStatus(old.stat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "deleted"));
-		
-		publishPr(UpdateType.DELETION, old.stat);
 		// store new pr instance (including tasks) + new pr status (including task statuses)
-		prInsts.updatePr(prInst, prStatNew);
+		prInsts.updatePr(prInst, itemNew.stat);
 		// notify plugin
-		plugPrUpdated(prInst, prStatNew);
-		// .. and publish new
-		for (int i = 0; (null != prStatNew.getTaskStatuses()) && (i < prStatNew.getTaskStatuses().size()); ++i) {
-			TaskStatusDetails taskStat = prStatNew.getTaskStatuses().get(i);
-			publishTask(UpdateType.CREATION, taskStat);
-		}
-		publishPr(UpdateType.CREATION, prStatNew);
+		plugPrUpdated(prInst, itemNew.stat);
+		// .. and publish changes
+		publishPr(UpdateType.MODIFICATION, prChange);
 		
 		LOG.log(Level.INFO, "{1}.updatePlanningRequest() response: returning prStatus={0}",
-				new Object[] { Dumper.prStat(prStatNew), Dumper.sending(interaction) });
-		return prStatNew;
+				new Object[] { Dumper.prStat(itemOld.stat), Dumper.sending(interaction) });
+		return itemOld.stat;
 	}
 
 	/**
@@ -366,26 +436,28 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{1}.removePlanningRequest(prInstId={0})",
 				new Object[] { prInstId, Dumper.received(interaction) });
 		Check.prInstId(prInstId);
-		PrInstStore.Item old = Check.prInstExists(prInstId, prInsts);
+		PrInstStore.PrItem item = Check.prInstExists(prInstId, prInsts);
 		// that's it
 		prInsts.removePr(prInstId);
 		// notify plugin
 		plugPrRemoved(prInstId);
-		// publish
-		for (int i = 0; (null != old.stat.getTaskStatuses()) && (i < old.stat.getTaskStatuses().size()); ++i) {
-			TaskStatusDetails taskStat = old.stat.getTaskStatuses().get(i);
-			taskStat.setStatus(Util.addOrUpdateStatus(taskStat.getStatus(), InstanceState.LAST_MODIFIED,
-					new Time(System.currentTimeMillis()), "deleted"));
-			publishTask(UpdateType.DELETION, taskStat);
+		// gather changes
+		TaskStatusDetailsList taskStats = (null != item.pr.getTasks() && !item.pr.getTasks().isEmpty()) ? new TaskStatusDetailsList(): null;
+		for (int i = 0; (null != item.pr.getTasks()) && (i < item.pr.getTasks().size()); ++i) {
+			TaskInstanceDetails task = item.pr.getTasks().get(i);
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "deleted"));
+			TaskStatusDetails taskStat = new TaskStatusDetails(task.getId(), srl);
+			taskStats.add(taskStat);
 		}
-		
-		old.stat.setStatus(Util.addOrUpdateStatus(old.stat.getStatus(), InstanceState.LAST_MODIFIED,
-				new Time(System.currentTimeMillis()), "deleted"));
-		
-		publishPr(UpdateType.DELETION, old.stat);
+		StatusRecordList srl = new StatusRecordList();
+		srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "deleted"));
+		PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(prInstId, srl, taskStats);
+		// publish changes
+		publishPr(UpdateType.DELETION, prStat);
 		LOG.log(Level.INFO, "{1}.removePlanningRequest() response: returning prStatus={0}",
-				new Object[] { Dumper.prStat(old.stat), Dumper.sending(interaction) });
-		return old.stat;
+				new Object[] { Dumper.prStat(item.stat), Dumper.sending(interaction) });
+		return item.stat;
 	}
 
 	/**
@@ -399,8 +471,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.prInstIds(prIds);
 		PlanningRequestStatusDetailsList stats = new PlanningRequestStatusDetailsList(); 
 		for (int i = 0; i < prIds.size(); ++i) {
-			PrInstStore.Item old = prInsts.findPr(prIds.get(i));
-			PlanningRequestStatusDetails prStat = (null != old) ? old.stat : null;
+			PrInstStore.PrItem item = prInsts.findPrItem(prIds.get(i));
+			PlanningRequestStatusDetails prStat = (null != item) ? item.stat : null;
 			stats.add(prStat);
 		}
 		LOG.log(Level.INFO, "{1}.getPlanningRequestStatus() response: returning prStatuses={0}",
@@ -511,8 +583,9 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.taskInstIds(taskIds);
 		TaskStatusDetailsList stats = new TaskStatusDetailsList();
 		for (int i = 0; i < taskIds.size(); ++i) {
-			TaskStatusDetails taskStat = prInsts.findTask(taskIds.get(i));
-			stats.add(taskStat);
+			PrInstStore.TaskItem item = prInsts.findTaskItem(taskIds.get(i));
+			TaskStatusDetails stat = (null != item) ? item.stat : null;
+			stats.add(stat);
 		}
 		LOG.log(Level.INFO, "{1}.getTaskStatus() response: returning taskStatuses={0}",
 				new Object[] { Dumper.taskStats(stats), Dumper.sending(interaction) });

@@ -2,6 +2,8 @@ package esa.mo.inttest;
 
 import java.util.concurrent.Callable;
 
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.structures.Element;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
@@ -17,6 +19,8 @@ import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
@@ -87,23 +91,95 @@ public class Util {
 	}
 	
 	/**
-	 * Add given status to the given list. Create list if null. Return list.
-	 * @param srl
+	 * Add or update existing state in list.
+	 * @param stat
 	 * @param is
 	 * @param t
-	 * @param comm
+	 * @param c
 	 * @return
 	 */
-	public static StatusRecordList addOrUpdateStatus(StatusRecordList srl, InstanceState is, Time t, String comm) {
-		StatusRecord sr = (null != srl) ? findStatus(srl, is) : null;
-		StatusRecordList list = (null != srl) ? srl : new StatusRecordList();
+	public static StatusRecord addOrUpdateStatus(PlanningRequestStatusDetails stat, InstanceState is, Time t, String c) {
+		StatusRecord sr = (null != stat.getStatus()) ? findStatus(stat.getStatus(), is) : null;
+		if (null == stat.getStatus()) {
+			stat.setStatus(new StatusRecordList());
+		}
 		if (null == sr) {
-			list.add(new StatusRecord(is, t, comm));
+			sr = new StatusRecord(is, t, c);
+			stat.getStatus().add(sr);
 		} else {
 			sr.setTimeStamp(t);
-			sr.setComment(comm);
+			sr.setComment(c);
 		}
-		return list;
+		return sr;
+	}
+	
+	/**
+	 * Add or update existing state in list.
+	 * @param stat
+	 * @param is
+	 * @param t
+	 * @param c
+	 * @return
+	 */
+	public static StatusRecord addOrUpdateStatus(TaskStatusDetails stat, InstanceState is, Time t, String c) {
+		StatusRecord sr = (null != stat.getStatus()) ? findStatus(stat.getStatus(), is) : null;
+		if (null == stat.getStatus()) {
+			stat.setStatus(new StatusRecordList());
+		}
+		if (null == sr) {
+			sr = new StatusRecord(is, t, c);
+			stat.getStatus().add(sr);
+		} else {
+			sr.setTimeStamp(t);
+			sr.setComment(c);
+		}
+		return sr;
+	}
+	
+	/**
+	 * Add or update existing state in list.
+	 * @param stat
+	 * @param is
+	 * @param t
+	 * @param c
+	 * @return
+	 */
+	public static StatusRecord addOrUpdateStatus(ScheduleStatusDetails stat, InstanceState is, Time t, String c) {
+		StatusRecord sr = (null != stat.getStatus()) ? findStatus(stat.getStatus(), is) : null;
+		if (null == stat.getStatus()) {
+			stat.setStatus(new StatusRecordList());
+		}
+		if (null == sr) {
+			sr = new StatusRecord(is, t, c);
+			stat.getStatus().add(sr);
+		} else {
+			sr.setTimeStamp(t);
+			sr.setComment(c);
+		}
+		return sr;
+	}
+	
+	/**
+	 * Add or update existing state in list.
+	 * @param stat
+	 * @param is
+	 * @param t
+	 * @param c
+	 * @return
+	 */
+	public static StatusRecord addOrUpdateStatus(ScheduleItemStatusDetails stat, InstanceState is, Time t, String c) {
+		StatusRecord sr = (null != stat.getStatus()) ? findStatus(stat.getStatus(), is) : null;
+		if (null == stat.getStatus()) {
+			stat.setStatus(new StatusRecordList());
+		}
+		if (null == sr) {
+			sr = new StatusRecord(is, t, c);
+			stat.getStatus().add(sr);
+		} else {
+			sr.setTimeStamp(t);
+			sr.setComment(c);
+		}
+		return sr;
 	}
 	
 	/**

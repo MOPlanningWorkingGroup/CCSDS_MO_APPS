@@ -7,8 +7,6 @@ import org.ccsds.moims.mo.mal.MALHelper;
 import org.ccsds.moims.mo.planning.PlanningHelper;
 import org.ccsds.moims.mo.planning.planningrequest.PlanningRequestHelper;
 import org.ccsds.moims.mo.planningdatatypes.PlanningDataTypesHelper;
-import org.ccsds.moims.mo.planningprototype.PlanningPrototypeHelper;
-import org.ccsds.moims.mo.planningprototype.planningrequesttest.PlanningRequestTestHelper;
 
 import esa.mo.inttest.FactoryBase;
 
@@ -24,12 +22,6 @@ public abstract class PlanningRequestFactory extends FactoryBase {
 		PlanningDataTypesHelper.init(MALContextFactory.getElementFactoryRegistry());
 		try {
 			PlanningRequestHelper.init(MALContextFactory.getElementFactoryRegistry());
-		} catch (MALException e) {
-			// ignore "service already registered"
-		}
-		PlanningPrototypeHelper.init(MALContextFactory.getElementFactoryRegistry()); // testing support
-		try {
-			PlanningRequestTestHelper.init(MALContextFactory.getElementFactoryRegistry()); // testing support
 		} catch (MALException e) {
 			// ignore "service already registered"
 		}

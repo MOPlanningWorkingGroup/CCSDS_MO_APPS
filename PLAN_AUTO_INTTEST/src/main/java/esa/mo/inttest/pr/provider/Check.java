@@ -69,7 +69,7 @@ public class Check {
 	 * @throws MALException
 	 */
 	public static void prInstNoExist(Long id, PrInstStore store) throws MALException {
-		PrInstStore.Item it = store.findPr(id);
+		PrInstStore.PrItem it = store.findPrItem(id);
 		if (null != it) {
 			throw new MALException("pr instance already exists, id: " + id);
 		}
@@ -82,8 +82,8 @@ public class Check {
 	 * @return
 	 * @throws MALException
 	 */
-	public static PrInstStore.Item prInstExists(Long id, PrInstStore store) throws MALException {
-		PrInstStore.Item it = store.findPr(id);
+	public static PrInstStore.PrItem prInstExists(Long id, PrInstStore store) throws MALException {
+		PrInstStore.PrItem it = store.findPrItem(id);
 		if (null == it) {
 			throw new MALException("pr instance not found, id: " + id);
 		}
@@ -127,7 +127,7 @@ public class Check {
 	 * @param instIds
 	 * @throws MALException
 	 */
-	public static void listElements(TaskInstanceDetailsList tasks, /*LongList defIds, LongList instIds*/Long prId) throws MALException {
+	public static void listElements(TaskInstanceDetailsList tasks, Long prId) throws MALException {
 		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
 			TaskInstanceDetails taskInst = tasks.get(i);
 			if (null == taskInst) {
@@ -236,7 +236,7 @@ public class Check {
 	 */
 	public static void prInstIdList(LongList ids) throws MALException {
 		if (ids == null) {
-			throw new MALException("no pr instance id list given");
+			throw new MALException("pr instance id list is null");
 		}
 		if (ids.isEmpty()) {
 			throw new MALException("pr instance id list is empty");
