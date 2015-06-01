@@ -110,9 +110,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 	}
 	
 	protected ScheduleInstanceDetails createInst() {
-		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-//		schInst.setName(new Identifier(n));
-		return schInst;
+		return new ScheduleInstanceDetails();
 	}
 	
 	protected Long createAndAddDef(String n) throws MALException, MALInteractionException {
@@ -230,10 +228,6 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		ScheduleInstanceDetails schInst = createAndSubmitInst(schDefId, schInstId, "test schedule inst");
 		
 		waitForSch(schMon);
-		
-//		SchedulePatchOperations patchOp = new SchedulePatchOperations();
-//		patchOp.setScheduleInstName(new Identifier("patch schedule"));
-//		Long targetSchInstId = 2L;
 		
 		schMon.clear(); // clear submit info
 		schInst.setComment("new modified comment");

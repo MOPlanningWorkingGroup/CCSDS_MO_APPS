@@ -15,7 +15,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsL
 /**
  * PR instances storage.
  */
-public class PrInstStore {
+public class InstStore {
 
 	/**
 	 * Structure to hold PR instance, PR status.
@@ -43,7 +43,7 @@ public class PrInstStore {
 	}
 	
 	private Map<Long, PrItem> prs = new HashMap<Long, PrItem>();
-	private Map<Long, TaskItem> tasks = new HashMap<Long, PrInstStore.TaskItem>();
+	private Map<Long, TaskItem> tasks = new HashMap<Long, InstStore.TaskItem>();
 	
 	protected void addTask(TaskInstanceDetails task, TaskStatusDetails stat) {
 		tasks.put(task.getId(), new TaskItem(task, stat));
@@ -52,7 +52,7 @@ public class PrInstStore {
 	protected void addTasks(TaskInstanceDetailsList tasks, TaskStatusDetailsList stats) {
 		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
 			TaskInstanceDetails t = tasks.get(i);
-			TaskStatusDetails s = stats.get(i);
+			TaskStatusDetails s = stats.get(i); // FIXME hopefully stat matches task
 			addTask(t, s);
 		}
 	}
@@ -80,17 +80,17 @@ public class PrInstStore {
 		return prs.get(prInstId);
 	}
 	
-	/**
-	 * Replaces PR status by id.
-	 * @param prInstId
-	 * @param prStat
-	 */
-	public void setPrStatus(Long prInstId, PlanningRequestStatusDetails prStat) {
-		PrItem item = findPrItem(prInstId);
-		if (null != item) {
-			item.stat = prStat;
-		}
-	}
+//	/**
+//	 * Replaces PR status by id.
+//	 * @param prInstId
+//	 * @param prStat
+//	 */
+//	public void setPrStatus(Long prInstId, PlanningRequestStatusDetails prStat) {
+//		PrItem item = findPrItem(prInstId);
+//		if (null != item) {
+//			item.stat = prStat;
+//		}
+//	}
 	
 	public TaskItem findTaskItem(Long taskInstId) {
 		return tasks.get(taskInstId);
@@ -127,19 +127,16 @@ public class PrInstStore {
 	}
 	
 	/**
-	 * Replaces PR inst and status by id.
+	 * Replaces PR inst by id.
 	 * @param prInstId
 	 * @param prInst
 	 * @param prStat
 	 */
-	public void updatePr(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+	public void updatePr(PlanningRequestInstanceDetails prInst) {
 		PrItem item = findPrItem(prInst.getId());
-		if (null != item) {
-			removeTasks(item.pr, prInst);
-			item.pr = prInst;
-			item.stat = prStat;
-			updateTasks(prInst.getTasks(), prStat.getTaskStatuses()); // add or update
-		}
+		removeTasks(item.pr, prInst);
+		item.pr = prInst;
+		updateTasks(prInst.getTasks(), item.stat.getTaskStatuses()); // add or update
 	}
 	
 	protected void removeTask(Long taskId) {
@@ -165,15 +162,15 @@ public class PrInstStore {
 		return item;
 	}
 	
-	/**
-	 * Replaces Task status by id.
-	 * @param taskInstId
-	 * @param taskStat
-	 */
-	public void setTaskStatus(Long taskInstId, TaskStatusDetails taskStat) {
-		TaskItem item = findTaskItem(taskInstId);
-		if (null != item) {
-			item.stat = taskStat;
-		}
-	}
+//	/**
+//	 * Replaces Task status by id.
+//	 * @param taskInstId
+//	 * @param taskStat
+//	 */
+//	public void setTaskStatus(Long taskInstId, TaskStatusDetails taskStat) {
+//		TaskItem item = findTaskItem(taskInstId);
+//		if (null != item) {
+//			item.stat = taskStat;
+//		}
+//	}
 }

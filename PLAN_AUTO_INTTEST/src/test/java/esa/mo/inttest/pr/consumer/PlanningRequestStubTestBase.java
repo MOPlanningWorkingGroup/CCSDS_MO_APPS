@@ -423,8 +423,8 @@ public class PlanningRequestStubTestBase {
 		prCons.updatePlanningRequest(prInst);
 	}
 	
-	protected void removePlanningRequest(Long prInstId) throws MALException, MALInteractionException {
-		prCons.removePlanningRequest(prInstId);
+	protected void removePlanningRequest(Long prId) throws MALException, MALInteractionException {
+		prCons.removePlanningRequest(prId);
 	}
 	
 	protected PlanningRequestStatusDetailsList getPlanningRequestStatus(Long prInstId) throws MALException, MALInteractionException {

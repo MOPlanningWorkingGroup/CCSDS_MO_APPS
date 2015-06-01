@@ -38,7 +38,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsL
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
-//import org.ccsds.moims.mo.planningprototype.planningrequesttest.consumer.PlanningRequestTestStub;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -53,7 +52,7 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 import esa.mo.inttest.pr.provider.Plugin;
-import esa.mo.inttest.pr.provider.PrInstStore;
+import esa.mo.inttest.pr.provider.InstStore;
 
 /**
  * Three consumers demo. One consumer managing defs, second managing instances, third only monitoring.
@@ -102,19 +101,19 @@ public class ThreeGoceConsumersTest {
 			this.prov = prov;
 		}
 		
-		public void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
-			newPrs.add(prInst.getId());
-			for (int i = 0; (null != prInst.getTasks()) && (i < prInst.getTasks().size()); ++i) {
-				TaskInstanceDetails taskInst = prInst.getTasks().get(i);
-				newTasks.add(taskInst.getId());
+		public void onPrSubmit(PlanningRequestInstanceDetails pr) {
+			newPrs.add(pr.getId());
+			for (int j = 0; (null != pr.getTasks()) && (j < pr.getTasks().size()); ++j) {
+				TaskInstanceDetails task = pr.getTasks().get(j);
+				newTasks.add(task.getId());
 			}
 		}
 		
-		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			// ignore
 		}
 		
-		public void onPrRemove(Long prId) {
+		public void onPrRemove(Long id) {
 			// ignore
 		}
 		
@@ -160,7 +159,7 @@ public class ThreeGoceConsumersTest {
 		private void processTasks() throws MALException, MALInteractionException {
 			for (int i0 = 0; i0 < newTasks.size(); ++i0) {
 				Long taskId = newTasks.get(i0);
-				PrInstStore.TaskItem item = prov.getInstStore().findTaskItem(taskId);
+				InstStore.TaskItem item = prov.getInstStore().findTaskItem(taskId);
 				boolean doRemove = true;
 				if (null != item) {
 					doRemove = checkTaskAccept(item.task.getPrInstId(), taskId, item.stat);
@@ -213,7 +212,7 @@ public class ThreeGoceConsumersTest {
 		private void processPrs() throws MALException, MALInteractionException {
 			for (int i0 = 0; i0 < newPrs.size(); ++i0) {
 				Long prId = newPrs.get(i0);
-				PrInstStore.PrItem item = prov.getInstStore().findPrItem(prId);
+				InstStore.PrItem item = prov.getInstStore().findPrItem(prId);
 				boolean doRemove = true;
 				if (null != item) {
 					doRemove = checkPrAccept(prId, item.stat);
@@ -248,7 +247,6 @@ public class ThreeGoceConsumersTest {
 	private GoceConsumer goce2;
 	private GoceConsumer goce3;
 	
-//	private PlanningRequestTestStub procTestProv;
 	private PlanningRequestStub procProv;
 	
 	private static boolean log2file = false;
@@ -285,13 +283,11 @@ public class ThreeGoceConsumersTest {
 		consFct.setPropertyFile(props);
 		consFct.setProviderUri(provFct.getProviderUri());
 		consFct.setBrokerUri(provFct.getBrokerUri());
-//		consFct.setTestProviderUri(provFct.getTestProviderUri()); // testSupport connection
 		
 		goce1 = new GoceConsumer(consFct.start(CLIENT1), null); // start a new instance of consumer
 		goce2 = new GoceConsumer(consFct.start(CLIENT2), null);
 		goce3 = new GoceConsumer(consFct.start(CLIENT3), null);
 		
-//		procTestProv = consFct.startTest(PROVIDER+"0"); // cons/prov names need to be unique within RMI
 		procProv = consFct.start(PROVIDER+"1");
 		
 		LOG.exiting(getClass().getName(), "setUp");
@@ -302,7 +298,6 @@ public class ThreeGoceConsumersTest {
 		LOG.entering(getClass().getName(), "tearDown");
 		if (consFct != null) {
 			consFct.stop(procProv);
-//			consFct.stopTest(procTestProv);
 			consFct.stop(goce3.getPrStub());
 			consFct.stop(goce2.getPrStub());
 			consFct.stop(goce1.getPrStub());

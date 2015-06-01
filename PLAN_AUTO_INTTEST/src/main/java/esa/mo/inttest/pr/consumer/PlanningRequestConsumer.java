@@ -113,12 +113,11 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	 * @param prName
 	 * @return
 	 */
-	public static TaskInstanceDetails createTaskInst(/*String name*/Long id, Long defId, String comm/*, String prName*/) {
+	public static TaskInstanceDetails createTaskInst(Long id, Long defId, String comm) {
 		TaskInstanceDetails inst = new TaskInstanceDetails();
 		inst.setId(id);
 		inst.setTaskDefId(defId);
 		inst.setComment(comm);
-//		inst.setPrInstId(prId);
 		return inst;
 	}
 	

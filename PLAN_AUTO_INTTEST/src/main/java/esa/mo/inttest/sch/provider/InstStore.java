@@ -9,6 +9,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -28,22 +30,27 @@ public class InstStore {
 	/**
 	 * Schedule instance + status info.
 	 */
-	public static final class Item {
+	public static final class SchItem {
 		public ScheduleInstanceDetails inst;
 		public ScheduleStatusDetails stat;
 	}
+	/**
+	 * Schedule item instance + status.
+	 */
+	public static final class ItemItem {
+		public ScheduleItemInstanceDetails inst;
+		public ScheduleItemStatusDetails stat;
+	}
 	
-	List<Item> items = new ArrayList<InstStore.Item>();
+	Map<Long, SchItem> scheds = new HashMap<Long, SchItem>();
+	Map<Long, ItemItem> items = new HashMap<Long, InstStore.ItemItem>();
 	
-	public Item findItem(Long id) {
-		Item it = null;
-		for (Item i: items) {
-			if (id == i.inst.getId()) {
-				it = i;
-				break;
-			}
-		}
-		return it;
+	public SchItem findSchItem(Long id) {
+		return scheds.get(id);
+	}
+	
+	public ItemItem findItemItem(Long id) {
+		return items.get(id);
 	}
 	
 	/**
@@ -56,7 +63,7 @@ public class InstStore {
 		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			Item it = findItem(id);
+			SchItem it = findSchItem(id);
 			ScheduleInstanceDetails inst = (null != it) ? it.inst : null;
 			insts.add(inst);
 		}
@@ -76,11 +83,26 @@ public class InstStore {
 			if (null == id) {
 				throw new MALException("schedule instance id[" + i + "] is null");
 			}
-			Item it = findItem(id);
+			SchItem it = findSchItem(id);
 			ScheduleStatusDetails stat = (null != it) ? it.stat : null;
 			stats.add(stat);
 		}
 		return stats;
+	}
+	
+	protected void addItem(ScheduleItemInstanceDetails item, ScheduleItemStatusDetails stat) {
+		ItemItem it = new ItemItem();
+		it.inst = item;
+		it.stat = stat;
+		items.put(item.getId(), it);
+	}
+	
+	protected void addItems(ScheduleItemInstanceDetailsList items, ScheduleItemStatusDetailsList stats) {
+		for (int i = 0; (null != items) && (i < items.size()); ++i) {
+			ScheduleItemInstanceDetails item = items.get(i);
+			ScheduleItemStatusDetails stat = stats.get(i); // FIXME hopefully stat matches item
+			addItem(item, stat);
+		}
 	}
 	
 	/**
@@ -92,10 +114,45 @@ public class InstStore {
 	 * @throws MALException
 	 */
 	public void add(ScheduleInstanceDetails inst, ScheduleStatusDetails stat) {
-		Item it = new Item();
+		SchItem it = new SchItem();
 		it.inst = inst;
 		it.stat = stat;
-		items.add(it);
+		scheds.put(inst.getId(), it);
+		addItems(inst.getScheduleItems(), stat.getScheduleItemStatuses());
+	}
+	
+	protected void removeItem(Long id) {
+		items.remove(id);
+	}
+	
+	protected void removeItems(ScheduleInstanceDetails schOld, ScheduleInstanceDetails schNew) {
+		List<Long> newItems = new ArrayList<Long>();
+		// create lookup list of new items
+		for (int i = 0; (null != schNew.getScheduleItems()) && (i < schNew.getScheduleItems().size()); ++i) {
+			ScheduleItemInstanceDetails item = schNew.getScheduleItems().get(i);
+			newItems.add(item.getId());
+		}
+		// remove items not present in new list
+		for (int i = 0; (null != schOld.getScheduleItems()) && (i < schOld.getScheduleItems().size()); ++i) {
+			ScheduleItemInstanceDetails item = schOld.getScheduleItems().get(i);
+			if (!newItems.contains(item.getId())) {
+				removeItem(item.getId());
+			}
+		}
+	}
+	
+	protected void updateItems(ScheduleItemInstanceDetailsList items, ScheduleItemStatusDetailsList stats) {
+		for (int i = 0; (null != items) && (i < items.size()); ++i) {
+			ScheduleItemInstanceDetails item = items.get(i);
+			ScheduleItemStatusDetails stat = stats.get(i); // FIXME hopefully stat matches item
+			ItemItem it = findItemItem(item.getId());
+			if (null == it) { // add
+				addItem(item, stat);
+			} else { // replace
+				it.inst = item;
+				it.stat = stat;
+			}
+		}
 	}
 	
 	/**
@@ -106,19 +163,29 @@ public class InstStore {
 	 * @throws MALException
 	 */
 	public void update(ScheduleInstanceDetails inst) {
-		Item it = findItem(inst.getId());
+		SchItem it = findSchItem(inst.getId());
+		removeItems(it.inst, inst);
 		it.inst = inst;
+		updateItems(inst.getScheduleItems(), it.stat.getScheduleItemStatuses());
 	}
 	
+	protected void removeItems(ScheduleItemInstanceDetailsList items) {
+		for (int i = 0; (null != items) && (i < items.size()); ++i) {
+			ScheduleItemInstanceDetails item = items.get(i);
+			this.items.remove(item.getId());
+		}
+	}
 	/**
 	 * Remove schedule instance.
 	 * @param instId
 	 * @return
 	 * @throws MALException
 	 */
-	public Item remove(Long instId) {
-		Item it = findItem(instId);
-		items.remove(it);
+	public SchItem remove(Long id) {
+		SchItem it = scheds.remove(id);
+		if (null != it) {
+			removeItems(it.inst.getScheduleItems());
+		}
 		return it;
 	}
 	
@@ -266,16 +333,7 @@ public class InstStore {
 		// updates
 		for (int i = 0; (null != update) && (i < update.size()); ++i) {
 			ScheduleInstanceDetails srcSch = update.get(i);
-			if (null == srcSch) {
-				throw new MALException("update schedule instance[" + i + "] is null");
-			}
-			if (null == srcSch.getId()) {
-				throw new MALException("update schedule instance[" + i + "].id is null");
-			}
-			Item it = findItem(srcSch.getId()); // storage item, not schedule item
-			if (null == it) {
-				throw new MALException("no such schedule to update, instance[" + i + "]: " + srcSch.getId());
-			}
+			SchItem it = findSchItem(srcSch.getId()); // storage item, not schedule item
 			// update fields
 			if (null != srcSch.getSchDefId()) {
 				it.inst.setSchDefId(srcSch.getSchDefId());
@@ -313,7 +371,7 @@ public class InstStore {
 		// removals
 		for (int i = 0; (null != remove) && (i < remove.size()); ++i) {
 			ScheduleInstanceDetails srcSch = remove.get(i);
-			Item it = findItem(srcSch.getId());
+			SchItem it = findSchItem(srcSch.getId());
 			// remove field values
 			// can't remove def id
 			if (null != srcSch.getComment()) {
@@ -378,16 +436,7 @@ public class InstStore {
 		// additions
 		for (int i = 0; (null != add) && (i < add.size()); ++i) {
 			ScheduleInstanceDetails srcSch = add.get(i);
-			if (null == srcSch) {
-				throw new MALException("add schedule instance[" + i + "] is null");
-			}
-			if (null == srcSch.getId()) {
-				throw new MALException("add schedule instance[" + i + "].id is null");
-			}
-			Item it = findItem(srcSch.getId());
-			if (null == it) {
-				throw new MALException("no such schedule to add to, instance[" + i + "]: " + srcSch.getId());
-			}
+			SchItem it = findSchItem(srcSch.getId());
 			// no fields to add
 			if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
 				if (null == it.inst.getArgumentValues()) {

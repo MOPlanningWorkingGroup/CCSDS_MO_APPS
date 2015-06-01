@@ -8,7 +8,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -37,6 +36,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.junit.After;
 import org.junit.AfterClass;
 
@@ -52,7 +52,7 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 import esa.mo.inttest.pr.provider.Plugin;
-import esa.mo.inttest.pr.provider.PrInstStore;
+import esa.mo.inttest.pr.provider.InstStore;
 
 /**
  * Demonstrate interaction between two PR providers (instrument&gs) and consumer.
@@ -106,16 +106,19 @@ public class TwoPrDemoTest {
 		}
 		
 		// forward pr status update from gs to instr consumer
-		private void forward(Long id, PlanningRequestStatusDetails stat) {
-			PrInstStore.PrItem it = instr.getInstStore().findPrItem(id);
+		private void forward(PlanningRequestStatusDetails stat) {
+			InstStore.PrItem it = instr.getInstStore().findPrItem(stat.getPrInstId());
 			if (null != it) {
 				StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
 				InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
 				Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
-				Util.addOrUpdateStatus(it.stat, is, t, c);
+				// forward only change
+				StatusRecordList srl = new StatusRecordList();
+				srl.add(Util.addOrUpdateStatus(it.stat, is, t, c));
+				PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(stat.getPrInstId(), srl, null);
 				try {
-					instr.publishPr(UpdateType.UPDATE, it.stat);
+					instr.publishPr(UpdateType.UPDATE, prStat);
 				} catch (MALException e) {
 					LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
 				} catch (MALInteractionException e) {
@@ -129,8 +132,8 @@ public class TwoPrDemoTest {
 		 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorPlanningRequestsNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList, java.util.Map)
 		 */
 		@SuppressWarnings("rawtypes")
-		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
-				ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps)
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id,
+				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps)
 		{
 			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(id={0}, List:updHdrs, List:objIds, " +
 					"List:prStats, Map:qosProps)\n  updHdrs[]={1}\n  objIds[]={2}\n  prStats[]={3}",
@@ -139,24 +142,27 @@ public class TwoPrDemoTest {
 			for (int i = 0; i < updHdrs.size(); ++i) {
 				UpdateHeader uh = updHdrs.get(i);
 				if (UpdateType.UPDATE == uh.getUpdateType()) {
-					ObjectId oi = objIds.get(i);
 					PlanningRequestStatusDetails prStat = prStats.get(i);
-					forward(oi.getKey().getInstId(), prStat);
+					forward(prStat);
 				}
 			}
 		}
 		
 		private void forwardTask(TaskStatusDetails stat) {
-			PrInstStore.TaskItem taskItem = instr.getInstStore().findTaskItem(stat.getTaskInstId());
+			InstStore.TaskItem taskItem = instr.getInstStore().findTaskItem(stat.getTaskInstId());
 			if (null != taskItem) {
 				StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
 				InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
 				Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
-				Util.addOrUpdateStatus(taskItem.stat, is, t, c);
+				// forward only change
+				StatusRecordList srl = new StatusRecordList();
+				srl.add(Util.addOrUpdateStatus(taskItem.stat, is, t, c));
+				TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
+				taskStats.add(new TaskStatusDetails(stat.getTaskInstId(), srl));
+				PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(taskItem.task.getPrInstId(), null, taskStats);
 				try {
-					PrInstStore.PrItem item2 = instr.getInstStore().findPrItem(taskItem.task.getPrInstId());
-					instr.publishPr(UpdateType.UPDATE, item2.stat); // TODO only changed parts?
+					instr.publishPr(UpdateType.UPDATE, prStat);
 				} catch (MALException e) {
 					LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
 				} catch (MALInteractionException e) {
@@ -189,12 +195,12 @@ public class TwoPrDemoTest {
 		 * Pr submission notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrSubmit(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public 	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
-			prInstIds.add(prInst.getId());
+		public 	void onPrSubmit(PlanningRequestInstanceDetails pr) {
+			prInstIds.add(pr.getId());
 			LongList taskIds = null;
-			if (null != prInst.getTasks() && !prInst.getTasks().isEmpty()) {
+			if (null != pr.getTasks() && !pr.getTasks().isEmpty()) {
 				taskIds = new LongList();
-				for (TaskInstanceDetails t: prInst.getTasks()) {
+				for (TaskInstanceDetails t: pr.getTasks()) {
 					taskIds.add(t.getId());
 				}
 			}
@@ -205,7 +211,7 @@ public class TwoPrDemoTest {
 		 * Pr update notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrUpdate(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			// nothing
 		}
 		
@@ -213,7 +219,7 @@ public class TwoPrDemoTest {
 		 * Pr removal notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrRemove(java.lang.Long)
 		 */
-		public void onPrRemove(Long prInstId) {
+		public void onPrRemove(Long id) {
 			// nothing
 		}
 		
@@ -266,15 +272,15 @@ public class TwoPrDemoTest {
 		 * Pr submission notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrSubmit(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public 	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
-			prInstIds.add(prInst.getId());
+		public 	void onPrSubmit(PlanningRequestInstanceDetails pr) {
+			prInstIds.add(pr.getId());
 		}
 		
 		/**
 		 * Pr update notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrUpdate(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails)
 		 */
-		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			// nothing
 		}
 		
@@ -282,7 +288,7 @@ public class TwoPrDemoTest {
 		 * Pr removal notification from plugin owner.
 		 * @see esa.mo.inttest.pr.provider.Plugin#onPrRemove(java.lang.Long)
 		 */
-		public void onPrRemove(Long prInstId) {
+		public void onPrRemove(Long id) {
 			// nothing
 		}
 		
@@ -294,11 +300,14 @@ public class TwoPrDemoTest {
 		public void doPlanning() throws MALException, MALInteractionException {
 			// process submitted prs
 			for (Long id: prInstIds) {
-				PrInstStore.PrItem it = pr.getInstStore().findPrItem(id);
+				InstStore.PrItem it = pr.getInstStore().findPrItem(id);
 				if (null != it) {
-					Util.addOrUpdateStatus(it.stat, InstanceState.PLAN_CONFLICT,
-							Util.currentTime(), "planning conflict");
-					pr.publishPr(UpdateType.UPDATE, it.stat);
+					// publish only change
+					StatusRecordList srl = new StatusRecordList();
+					srl.add(Util.addOrUpdateStatus(it.stat, InstanceState.PLAN_CONFLICT,
+							Util.currentTime(), "planning conflict"));
+					PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(it.stat.getPrInstId(), srl, null);
+					pr.publishPr(UpdateType.UPDATE, prStat);
 				}
 			}
 		}

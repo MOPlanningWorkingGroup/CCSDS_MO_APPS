@@ -45,11 +45,11 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
+		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-		schInst.setId(1L);
+		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefIds.get(0));
 		
-		Long schInstId = 1L;
 		final boolean[] submitted = { false };
 		
 		MALMessage msg = schCons.asyncSubmitSchedule(schInst, new ScheduleAdapter() {
@@ -100,11 +100,10 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
-		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-		schInst.setId(1L);
-		schInst.setSchDefId(schDefIds.get(0));
-		
 		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
+		schInst.setId(schInstId);
+		schInst.setSchDefId(schDefIds.get(0));
 		
 		schCons.submitSchedule(schInst);
 		
@@ -159,11 +158,10 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
 		
-		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
-		schInst.setId(1L);
-		schInst.setSchDefId(schDefIds.get(0));
-		
 		Long schInstId = 1L;
+		ScheduleInstanceDetails schInst = new ScheduleInstanceDetails();
+		schInst.setId(schInstId);
+		schInst.setSchDefId(schDefIds.get(0));
 		
 		schCons.submitSchedule(schInst);
 		
@@ -195,10 +193,10 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		assertTrue(removed[0]);
 		
-		LongList schInstIds = new LongList();
-		schInstIds.add(schInstId);
+		LongList schIds = new LongList();
+		schIds.add(schInstId);
 		
-		ScheduleStatusDetailsList schStats = schCons.getScheduleStatus(schInstIds);
+		ScheduleStatusDetailsList schStats = schCons.getScheduleStatus(schIds);
 		
 		assertNotNull(schStats);
 		assertEquals(1, schStats.size());
@@ -241,7 +239,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void patchScheduleErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			public void patchScheduleErrorReceived(MALMessageHeader msgHeader,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});
@@ -283,15 +282,16 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			
 			@SuppressWarnings("rawtypes")
 			public void getScheduleStatusResponseReceived(MALMessageHeader msgHeader,
-					ScheduleStatusDetailsList schStatus, Map qosProps) {
-				stats[0] = schStatus;
+					ScheduleStatusDetailsList schStats, Map qosProps) {
+				stats[0] = schStats;
 				synchronized (stats) {
 					stats.notifyAll();
 				}
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void getScheduleStatusErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			public void getScheduleStatusErrorReceived(MALMessageHeader msgHeader,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});
@@ -330,8 +330,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			
 			@SuppressWarnings("rawtypes")
 			@Override
-			public void monitorSchedulesRegisterErrorReceived(MALMessageHeader msgHdr, MALStandardError error,
-					Map qosProps) {
+			public void monitorSchedulesRegisterErrorReceived(MALMessageHeader msgHdr,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});
@@ -407,12 +407,12 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schInst);
 		
-		LongList schInstIds = new LongList();
-		schInstIds.add(schInstId);
+		LongList ids = new LongList();
+		ids.add(schInstId);
 		
 		final boolean[] started = { false };
 		
-		MALMessage msg = schCons.asyncStart(schInstIds, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncStart(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void startAckReceived(MALMessageHeader msgHeader, Map qosProps) {
@@ -423,7 +423,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void startErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			public void startErrorReceived(MALMessageHeader msgHeader,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});
@@ -458,12 +459,12 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schInst);
 		
-		LongList schInstIds = new LongList();
-		schInstIds.add(schInstId);
+		LongList ids = new LongList();
+		ids.add(schInstId);
 		
 		final boolean[] paused = { false };
 		
-		MALMessage msg = schCons.asyncPause(schInstIds, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncPause(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void pauseAckReceived(MALMessageHeader msgHeader, Map qosProps) {
@@ -474,7 +475,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void pauseErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			public void pauseErrorReceived(MALMessageHeader msgHeader,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});
@@ -509,12 +511,12 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schInst);
 		
-		LongList schInstIds = new LongList();
-		schInstIds.add(schInstId);
+		LongList ids = new LongList();
+		ids.add(schInstId);
 		
 		final boolean[] resumed = { false };
 		
-		MALMessage msg = schCons.asyncResume(schInstIds, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncResume(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void resumeAckReceived(MALMessageHeader msgHeader, Map qosProps) {
@@ -525,7 +527,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void resumeErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			public void resumeErrorReceived(MALMessageHeader msgHeader,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});
@@ -560,12 +563,12 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		schCons.submitSchedule(schInst);
 		
-		LongList schInstIds = new LongList();
-		schInstIds.add(schInstId);
+		LongList ids = new LongList();
+		ids.add(schInstId);
 		
 		final boolean[] terminated = { false };
 		
-		MALMessage msg = schCons.asyncTerminate(schInstIds, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncTerminate(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void terminateAckReceived(MALMessageHeader msgHeader, Map qosProps) {
@@ -576,7 +579,8 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void terminateErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProps) {
+			public void terminateErrorReceived(MALMessageHeader msgHeader,
+					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}
 		});

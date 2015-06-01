@@ -58,7 +58,7 @@ public class ThreeSchedulersDemoTest {
 			this.prov = prov;
 		}
 		
-		public void onSubmit(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		public void onSubmit(ScheduleInstanceDetails sch) {
 			submitted.add(sch.getId());
 		}
 		
@@ -74,25 +74,25 @@ public class ThreeSchedulersDemoTest {
 			// ignore
 		}
 		
-		public void onStart(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		public void onStart(LongList ids, ScheduleStatusDetailsList stats) {
 			// ignore
 		}
 		
-		public void onPause(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		public void onPause(LongList ids, ScheduleStatusDetailsList stats) {
 			// ignore
 		}
 		
-		public void onResume(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		public void onResume(LongList ids, ScheduleStatusDetailsList stats) {
 			// ignore
 		}
 		
-		public void onTerminate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		public void onTerminate(LongList ids, ScheduleStatusDetailsList stats) {
 			// ignore
 		}
 		
 		public void acceptSubmitted() throws MALException, MALInteractionException {
 			for (Long id: submitted) {
-				InstStore.Item item = prov.getInstStore().findItem(id);
+				InstStore.SchItem item = prov.getInstStore().findSchItem(id);
 				StatusRecord asr = Util.findStatus(item.stat.getStatus(), InstanceState.ACCEPTED);
 				if (null == asr) {
 					asr = new StatusRecord(InstanceState.ACCEPTED, Util.currentTime(), "accepted");
@@ -100,6 +100,7 @@ public class ThreeSchedulersDemoTest {
 					// all statuses list was updated, now publish changed status
 					StatusRecordList srl = new StatusRecordList();
 					srl.add(asr);
+//					ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
 					ScheduleStatusDetails stat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList());
 					prov.publish(UpdateType.UPDATE, stat);
 				}

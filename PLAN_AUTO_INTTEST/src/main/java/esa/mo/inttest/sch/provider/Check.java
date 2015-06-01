@@ -1,5 +1,8 @@
 package esa.mo.inttest.sch.provider;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
@@ -25,7 +28,7 @@ public class Check {
 			throw new MALException("schedule instance is null");
 		}
 	}
-	
+
 	/**
 	 * Check schedule for id.
 	 * @param id
@@ -36,7 +39,7 @@ public class Check {
 			throw new MALException("schedule instance id is null");
 		}
 	}
-	
+
 	/**
 	 * Check schedule for definition id.
 	 * @param id
@@ -47,7 +50,7 @@ public class Check {
 			throw new MALException("schedule definition id is null");
 		}
 	}
-	
+
 	/**
 	 * Check schedule definition exists.
 	 * @param id
@@ -60,7 +63,7 @@ public class Check {
 			throw new MALException("schedule definition not found, id: " + id);
 		}
 	}
-	
+
 	/**
 	 * Check schedule doesn't exist.
 	 * @param id
@@ -68,12 +71,12 @@ public class Check {
 	 * @throws MALException
 	 */
 	public static void schInstNoExist(Long id, InstStore insts) throws MALException {
-		InstStore.Item item = insts.findItem(id);
+		InstStore.SchItem item = insts.findSchItem(id);
 		if (null != item) {
 			throw new MALException("schedule instance already exists, id: " + id);
 		}
 	}
-	
+
 	/**
 	 * Check schedule items list elements.
 	 * @param items
@@ -94,7 +97,7 @@ public class Check {
 			}
 		}
 	}
-	
+
 	/**
 	 * Check schedule id list.
 	 * @param ids
@@ -123,6 +126,19 @@ public class Check {
 		}
 	}
 	
+	public static List<InstStore.SchItem> schInstsExist(LongList ids, InstStore insts) throws MALException {
+		List<InstStore.SchItem> items = new ArrayList<InstStore.SchItem>();
+		for (int i = 0; i < ids.size(); ++i) {
+			Long id = ids.get(i);
+			InstStore.SchItem item = insts.findSchItem(id);
+			if (null == item) {
+				throw new MALException("schedule instance id[" + i + "] not found, id: " + id);
+			}
+			items.add(item);
+		}
+		return items;
+	}
+	
 	/**
 	 * Check schedule exists.
 	 * @param id
@@ -130,8 +146,8 @@ public class Check {
 	 * @return
 	 * @throws MALException
 	 */
-	public static InstStore.Item schInstExists(Long id, InstStore insts) throws MALException {
-		InstStore.Item item = insts.findItem(id);
+	public static InstStore.SchItem schInstExists(Long id, InstStore insts) throws MALException {
+		InstStore.SchItem item = insts.findSchItem(id);
 		if (null == item) {
 			throw new MALException("schedule instance not found, id: " + id);
 		}
@@ -170,9 +186,9 @@ public class Check {
 			if (null == sch.getId()) {
 				throw new MALException("remove schedule instance[" + i + "].id is null");
 			}
-			InstStore.Item it = insts.findItem(sch.getId());
+			InstStore.SchItem it = insts.findSchItem(sch.getId());
 			if (null == it) {
-				throw new MALException("can't find schedule to remove from[" + i + "] by id: " + sch.getId());
+				throw new MALException("can't find schedule instance[" + i + "] to remove from, id: " + sch.getId());
 			}
 		}
 	}
@@ -192,9 +208,9 @@ public class Check {
 			if (null == sch.getId()) {
 				throw new MALException("update schedule instance[" + i + "].id is null");
 			}
-			InstStore.Item it = insts.findItem(sch.getId());
+			InstStore.SchItem it = insts.findSchItem(sch.getId());
 			if (null == it) {
-				throw new MALException("can't find schedule to update from[" + i + "] by id: " + sch.getId());
+				throw new MALException("can't find schedule instance[" + i + "] to update, id: " + sch.getId());
 			}
 		}
 	}
@@ -214,9 +230,9 @@ public class Check {
 			if (null == sch.getId()) {
 				throw new MALException("add schedule instance[" + i + "].id is null");
 			}
-			InstStore.Item it = insts.findItem(sch.getId());
+			InstStore.SchItem it = insts.findSchItem(sch.getId());
 			if (null == it) {
-				throw new MALException("can't find schedule to add to[" + i + "] by id: " + sch.getId());
+				throw new MALException("can't find schedule instance[" + i + "] to add to, id: " + sch.getId());
 			}
 		}
 	}

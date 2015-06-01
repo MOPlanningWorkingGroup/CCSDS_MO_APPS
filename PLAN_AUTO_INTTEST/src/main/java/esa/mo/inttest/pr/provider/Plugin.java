@@ -15,22 +15,21 @@ public interface Plugin {
 	void setProv(PlanningRequestProvider prov);
 	
 	/**
-	 * Called when new PR is added.
-	 * @param prInst
-	 * @param prStat
+	 * Called when new PRs are added.
+	 * @param prs
 	 */
-	void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat);
+	void onPrSubmit(PlanningRequestInstanceDetails pr);
 	
 	/**
 	 * Called when PR has been updated.
-	 * @param prInst
-	 * @param prStat
+	 * @param prs
+	 * @param stats
 	 */
-	void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat);
+	void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat);
 	
 	/**
 	 * Called when PR has been removed.
-	 * @param prInstId
+	 * @param prInstIds
 	 */
-	void onPrRemove(Long prInstId);
+	void onPrRemove(Long prId);
 }

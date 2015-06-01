@@ -102,7 +102,9 @@ public class BepiColomboConsumer {
 		PlanningRequestInstanceDetails prInst = crf.createPrInst(generateId(), prDefId);
 		setTaskInsts(prInst, taskInst1, taskInst2, taskInst3, taskInst4);
 		
-		return cons.getStub().submitPlanningRequest(prInst);
+		PlanningRequestStatusDetails stat = cons.getStub().submitPlanningRequest(prInst);
+		
+		return stat;
 	}
 	
 	public PlanningRequestStatusDetails crrf() throws MALException, MALInteractionException, ParseException {

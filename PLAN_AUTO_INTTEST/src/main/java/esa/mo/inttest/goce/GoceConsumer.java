@@ -120,8 +120,8 @@ public class GoceConsumer {
 	 * @throws MALInteractionException
 	 * @throws ParseException
 	 */
-	public void ppf() throws MALException, MALInteractionException,
-			ParseException {
+	public void ppf() throws MALException, MALInteractionException, ParseException {
+		
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 
 		TaskDefinitionDetails taskDef = ppf.createTaskDef(0);
@@ -198,7 +198,7 @@ public class GoceConsumer {
 		LongList prIds = prStub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
 
 		if (prIds.isEmpty()) {
-			PlanningRequestDefinitionDetails prDef = ppf.createPrDef(getTaskDefNames(ppf.getTaskDefName(0)));
+			PlanningRequestDefinitionDetails prDef = ppf.createPrDef(null); // FIXME
 			Long prDefId = submitPrDef(prDef);
 			created = (prDef != null) || (prDefId != null);
 		} else if (prIds.size() > 1) {
@@ -273,8 +273,8 @@ public class GoceConsumer {
 	 * @throws MALInteractionException
 	 * @throws ParseException
 	 */
-	public void pif() throws MALException, MALInteractionException,
-			ParseException {
+	public void pif() throws MALException, MALInteractionException, ParseException {
+		
 		PlanIncrementFile pif = new PlanIncrementFile();
 
 		TaskDefinitionDetails taskDef = pif.createTaskDef();
@@ -298,8 +298,8 @@ public class GoceConsumer {
 	 * @throws MALInteractionException
 	 * @throws ParseException
 	 */
-	public void spf() throws MALException, MALInteractionException,
-			ParseException {
+	public void spf() throws MALException, MALInteractionException, ParseException {
+		
 		SkeletonPlanningFile spf = new SkeletonPlanningFile();
 
 		TaskDefinitionDetails taskDef = spf.createTaskDef();
@@ -325,8 +325,8 @@ public class GoceConsumer {
 	 * @throws MALInteractionException
 	 * @throws ParseException
 	 */
-	public void opf() throws MALException, MALInteractionException,
-			ParseException {
+	public void opf() throws MALException, MALInteractionException, ParseException {
+		
 		OperationsPlanningFile opf = new OperationsPlanningFile();
 
 		TaskDefinitionDetails taskDef = opf.createTaskDef();
@@ -357,8 +357,8 @@ public class GoceConsumer {
 		return id;
 	}
 
-	public void sist() throws MALException, MALInteractionException,
-			ParseException {
+	public void sist() throws MALException, MALInteractionException, ParseException {
+		
 		StationScheduleIncrementFile sist = new StationScheduleIncrementFile();
 
 		ScheduleDefinitionDetails schDef = sist.createSchDef();

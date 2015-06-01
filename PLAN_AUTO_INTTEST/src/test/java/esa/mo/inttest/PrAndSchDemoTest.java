@@ -13,9 +13,9 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleStub;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
-import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -37,6 +37,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
@@ -56,7 +57,7 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumerFactory;
 import esa.mo.inttest.pr.provider.PlanningRequestProvider;
 import esa.mo.inttest.pr.provider.PlanningRequestProviderFactory;
 import esa.mo.inttest.pr.provider.Plugin;
-import esa.mo.inttest.pr.provider.PrInstStore;
+import esa.mo.inttest.pr.provider.InstStore;
 import esa.mo.inttest.sch.consumer.ScheduleConsumer;
 import esa.mo.inttest.sch.consumer.ScheduleConsumerFactory;
 import esa.mo.inttest.sch.provider.ScheduleProviderFactory;
@@ -85,13 +86,18 @@ public class PrAndSchDemoTest {
 		public void setProv(PlanningRequestProvider prov) {
 			prProv = prov;
 		}
-		protected void setTaskStatus(TaskStatusDetails stat, InstanceState is, String comm) {
+		protected void setTaskStatus(InstStore.TaskItem taskItem, InstanceState is, String comm) {
 			// add (or update) task status
-			Util.addOrUpdateStatus(stat, is, Util.currentTime(), comm);
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(Util.addOrUpdateStatus(taskItem.stat, is, Util.currentTime(), comm));
+			
+			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
+			taskStats.add(new TaskStatusDetails(taskItem.task.getId(), srl));
+			
+			PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(taskItem.task.getPrInstId(), null, taskStats);
+			
 			try {
-				PrInstStore.TaskItem item = prProv.getInstStore().findTaskItem(stat.getTaskInstId());
-				PrInstStore.PrItem item2 = prProv.getInstStore().findPrItem(item.task.getPrInstId());
-				prProv.publishPr(UpdateType.UPDATE, item2.stat); // TODO only changed parts?
+				prProv.publishPr(UpdateType.UPDATE, prStat);
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "PrSchProcessor.setTaskStatus: {0}", e);
 				assertTrue(false);
@@ -100,21 +106,23 @@ public class PrAndSchDemoTest {
 				assertTrue(false);
 			}
 		}
-		protected void updateTask(Long id, StatusRecordList stats) {
-			PrInstStore.TaskItem taskItem = prProv.getInstStore().findTaskItem(id);
+		protected void updateTask(ScheduleStatusDetails schStat) {
+			InstStore.TaskItem taskItem = prProv.getInstStore().findTaskItem(schStat.getSchInstId());
 			assertNotNull(taskItem);
 			// assuming task name matches schedule name
-			assertTrue(taskItem.stat.getTaskInstId() == id);
-			assertTrue(taskItem.task.getId() == id);
+			assertTrue(taskItem.stat.getTaskInstId() == schStat.getSchInstId());
+			assertTrue(taskItem.task.getId() == schStat.getSchInstId());
 			
 			InstanceState[] states = new InstanceState[] { InstanceState.INVALID, InstanceState.SCHEDULED,
 					InstanceState.PLANNED, InstanceState.DISTRIBUTED_FOR_EXECUTION };
 			String[] comments = new String[] { "sch terminated", "sch resumed", "sch paused", "sch started" };
 			// assuming statuses come in order above
 			for (int i = 0; i < states.length; ++i) {
-				StatusRecord sr = Util.findStatus(stats, states[i]);
+				// look into schedule status
+				StatusRecord sr = Util.findStatus(schStat.getStatus(), states[i]);
 				if (null != sr) {
-					setTaskStatus(taskItem.stat, states[i], comments[i]);
+					// update task status
+					setTaskStatus(taskItem, states[i], comments[i]);
 					break;
 				}
 			}
@@ -131,11 +139,8 @@ public class PrAndSchDemoTest {
 				if (UpdateType.CREATION == updHdr.getUpdateType()) {
 					// ignore
 				} else if (UpdateType.UPDATE == updHdr.getUpdateType()) {
-					ObjectId objId = objIds.get(i);
-					Long id2 = objId.getKey().getInstId(); // schedule id - same is task id
 					ScheduleStatusDetails schStat = schStats.get(i);
-					StatusRecordList stats = schStat.getStatus();
-					updateTask(id2, stats);
+					updateTask(schStat);
 				}
 			}
 		}
@@ -157,9 +162,12 @@ public class PrAndSchDemoTest {
 			}
 			return id;
 		}
-		protected void addSchInst(/*Long defId, Long instId,*/ ScheduleInstanceDetails schInst) {
+		protected void addSchInst(ScheduleInstanceDetails schInst) {
 			try {
-				schStub.submitSchedule(schInst);
+				ScheduleInstanceDetailsList schInsts = new ScheduleInstanceDetailsList();
+				schInsts.add(schInst);
+				ScheduleStatusDetails schStat = schStub.submitSchedule(schInst);
+				assertNotNull(schStat);
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "add schedule inst: {0}", e);
 			} catch (MALInteractionException e) {
@@ -180,14 +188,14 @@ public class PrAndSchDemoTest {
 				schInsts.put(taskInst.getId(), schInst);
 			}
 		}
-		public void onPrSubmit(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+		public void onPrSubmit(PlanningRequestInstanceDetails pr) {
 			// new pr - produce sch for each task
-			createSchForEachTask(prInst);
+			createSchForEachTask(pr);
 		}
-		public void onPrUpdate(PlanningRequestInstanceDetails prInst, PlanningRequestStatusDetails prStat) {
+		public void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			// nothing yet
 		}
-		public void onPrRemove(Long prInstId) {
+		public void onPrRemove(Long id) {
 			// nothing yet
 		}
 	}

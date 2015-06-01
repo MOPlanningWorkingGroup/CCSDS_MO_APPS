@@ -17,7 +17,7 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 
 /**
- * Verification and validation of various PR fields.
+ * Verification and validation of various PR fields. All error messages in one place.
  */
 public class Check {
 
@@ -26,7 +26,7 @@ public class Check {
 	 */
 	private Check() {
 	}
-	
+
 	/**
 	 * Verify that PR def Id is not null.
 	 * @param id
@@ -37,7 +37,7 @@ public class Check {
 			throw new MALException("pr definition id is null");
 		}
 	}
-	
+
 	/**
 	 * Verify that PR def exists.
 	 * @param id
@@ -50,7 +50,7 @@ public class Check {
 			throw new MALException("pr definition not found, id: " + id);
 		}
 	}
-	
+
 	/**
 	 * Verify that PR inst Id is not null.
 	 * @param id
@@ -61,20 +61,20 @@ public class Check {
 			throw new MALException("pr instance id is null");
 		}
 	}
-	
+
 	/**
 	 * Verify that PR inst does not exist.
 	 * @param id
 	 * @param store
 	 * @throws MALException
 	 */
-	public static void prInstNoExist(Long id, PrInstStore store) throws MALException {
-		PrInstStore.PrItem it = store.findPrItem(id);
+	public static void prInstNoExist(Long id, InstStore store) throws MALException {
+		InstStore.PrItem it = store.findPrItem(id);
 		if (null != it) {
 			throw new MALException("pr instance already exists, id: " + id);
 		}
 	}
-	
+
 	/**
 	 * Verify that PR inst exists.
 	 * @param id
@@ -82,14 +82,14 @@ public class Check {
 	 * @return
 	 * @throws MALException
 	 */
-	public static PrInstStore.PrItem prInstExists(Long id, PrInstStore store) throws MALException {
-		PrInstStore.PrItem it = store.findPrItem(id);
+	public static InstStore.PrItem prInstExists(Long id, InstStore store) throws MALException {
+		InstStore.PrItem it = store.findPrItem(id);
 		if (null == it) {
 			throw new MALException("pr instance not found, id: " + id);
 		}
 		return it;
 	}
-	
+
 	/**
 	 * Verify that PR inst is not null.
 	 * @param inst
@@ -100,26 +100,7 @@ public class Check {
 			throw new MALException("pr instance is null");
 		}
 	}
-	
-	/**
-	 * Verify that both lists have same amount of elements.
-	 * @param tasks
-	 * @param defIds
-	 * @param instIds
-	 * @throws MALException
-	 */
-	public static void listSizes(TaskInstanceDetailsList tasks, LongList defIds, LongList instIds) throws MALException {
-		int taskCount = (null != tasks) ? tasks.size() : 0;
-		int defIdCount = (null != defIds) ? defIds.size() : 0;
-		if (taskCount != defIdCount) {
-			throw new MALException("pr tasks count does not match task definition id count");
-		}
-		int instIdCount = (null != instIds) ? instIds.size() : 0;
-		if (defIdCount != instIdCount) {
-			throw new MALException("task definition id count does not match task instance id count");
-		}
-	}
-	
+
 	/**
 	 * Verify that list elements are not null.
 	 * @param tasks
@@ -144,7 +125,7 @@ public class Check {
 			}
 		}
 	}
-	
+
 	/**
 	 * Searches for argument def from list.
 	 * @param args
@@ -161,7 +142,7 @@ public class Check {
 		}
 		return argDef;
 	}
-	
+
 	/**
 	 * Check PR instance arguments for matching argument definition.
 	 * @param defId
@@ -186,7 +167,7 @@ public class Check {
 			} // else null - no value - no type
 		}
 	}
-	
+
 	/**
 	 * Check Task instance arguments for matching argument definition.
 	 * @param def
@@ -210,14 +191,14 @@ public class Check {
 			} // else null
 		}
 	}
-	
+
 	/**
 	 * Check Task instances for matching definition.
 	 * @param defIds
 	 * @param insts
 	 * @throws MALException
 	 */
-	public static void tasksArgs(TaskInstanceDetailsList insts, /*LongList defIds,*/ TaskDefStore store) throws MALException {
+	public static void tasksArgs(TaskInstanceDetailsList insts, TaskDefStore store) throws MALException {
 		for (int i = 0; (null != insts) && (i < insts.size()); ++i) {
 			Long defId = /*defIds.get(i)*/insts.get(i).getTaskDefId();
 			TaskDefinitionDetails def = store.find(defId);
@@ -228,7 +209,7 @@ public class Check {
 			taskArgs(def, inst);
 		}
 	}
-	
+
 	/**
 	 * Verify that PR inst Id list is not null.
 	 * @param ids
@@ -256,7 +237,7 @@ public class Check {
 			}
 		}
 	}
-	
+
 	/**
 	 * Verify that def type is the supported one.
 	 * @param type
@@ -280,7 +261,7 @@ public class Check {
 	 * @param ids
 	 * @throws MALException
 	 */
-	public static void idList(IdentifierList ids) throws MALException {
+	public static void nameList(IdentifierList ids) throws MALException {
 		if (ids == null) {
 			throw new MALException("identifier list is null");
 		}

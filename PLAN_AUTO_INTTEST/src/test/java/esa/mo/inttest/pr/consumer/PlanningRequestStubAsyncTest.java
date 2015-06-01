@@ -123,7 +123,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			
 			@SuppressWarnings("rawtypes")
 			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestStatusDetails resp2, Map qosProperties) {
+					PlanningRequestStatusDetails resp2, Map qosProps) {
 				LOG.log(Level.INFO, "submit pr resp={0}", resp2);
 				resp[0] = resp2;
 				synchronized (resp) {
@@ -133,7 +133,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 			
 			@SuppressWarnings("rawtypes")
 			public void submitPlanningRequestErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-					Map qosProperties) {
+					Map qosProps) {
 				LOG.log(Level.INFO, "submit pr error={0}", error);
 			}
 		});
@@ -286,10 +286,11 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		enter("testRemovePlanningRequest");
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
+		Long prId = prInst.getId();
 		
 		final boolean[] removed = { false };
 		
-		MALMessage malMsg = prCons.asyncRemovePlanningRequest(prInst.getId(), new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncRemovePlanningRequest(prId, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void removePlanningRequestResponseReceived(MALMessageHeader msgHeader,

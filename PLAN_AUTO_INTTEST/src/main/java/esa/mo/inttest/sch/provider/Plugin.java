@@ -4,6 +4,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.mal.structures.LongList;
 
 public interface Plugin {
 
@@ -14,23 +15,27 @@ public interface Plugin {
 	void setProv(ScheduleProvider prov);
 	
 	/**
+	 * Schedule submission callback.
 	 * @param sch
-	 * @param stat
+	 * @param stats
 	 */
-	void onSubmit(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
+	void onSubmit(ScheduleInstanceDetails sch);
 	
 	/**
-	 * @param sch
-	 * @param stat
+	 * Schedule update callback.
+	 * @param scheds
+	 * @param stats
 	 */
 	void onUpdate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
 	
 	/**
-	 * @param schId
+	 * Schedule remove callback.
+	 * @param schIds
 	 */
 	void onRemove(Long schId);
 	
 	/**
+	 * Schedules patched callback.
 	 * @param removed
 	 * @param updated
 	 * @param added
@@ -40,26 +45,30 @@ public interface Plugin {
 			ScheduleInstanceDetailsList added, ScheduleStatusDetailsList stats);
 	
 	/**
-	 * @param sch
-	 * @param stat
+	 * Schedule started callback.
+	 * @param ids
+	 * @param stats
 	 */
-	void onStart(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
+	void onStart(LongList ids, ScheduleStatusDetailsList stats);
 	
 	/**
-	 * @param sch
-	 * @param stat
+	 * Schedule paused callback.
+	 * @param ids
+	 * @param stats
 	 */
-	void onPause(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
+	void onPause(LongList ids, ScheduleStatusDetailsList stats);
 	
 	/**
-	 * @param sch
-	 * @param stat
+	 * Schedule resumed callback.
+	 * @param ids
+	 * @param stats
 	 */
-	void onResume(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
+	void onResume(LongList ids, ScheduleStatusDetailsList stats);
 	
 	/**
-	 * @param sch
-	 * @param stat
+	 * Schedule terminated callback.
+	 * @param ids
+	 * @param stats
 	 */
-	void onTerminate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
+	void onTerminate(LongList ids, ScheduleStatusDetailsList stats);
 }
