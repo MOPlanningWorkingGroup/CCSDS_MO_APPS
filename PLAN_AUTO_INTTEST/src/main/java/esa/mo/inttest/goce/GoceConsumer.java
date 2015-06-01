@@ -7,6 +7,7 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleStub;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -17,6 +18,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
@@ -64,9 +66,9 @@ public class GoceConsumer {
 		return lastId.incrementAndGet();
 	}
 
-	protected IdentifierList getTaskDefNames(String taskDefName) {
-		IdentifierList list = new IdentifierList();
-		list.add(new Identifier(taskDefName));
+	protected LongList getTaskDefIds(Long taskDefId) {
+		LongList list = new LongList();
+		list.add(taskDefId);
 		return list;
 	}
 
@@ -127,7 +129,7 @@ public class GoceConsumer {
 		TaskDefinitionDetails taskDef = ppf.createTaskDef(0);
 		Long taskDefId = submitTaskDef(taskDef);
 
-		PlanningRequestDefinitionDetails prDef = ppf.createPrDef(getTaskDefNames(taskDef.getName().getValue()));
+		PlanningRequestDefinitionDetails prDef = ppf.createPrDef(getTaskDefIds(taskDef.getId()));
 		Long prDefId = submitPrDef(prDef);
 
 		TaskInstanceDetails taskInst = ppf.createTaskInst(0, generateId(), taskDefId, null);
@@ -135,12 +137,15 @@ public class GoceConsumer {
 		PlanningRequestInstanceDetails prInst = ppf.createPrInst(0, generateId(), prDefId, getTaskInsts(taskInst));
 		taskInst.setPrInstId(prInst.getId());
 
-		prStub.submitPlanningRequest(prInst);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		prStub.submitPlanningRequest(insts);
 
 		TaskDefinitionDetails taskDef2 = ppf.createTaskDef(1);
 		Long taskDefId2 = submitTaskDef(taskDef2);
 
-		prDef.getTaskDefNames().add(taskDef2.getName());
+		prDef.getTaskDefIds().add(taskDef2.getId());
 		updatePrDef(prDefId, prDef);
 
 		TaskInstanceDetails taskInst2 = ppf.createTaskInst(1, generateId(), taskDefId2, null);
@@ -148,7 +153,10 @@ public class GoceConsumer {
 		PlanningRequestInstanceDetails prInst2 = ppf.createPrInst(1, generateId(), prDefId, getTaskInsts(taskInst2));
 		taskInst2.setPrInstId(prInst2.getId());
 
-		prStub.submitPlanningRequest(prInst2);
+		PlanningRequestInstanceDetailsList insts2 = new PlanningRequestInstanceDetailsList();
+		insts2.add(prInst2);
+		
+		prStub.submitPlanningRequest(insts2);
 	}
 
 	/**
@@ -159,7 +167,7 @@ public class GoceConsumer {
 	 * @throws MALException
 	 * @throws MALInteractionException
 	 */
-	public boolean createPpfTaskDefIfMissing() throws MALException,
+	public boolean createPpfTaskDefIfMissing(LongList taskDefIds) throws MALException,
 			MALInteractionException {
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 		boolean exists = false;
@@ -171,11 +179,15 @@ public class GoceConsumer {
 		if (taskIds.isEmpty()) {
 			TaskDefinitionDetails taskDef = ppf.createTaskDef(0);
 			Long taskDefId = submitTaskDef(taskDef);
+			if (null != taskDefId) {
+				taskDefIds.add(taskDefId);
+			}
 			created = (taskDef != null) && (taskDefId != null);
 		} else if (taskIds.size() > 1) {
 			throw new MALException("more than one goce ppf task def with same name found");
 		} else {
 			exists = true;
+			taskDefIds.add(taskIds.get(0));
 		}
 		return exists || created;
 	}
@@ -187,7 +199,7 @@ public class GoceConsumer {
 	 * @throws MALException
 	 * @throws MALInteractionException
 	 */
-	public boolean createPpfPrDefIfMissing() throws MALException,
+	public boolean createPpfPrDefIfMissing(LongList taskDefIds) throws MALException,
 			MALInteractionException {
 		PayloadPlanningFile ppf = new PayloadPlanningFile();
 		boolean exists = false;
@@ -198,7 +210,7 @@ public class GoceConsumer {
 		LongList prIds = prStub.listDefinition(DefinitionType.PLANNING_REQUEST_DEF, prNames);
 
 		if (prIds.isEmpty()) {
-			PlanningRequestDefinitionDetails prDef = ppf.createPrDef(null); // FIXME
+			PlanningRequestDefinitionDetails prDef = ppf.createPrDef(taskDefIds);
 			Long prDefId = submitPrDef(prDef);
 			created = (prDef != null) || (prDefId != null);
 		} else if (prIds.size() > 1) {
@@ -255,12 +267,16 @@ public class GoceConsumer {
 			Long prDefId = prDefIds.get(0);
 			PlanningRequestInstanceDetails prInst = ppf.createPrInst(0, generateId(), prDefId, getTaskInsts(taskInst1));
 			taskInst1.setPrInstId(prInst.getId());
-			prStub.submitPlanningRequest(prInst);
+			PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+			insts.add(prInst);
+			prStub.submitPlanningRequest(insts);
 			pr1Created = true;
 
 			PlanningRequestInstanceDetails prInst2 = ppf.createPrInst(1, generateId(), prDefId, getTaskInsts(taskInst2));
 			taskInst2.setPrInstId(prInst2.getId());
-			prStub.submitPlanningRequest(prInst2);
+			PlanningRequestInstanceDetailsList insts2 = new PlanningRequestInstanceDetailsList();
+			insts2.add(prInst2);
+			prStub.submitPlanningRequest(insts2);
 			pr2Created = true;
 		}
 		return task1Created && pr1Created && task2Created && pr2Created;
@@ -280,7 +296,7 @@ public class GoceConsumer {
 		TaskDefinitionDetails taskDef = pif.createTaskDef();
 		Long taskDefId = submitTaskDef(taskDef);
 
-		PlanningRequestDefinitionDetails prDef = pif.createPrDef(getTaskDefNames(taskDef.getName().getValue()));
+		PlanningRequestDefinitionDetails prDef = pif.createPrDef(getTaskDefIds(taskDef.getId()));
 		Long prDefId = submitPrDef(prDef);
 
 		TaskInstanceDetails taskInst = pif.createTaskInst(generateId(), taskDefId, null);
@@ -288,7 +304,10 @@ public class GoceConsumer {
 		PlanningRequestInstanceDetails prInst = pif.createPrInst(generateId(), prDefId, getTaskInsts(taskInst));
 		taskInst.setPrInstId(prInst.getId());
 
-		prStub.submitPlanningRequest(prInst);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		prStub.submitPlanningRequest(insts);
 	}
 
 	/**
@@ -305,7 +324,7 @@ public class GoceConsumer {
 		TaskDefinitionDetails taskDef = spf.createTaskDef();
 		Long taskDefId = submitTaskDef(taskDef);
 
-		PlanningRequestDefinitionDetails prDef = spf.createPrDef(getTaskDefNames(taskDef.getName().getValue()));
+		PlanningRequestDefinitionDetails prDef = spf.createPrDef(getTaskDefIds(taskDef.getId()));
 		Long prDefId = submitPrDef(prDef);
 
 		for (int i = 0; i < spf.getPrInstCount(); ++i) {
@@ -314,7 +333,10 @@ public class GoceConsumer {
 			PlanningRequestInstanceDetails prInst = spf.createPrInst(i, generateId(), prDefId, getTaskInsts(taskInst));
 			taskInst.setPrInstId(prInst.getId());
 
-			prStub.submitPlanningRequest(prInst);
+			PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+			insts.add(prInst);
+			
+			prStub.submitPlanningRequest(insts);
 		}
 	}
 
@@ -332,7 +354,7 @@ public class GoceConsumer {
 		TaskDefinitionDetails taskDef = opf.createTaskDef();
 		Long taskDefId = submitTaskDef(taskDef);
 
-		PlanningRequestDefinitionDetails prDef = opf.createPrDef(getTaskDefNames(taskDef.getName().getValue()));
+		PlanningRequestDefinitionDetails prDef = opf.createPrDef(getTaskDefIds(taskDef.getId()));
 		Long prDefId = submitPrDef(prDef);
 
 		TaskInstanceDetails taskInst = opf.createTaskInst(generateId(), taskDefId, null);
@@ -340,7 +362,10 @@ public class GoceConsumer {
 		PlanningRequestInstanceDetails prInst = opf.createPrInst(generateId(), prDefId, getTaskInsts(taskInst));
 		taskInst.setPrInstId(prInst.getId());
 
-		prStub.submitPlanningRequest(prInst);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		prStub.submitPlanningRequest(insts);
 	}
 
 	protected Long submitSchDef(ScheduleDefinitionDetails schDef)
@@ -366,15 +391,24 @@ public class GoceConsumer {
 
 		ScheduleInstanceDetails schInst = sist.createSchInst(0, generateId(), schDefId);
 
-		schStub.submitSchedule(schInst);
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(schInst);
+		
+		schStub.submitSchedule(insts);
 
 		ScheduleInstanceDetails schInst2 = sist.createSchInst(1, generateId(), schDefId);
 
-		schStub.submitSchedule(schInst2);
+		insts.clear();
+		insts.add(schInst2);
+		
+		schStub.submitSchedule(insts);
 
 		// alternative single schedule with two items
 		ScheduleInstanceDetails schInst3 = sist.createSchInst2(generateId(), schDefId, generateId(), generateId());
 
-		schStub.submitSchedule(schInst3);
+		insts.clear();
+		insts.add(schInst3);
+		
+		schStub.submitSchedule(insts);
 	}
 }

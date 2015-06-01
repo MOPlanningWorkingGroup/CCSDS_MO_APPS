@@ -1,8 +1,6 @@
 package esa.mo.inttest.sch.provider;
 
-import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
-import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 
@@ -19,20 +17,20 @@ public interface Plugin {
 	 * @param sch
 	 * @param stats
 	 */
-	void onSubmit(ScheduleInstanceDetails sch);
+	void onSubmit(ScheduleInstanceDetailsList schs);
 	
 	/**
 	 * Schedule update callback.
 	 * @param scheds
 	 * @param stats
 	 */
-	void onUpdate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat);
+	void onUpdate(ScheduleInstanceDetailsList schs, ScheduleStatusDetailsList stats);
 	
 	/**
 	 * Schedule remove callback.
 	 * @param schIds
 	 */
-	void onRemove(Long schId);
+	void onRemove(LongList schIds);
 	
 	/**
 	 * Schedules patched callback.

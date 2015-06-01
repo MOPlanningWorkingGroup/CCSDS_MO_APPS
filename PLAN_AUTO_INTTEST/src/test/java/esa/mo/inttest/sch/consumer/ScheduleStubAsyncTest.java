@@ -10,7 +10,6 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
-import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -50,13 +49,16 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefIds.get(0));
 		
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(schInst);
+		
 		final boolean[] submitted = { false };
 		
-		MALMessage msg = schCons.asyncSubmitSchedule(schInst, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncSubmitSchedule(insts, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void submitScheduleResponseReceived(MALMessageHeader msgHeader,
-					ScheduleStatusDetails schStat, Map qosProperties) {
+					ScheduleStatusDetailsList schStats, Map qosProperties) {
 				submitted[0] = true;
 				synchronized (submitted) {
 					submitted.notifyAll();
@@ -91,6 +93,12 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		msg.free();
 	}
 	
+	protected void submitSchedule(ScheduleInstanceDetails sch) throws MALException, MALInteractionException {
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(sch);
+		schCons.submitSchedule(insts);
+	}
+	
 	@Test
 	public void testAsyncUpdateSchedule() throws MALException, MALInteractionException, InterruptedException, Exception {
 		ScheduleDefinitionDetails schDef = createDef("test schedule definition");
@@ -105,17 +113,20 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		schInst.setComment("updated description");
 		
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(schInst);
+		
 		final boolean[] updated = { false };
 		
-		MALMessage msg = schCons.asyncUpdateSchedule(schInst, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncUpdateSchedule(insts, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void updateScheduleResponseReceived(MALMessageHeader msgHeader,
-					ScheduleStatusDetails schStat, Map qosProps) {
+					ScheduleStatusDetailsList schStats, Map qosProps) {
 				updated[0] = true;
 				synchronized (updated) {
 					updated.notifyAll();
@@ -163,15 +174,18 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
+		
+		LongList ids = new LongList();
+		ids.add(schInstId);
 		
 		final boolean[] removed = { false };
 		
-		MALMessage msg = schCons.asyncRemoveSchedule(schInstId, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncRemoveSchedule(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void removeScheduleResponseReceived(MALMessageHeader msgHeader,
-					ScheduleStatusDetails schStat, Map qosProps) {
+					ScheduleStatusDetailsList schStats, Map qosProps) {
 				removed[0] = true;
 				synchronized (removed) {
 					removed.notifyAll();
@@ -219,7 +233,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		schInst.setComment("new modified comment");
 		
@@ -271,7 +285,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -405,7 +419,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList ids = new LongList();
 		ids.add(schInstId);
@@ -457,7 +471,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList ids = new LongList();
 		ids.add(schInstId);
@@ -509,7 +523,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList ids = new LongList();
 		ids.add(schInstId);
@@ -561,7 +575,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList ids = new LongList();
 		ids.add(schInstId);

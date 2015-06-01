@@ -31,7 +31,9 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
@@ -94,10 +96,11 @@ public class PrAndSchDemoTest {
 			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
 			taskStats.add(new TaskStatusDetails(taskItem.task.getId(), srl));
 			
-			PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(taskItem.task.getPrInstId(), null, taskStats);
+			PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+			prStats.add(new PlanningRequestStatusDetails(taskItem.task.getPrInstId(), null, taskStats));
 			
 			try {
-				prProv.publishPr(UpdateType.UPDATE, prStat);
+				prProv.publishPr(UpdateType.UPDATE, prStats);
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "PrSchProcessor.setTaskStatus: {0}", e);
 				assertTrue(false);
@@ -166,8 +169,9 @@ public class PrAndSchDemoTest {
 			try {
 				ScheduleInstanceDetailsList schInsts = new ScheduleInstanceDetailsList();
 				schInsts.add(schInst);
-				ScheduleStatusDetails schStat = schStub.submitSchedule(schInst);
-				assertNotNull(schStat);
+				ScheduleStatusDetailsList schStats = schStub.submitSchedule(schInsts);
+				assertNotNull(schStats);
+				assertFalse(schStats.isEmpty());
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "add schedule inst: {0}", e);
 			} catch (MALInteractionException e) {
@@ -188,14 +192,16 @@ public class PrAndSchDemoTest {
 				schInsts.put(taskInst.getId(), schInst);
 			}
 		}
-		public void onPrSubmit(PlanningRequestInstanceDetails pr) {
+		public void onPrSubmit(PlanningRequestInstanceDetailsList prs) {
 			// new pr - produce sch for each task
-			createSchForEachTask(pr);
+			for (PlanningRequestInstanceDetails pr : prs) {
+				createSchForEachTask(pr);
+			}
 		}
-		public void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
+		public void onPrUpdate(PlanningRequestInstanceDetailsList prs, PlanningRequestStatusDetailsList stats) {
 			// nothing yet
 		}
-		public void onPrRemove(Long id) {
+		public void onPrRemove(LongList ids) {
 			// nothing yet
 		}
 	}
@@ -347,7 +353,7 @@ public class PrAndSchDemoTest {
 		taskInst.setPrInstId(prInst.getId());
 		prInst.setTasks(PlanningRequestConsumer.createTasksList(taskInst));
 		
-		PlanningRequestStatusDetails prStat = prCons.getStub().submitPlanningRequest(prInst);
+		PlanningRequestStatusDetails prStat = prCons.submitPr(prInst);
 		
 		assertNotNull(prStat);
 		

@@ -58,15 +58,17 @@ public class ThreeSchedulersDemoTest {
 			this.prov = prov;
 		}
 		
-		public void onSubmit(ScheduleInstanceDetails sch) {
-			submitted.add(sch.getId());
+		public void onSubmit(ScheduleInstanceDetailsList scheds) {
+			for (ScheduleInstanceDetails sch : scheds) {
+				submitted.add(sch.getId());
+			}
 		}
 		
-		public void onUpdate(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		public void onUpdate(ScheduleInstanceDetailsList scheds, ScheduleStatusDetailsList stats) {
 			// ignore
 		}
 		
-		public void onRemove(Long id) {
+		public void onRemove(LongList ids) {
 			// ignore
 		}
 		public void onPatch(ScheduleInstanceDetailsList removed, ScheduleInstanceDetailsList updated,
@@ -100,9 +102,9 @@ public class ThreeSchedulersDemoTest {
 					// all statuses list was updated, now publish changed status
 					StatusRecordList srl = new StatusRecordList();
 					srl.add(asr);
-//					ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
-					ScheduleStatusDetails stat = new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList());
-					prov.publish(UpdateType.UPDATE, stat);
+					ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
+					stats.add(new ScheduleStatusDetails(id, srl, new ScheduleItemStatusDetailsList()));
+					prov.publish(UpdateType.UPDATE, stats);
 				}
 			}
 		}
@@ -230,7 +232,7 @@ public class ThreeSchedulersDemoTest {
 		Long instId = generateId();
 		ScheduleInstanceDetails inst = ScheduleConsumer.createInst(instId, defIds.get(0), "test 1", null, null, null);
 		
-		cons2.getStub().submitSchedule(inst);
+		cons2.submitSchedule(inst);
 		instIds.add(instId);
 		
 		ArgumentValueList argVals = ScheduleConsumer.addArgValue(null, "arg1", new Union("desd"));
@@ -238,7 +240,7 @@ public class ThreeSchedulersDemoTest {
 		instId = generateId();
 		inst = ScheduleConsumer.createInst(instId, defIds.get(1), "test 2", argVals, null, null);
 		
-		cons2.getStub().submitSchedule(inst);
+		cons2.submitSchedule(inst);
 		instIds.add(instId);
 		
 		instId = generateId();
@@ -248,7 +250,7 @@ public class ThreeSchedulersDemoTest {
 				null, null, new TimingDetailsList(), objId);
 		inst.setScheduleItems(items);
 		
-		cons2.getStub().submitSchedule(inst);
+		cons2.submitSchedule(inst);
 		instIds.add(instId);
 		
 		return instIds;

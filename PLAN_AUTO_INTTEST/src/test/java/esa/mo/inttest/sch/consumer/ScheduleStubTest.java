@@ -54,6 +54,12 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		assertNotNull(schStats.get(0));
 	}
 	
+	protected void submitSchedule(ScheduleInstanceDetails sch) throws MALException, MALInteractionException {
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(sch);
+		schCons.submitSchedule(insts);
+	}
+	
 	@Test
 	public void testSubmitSchedule() throws MALException, MALInteractionException {
 		ScheduleDefinitionDetails schDef = createDef("test schedule def");
@@ -67,7 +73,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		verifySch(schInstId);
 	}
@@ -85,11 +91,14 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		schInst.setComment("updated description");
 		
-		schCons.updateSchedule(schInst);
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(schInst);
+		
+		schCons.updateSchedule(insts);
 		
 		verifySch(schInstId);
 	}
@@ -107,9 +116,12 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
-		schCons.removeSchedule(schInstId);
+		LongList ids = new LongList();
+		ids.add(schInstId);
+		
+		schCons.removeSchedule(ids);
 		
 		LongList schIds = new LongList();
 		schIds.add(schInstId);
@@ -134,7 +146,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 1L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefIds.get(0));
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		schInst.setComment("new modified comment");
 		
@@ -160,7 +172,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
 		insts.add(schInst);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		verifySch(schInstId);
 	}
@@ -203,7 +215,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -225,7 +237,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -247,7 +259,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
@@ -269,7 +281,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		Long schInstId = 2L;
 		ScheduleInstanceDetails schInst = createInst(schInstId, schDefId);
 		
-		schCons.submitSchedule(schInst);
+		submitSchedule(schInst);
 		
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);

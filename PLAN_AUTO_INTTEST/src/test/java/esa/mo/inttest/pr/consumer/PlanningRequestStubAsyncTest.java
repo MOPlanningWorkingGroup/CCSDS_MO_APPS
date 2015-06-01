@@ -25,7 +25,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -117,13 +117,16 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 	}
 	
 	protected MALMessage asyncSubmitPr(PlanningRequestInstanceDetails prInst,
-			final PlanningRequestStatusDetails[] resp) throws MALException, MALInteractionException {
+			final PlanningRequestStatusDetailsList[] resp) throws MALException, MALInteractionException {
 		
-		return prCons.asyncSubmitPlanningRequest(prInst, new PlanningRequestAdapter() {
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		return prCons.asyncSubmitPlanningRequest(insts, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void submitPlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestStatusDetails resp2, Map qosProps) {
+					PlanningRequestStatusDetailsList resp2, Map qosProps) {
 				LOG.log(Level.INFO, "submit pr resp={0}", resp2);
 				resp[0] = resp2;
 				synchronized (resp) {
@@ -152,7 +155,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		storePrInst(prInst);
 		
-		final PlanningRequestStatusDetails[] response = { null };
+		final PlanningRequestStatusDetailsList[] response = { null };
 		
 		MALMessage malMsg = asyncSubmitPr(prInst, response);
 		
@@ -198,7 +201,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		storePrInst(prInst);
 		
-		final PlanningRequestStatusDetails[] response = { null };
+		final PlanningRequestStatusDetailsList[] response = { null };
 		
 		MALMessage malMsg = asyncSubmitPr(prInst, response);
 		
@@ -235,14 +238,17 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		prInst.setComment("async updated");
 		
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
 		final boolean[] updated = { false };
 		
-		MALMessage malMsg = prCons.asyncUpdatePlanningRequest(prInst, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncUpdatePlanningRequest(insts, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void updatePlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestStatusDetails prStat, Map qosProps) {
-				LOG.log(Level.INFO, "update pr response={0}", Dumper.prStat(prStat));
+					PlanningRequestStatusDetailsList prStats, Map qosProps) {
+				LOG.log(Level.INFO, "update pr response={0}", Dumper.prStats(prStats));
 				updated[0] = true;
 				synchronized (updated) {
 					updated.notifyAll();
@@ -288,14 +294,17 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
 		Long prId = prInst.getId();
 		
+		LongList ids = new LongList();
+		ids.add(prId);
+		
 		final boolean[] removed = { false };
 		
-		MALMessage malMsg = prCons.asyncRemovePlanningRequest(prId, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncRemovePlanningRequest(ids, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void removePlanningRequestResponseReceived(MALMessageHeader msgHeader,
-					PlanningRequestStatusDetails prStat, Map qosProps) {
-				LOG.log(Level.INFO, "remove pr response={0}", Dumper.prStat(prStat));
+					PlanningRequestStatusDetailsList prStats, Map qosProps) {
+				LOG.log(Level.INFO, "remove pr response={0}", Dumper.prStats(prStats));
 				removed[0] = true;
 				synchronized (removed) {
 					removed.notifyAll();

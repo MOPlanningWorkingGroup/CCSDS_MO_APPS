@@ -127,7 +127,9 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		ScheduleInstanceDetails schInst = createInst();
 		schInst.setId(schInstId);
 		schInst.setSchDefId(schDefId);
-		schCons.submitSchedule(schInst);
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(schInst);
+		schCons.submitSchedule(insts);
 		return schInst;
 	}
 	
@@ -184,7 +186,10 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schMon.clear(); // clear submit info
 		
-		schCons.updateSchedule(schInst);
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(schInst);
+		
+		schCons.updateSchedule(insts);
 		
 		waitForSch(schMon);
 		
@@ -205,7 +210,10 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schMon.clear(); // clear submit info
 		
-		schCons.removeSchedule(schInstId);
+		LongList ids = new LongList();
+		ids.add(schInstId);
+		
+		schCons.removeSchedule(ids);
 		
 		waitForSch(schMon);
 		

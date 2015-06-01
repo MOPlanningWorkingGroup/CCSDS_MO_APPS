@@ -3,7 +3,7 @@ package esa.mo.inttest.goce;
 import java.text.ParseException;
 
 import org.ccsds.moims.mo.mal.structures.Attribute;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.Union;
@@ -136,10 +136,10 @@ public class PlanIncrementFile extends CommonFile {
 	 * @param taskDefNames
 	 * @return
 	 */
-	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) {
+	public PlanningRequestDefinitionDetails createPrDef(LongList taskDefIds) {
 		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("PIF", "PIF from PIF");
 		prDef.setArgumentDefs(createPifVersionArgDefs());
-		prDef.setTaskDefNames(taskDefNames);
+		prDef.setTaskDefIds(taskDefIds);
 		return prDef;
 	}
 	

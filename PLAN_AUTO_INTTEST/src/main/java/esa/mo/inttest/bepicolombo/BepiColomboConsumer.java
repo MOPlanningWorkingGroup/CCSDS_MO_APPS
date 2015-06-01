@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
@@ -40,10 +39,10 @@ public class BepiColomboConsumer {
 		return def.getId();
 	}
 	
-	protected IdentifierList taskDefNames(TaskDefinitionDetails... defs) {
-		IdentifierList list = new IdentifierList();
+	protected LongList taskDefIds(TaskDefinitionDetails... defs) {
+		LongList list = new LongList();
 		for (TaskDefinitionDetails def: defs) {
-			list.add(def.getName());
+			list.add(def.getId());
 		}
 		return list;
 	}
@@ -88,7 +87,7 @@ public class BepiColomboConsumer {
 		Long taskDefId4 = submitTaskDef(taskDef4);
 		
 		PlanningRequestDefinitionDetails prDef = crf.createPrDef();
-		prDef.setTaskDefNames(taskDefNames(taskDef1, taskDef2, taskDef3, taskDef4));
+		prDef.setTaskDefIds(taskDefIds(taskDef1, taskDef2, taskDef3, taskDef4));
 		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst1 = crf.createPassTaskInst(generateId(), taskDefId1, null);
@@ -102,9 +101,7 @@ public class BepiColomboConsumer {
 		PlanningRequestInstanceDetails prInst = crf.createPrInst(generateId(), prDefId);
 		setTaskInsts(prInst, taskInst1, taskInst2, taskInst3, taskInst4);
 		
-		PlanningRequestStatusDetails stat = cons.getStub().submitPlanningRequest(prInst);
-		
-		return stat;
+		return cons.submitPr(prInst);
 	}
 	
 	public PlanningRequestStatusDetails crrf() throws MALException, MALInteractionException, ParseException {

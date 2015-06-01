@@ -8,13 +8,17 @@ import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleAdapter;
 import org.ccsds.moims.mo.automation.schedule.consumer.ScheduleStub;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
+import org.ccsds.moims.mo.mal.MALException;
+import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.MALStandardError;
 import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Element;
@@ -197,5 +201,12 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	public static ObjectId createObjId(Element e, IdentifierList domain, Long id) {
 		ObjectKey objKey = new ObjectKey(domain, id);
 		return new ObjectId(Util.createObjType(e), objKey);
+	}
+	
+	public ScheduleStatusDetails submitSchedule(ScheduleInstanceDetails sch) throws MALException, MALInteractionException {
+		ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+		insts.add(sch);
+		ScheduleStatusDetailsList stats = getStub().submitSchedule(insts);
+		return (null != stats && !stats.isEmpty()) ? stats.get(0) : null;
 	}
 }

@@ -240,7 +240,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("name=").append(dumpId(prd.getName())).append(",\n");
 			s.append(ind).append(STEP).append("desc=").append(quote(prd.getDescription())).append(",\n");
 			s.append(ind).append(STEP).append("argDefs=").append(dumpArgDefs(prd.getArgumentDefs(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("taskDefNames=").append(dumpNames(prd.getTaskDefNames(), ind+STEP)).append("\n");
+			s.append(ind).append(STEP).append("taskDefIds=").append(prd.getTaskDefIds()).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);

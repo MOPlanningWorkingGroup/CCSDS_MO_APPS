@@ -328,7 +328,10 @@ public class PlanningRequestStubTestBase {
 		
 		storePrInst(prInst);
 		
-		prCons.submitPlanningRequest(prInst);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		prCons.submitPlanningRequest(insts);
 		
 		return prInst;
 	}
@@ -398,7 +401,10 @@ public class PlanningRequestStubTestBase {
 		PlanningRequestInstanceDetails prInst = createPrInst(prId, prDefId, taskInsts);
 		storePrInst(prInst);
 		
-		prCons.submitPlanningRequest(prInst);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		prCons.submitPlanningRequest(insts);
 		
 		return prInst;
 	}
@@ -420,11 +426,16 @@ public class PlanningRequestStubTestBase {
 		prInst.setComment("new updated desc");
 		prInst.setTasks(taskInsts);
 		
-		prCons.updatePlanningRequest(prInst);
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(prInst);
+		
+		prCons.updatePlanningRequest(insts);
 	}
 	
 	protected void removePlanningRequest(Long prId) throws MALException, MALInteractionException {
-		prCons.removePlanningRequest(prId);
+		LongList ids = new LongList();
+		ids.add(prId);
+		prCons.removePlanningRequest(ids);
 	}
 	
 	protected PlanningRequestStatusDetailsList getPlanningRequestStatus(Long prInstId) throws MALException, MALInteractionException {

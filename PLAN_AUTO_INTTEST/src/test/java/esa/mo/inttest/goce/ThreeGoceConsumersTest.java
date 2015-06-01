@@ -30,6 +30,7 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter;
 import org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestStub;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
@@ -101,19 +102,21 @@ public class ThreeGoceConsumersTest {
 			this.prov = prov;
 		}
 		
-		public void onPrSubmit(PlanningRequestInstanceDetails pr) {
-			newPrs.add(pr.getId());
-			for (int j = 0; (null != pr.getTasks()) && (j < pr.getTasks().size()); ++j) {
-				TaskInstanceDetails task = pr.getTasks().get(j);
-				newTasks.add(task.getId());
+		public void onPrSubmit(PlanningRequestInstanceDetailsList prs) {
+			for (PlanningRequestInstanceDetails pr : prs) {
+				newPrs.add(pr.getId());
+				for (int j = 0; (null != pr.getTasks()) && (j < pr.getTasks().size()); ++j) {
+					TaskInstanceDetails task = pr.getTasks().get(j);
+					newTasks.add(task.getId());
+				}
 			}
 		}
 		
-		public void onPrUpdate(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
+		public void onPrUpdate(PlanningRequestInstanceDetailsList prs, PlanningRequestStatusDetailsList stats) {
 			// ignore
 		}
 		
-		public void onPrRemove(Long id) {
+		public void onPrRemove(LongList ids) {
 			// ignore
 		}
 		
@@ -147,8 +150,9 @@ public class ThreeGoceConsumersTest {
 					changes.add(asr);
 					TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
 					taskStats.add(new TaskStatusDetails(taskId, changes));
-					PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(prId, null, taskStats);
-					prov.publishPr(UpdateType.UPDATE, prStat);
+					PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+					prStats.add(new PlanningRequestStatusDetails(prId, null, taskStats));
+					prov.publishPr(UpdateType.UPDATE, prStats);
 				} else {
 					doRemove = false; // wait before removing
 				} // csr
@@ -200,8 +204,9 @@ public class ThreeGoceConsumersTest {
 					//  all statuses updated, now publish status change
 					StatusRecordList srl = new StatusRecordList();
 					srl.add(asr);
-					PlanningRequestStatusDetails prStat = new PlanningRequestStatusDetails(prId, srl, null);
-					prov.publishPr(UpdateType.UPDATE, prStat);
+					PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+					prStats.add(new PlanningRequestStatusDetails(prId, srl, null));
+					prov.publishPr(UpdateType.UPDATE, prStats);
 				} else {
 					doRemove = false; // wait before removing
 				} // csr
@@ -372,8 +377,9 @@ public class ThreeGoceConsumersTest {
 		provFct.setPlugin(proc);
 		
 		// super user registers definitions
-		goce1.createPpfTaskDefIfMissing();
-		goce1.createPpfPrDefIfMissing();
+		LongList taskDefIds = new LongList();
+		goce1.createPpfTaskDefIfMissing(taskDefIds);
+		goce1.createPpfPrDefIfMissing(taskDefIds);
 		
 		// normal user submits instances
 		goce2.createPpfInstsIfMissingAndDefsExist();

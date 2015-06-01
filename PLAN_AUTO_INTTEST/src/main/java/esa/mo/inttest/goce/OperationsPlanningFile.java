@@ -2,7 +2,7 @@ package esa.mo.inttest.goce;
 
 import java.text.ParseException;
 
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
@@ -26,9 +26,9 @@ public class OperationsPlanningFile extends CommonFile {
 		return taskDef;
 	}
 	
-	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) {
+	public PlanningRequestDefinitionDetails createPrDef(LongList taskDefIds) {
 		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("OPF", "EVRQ from OPF");
-		prDef.setTaskDefNames(taskDefNames);
+		prDef.setTaskDefIds(taskDefIds);
 		return prDef;
 	}
 	

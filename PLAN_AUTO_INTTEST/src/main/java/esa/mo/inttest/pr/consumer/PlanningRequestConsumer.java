@@ -17,6 +17,8 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
@@ -177,6 +179,13 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 		prInst.setTasks(taskInsts);
 		taskInst.setPrInstId(prInst.getId());
 		
-		stub.submitPlanningRequest(prInst);
+		submitPr(prInst);
+	}
+	
+	public PlanningRequestStatusDetails submitPr(PlanningRequestInstanceDetails inst) throws MALException, MALInteractionException {
+		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
+		insts.add(inst);
+		PlanningRequestStatusDetailsList stats = getStub().submitPlanningRequest(insts);
+		return (null != stats && !stats.isEmpty()) ? stats.get(0) : null;
 	}
 }

@@ -5,7 +5,7 @@ import java.text.ParseException;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.structures.Attribute;
-import org.ccsds.moims.mo.mal.structures.IdentifierList;
+import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
@@ -49,10 +49,10 @@ public class PayloadPlanningFile extends CommonFile {
 		return "PPF-PR-Def";
 	}
 	
-	public PlanningRequestDefinitionDetails createPrDef(IdentifierList taskDefNames) throws MALException, MALInteractionException {
+	public PlanningRequestDefinitionDetails createPrDef(LongList taskDefIds) throws MALException, MALInteractionException {
 		String prDefName = getPrDefName();
 		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef(prDefName, "EVRQ from PPF");
-		prDef.setTaskDefNames(taskDefNames);
+		prDef.setTaskDefIds(taskDefIds);
 		return prDef;
 	}
 	
