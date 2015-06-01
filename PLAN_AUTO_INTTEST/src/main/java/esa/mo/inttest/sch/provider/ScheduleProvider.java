@@ -560,24 +560,25 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#start(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void start(LongList schInstIds, MALInteraction interaction)
+	public ScheduleStatusDetailsList start(LongList schIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{1}.start(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		Check.schInstIdList(schInstIds);
-		Check.schInstIds(schInstIds);
-		List<InstStore.SchItem> items = Check.schInstsExist(schInstIds, schInsts);
+		LOG.log(Level.INFO, "{1}.start(schInstIds={0})", new Object[] { schIds, Dumper.received(interaction) });
+		Check.schInstIdList(schIds);
+		Check.schInstIds(schIds);
+		List<InstStore.SchItem> items = Check.schInstsExist(schIds, schInsts);
 		// store changes
-		ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
-		for (int i = 0; i < schInstIds.size(); ++i) {
+		ScheduleStatusDetailsList schStats = new ScheduleStatusDetailsList();
+		for (int i = 0; i < schIds.size(); ++i) {
 			InstStore.SchItem item = items.get(i);
-			stats.add(start(item));
+			schStats.add(start(item));
 		}
 		// notify plugin
-		plugStarted(schInstIds, stats);
+		plugStarted(schIds, schStats);
 		
-		publish(UpdateType.UPDATE, stats);
+		publish(UpdateType.UPDATE, schStats);
 		LOG.log(Level.INFO, "{1}.start() response: returning schStats={0}",
-				new Object[] { Dumper.schStats(stats), Dumper.sending(interaction) });
+				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
+		return schStats;
 	}
 
 	private ScheduleStatusDetails pause(InstStore.SchItem item) throws MALException, MALInteractionException {
@@ -595,24 +596,25 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#pause(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void pause(LongList schInstIds, MALInteraction interaction)
+	public ScheduleStatusDetailsList pause(LongList schIds, MALInteraction interaction)
 			throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{1}.pause(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		Check.schInstIdList(schInstIds);
-		Check.schInstIds(schInstIds);
-		List<InstStore.SchItem> items = Check.schInstsExist(schInstIds, schInsts);
+		LOG.log(Level.INFO, "{1}.pause(schInstIds={0})", new Object[] { schIds, Dumper.received(interaction) });
+		Check.schInstIdList(schIds);
+		Check.schInstIds(schIds);
+		List<InstStore.SchItem> items = Check.schInstsExist(schIds, schInsts);
 		// store changes
-		ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
-		for (int i = 0; i < schInstIds.size(); ++i) {
+		ScheduleStatusDetailsList schStats = new ScheduleStatusDetailsList();
+		for (int i = 0; i < schIds.size(); ++i) {
 			InstStore.SchItem item = items.get(i);
-			stats.add(pause(item));
+			schStats.add(pause(item));
 		}
 		// notify plugin
-		plugPaused(schInstIds, stats);
+		plugPaused(schIds, schStats);
 		
-		publish(UpdateType.UPDATE, stats);
+		publish(UpdateType.UPDATE, schStats);
 		LOG.log(Level.INFO, "{1}.pause() response: returning schStats={0}",
-				new Object[] { Dumper.schStats(stats), Dumper.sending(interaction) });
+				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
+		return schStats;
 	}
 
 	private ScheduleStatusDetails resume(InstStore.SchItem item) throws MALException, MALInteractionException {
@@ -630,23 +632,26 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#resume(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void resume(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{1}.resume(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		Check.schInstIdList(schInstIds);
-		Check.schInstIds(schInstIds);
-		List<InstStore.SchItem> items = Check.schInstsExist(schInstIds, schInsts);
+	public ScheduleStatusDetailsList resume(LongList schIds, MALInteraction interaction)
+			throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "{1}.resume(schInstIds={0})",
+				new Object[] { schIds, Dumper.received(interaction) });
+		Check.schInstIdList(schIds);
+		Check.schInstIds(schIds);
+		List<InstStore.SchItem> items = Check.schInstsExist(schIds, schInsts);
 		// store changes
-		ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
-		for (int i = 0; i < schInstIds.size(); ++i) {
+		ScheduleStatusDetailsList schStats = new ScheduleStatusDetailsList();
+		for (int i = 0; i < schIds.size(); ++i) {
 			InstStore.SchItem item = items.get(i);
-			stats.add(resume(item));
+			schStats.add(resume(item));
 		}
 		// notify plugin
-		plugResumed(schInstIds, stats);
+		plugResumed(schIds, schStats);
 		
-		publish(UpdateType.UPDATE, stats);
+		publish(UpdateType.UPDATE, schStats);
 		LOG.log(Level.INFO, "{1}.resume() response: returning schStats={0}",
-				new Object[] { Dumper.schStats(stats), Dumper.sending(interaction) });
+				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
+		return schStats;
 	}
 
 	private ScheduleStatusDetails terminate(InstStore.SchItem item) throws MALException, MALInteractionException {
@@ -664,23 +669,26 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#terminate(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void terminate(LongList schInstIds, MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{1}.terminate(schInstIds={0})", new Object[] { schInstIds, Dumper.received(interaction) });
-		Check.schInstIdList(schInstIds);
-		Check.schInstIds(schInstIds);
-		List<InstStore.SchItem> items = Check.schInstsExist(schInstIds, schInsts);
+	public ScheduleStatusDetailsList terminate(LongList schIds, MALInteraction interaction)
+			throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "{1}.terminate(schInstIds={0})",
+				new Object[] { schIds, Dumper.received(interaction) });
+		Check.schInstIdList(schIds);
+		Check.schInstIds(schIds);
+		List<InstStore.SchItem> items = Check.schInstsExist(schIds, schInsts);
 		// store changes
-		ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
-		for (int i = 0; i < schInstIds.size(); ++i) {
+		ScheduleStatusDetailsList schStats = new ScheduleStatusDetailsList();
+		for (int i = 0; i < schIds.size(); ++i) {
 			InstStore.SchItem item = items.get(i);
-			stats.add(terminate(item));
+			schStats.add(terminate(item));
 		}
 		// notify plugin
-		plugTerminated(schInstIds, stats);
+		plugTerminated(schIds, schStats);
 		
-		publish(UpdateType.UPDATE, stats);
+		publish(UpdateType.UPDATE, schStats);
 		LOG.log(Level.INFO, "{1}.terminate() response: returning schStats={0}",
-				new Object[] { Dumper.schStats(stats), Dumper.sending(interaction) });
+				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
+		return schStats;
 	}
 
 	/**

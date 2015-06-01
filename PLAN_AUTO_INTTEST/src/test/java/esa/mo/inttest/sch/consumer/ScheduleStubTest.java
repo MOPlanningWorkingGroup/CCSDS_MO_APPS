@@ -7,6 +7,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -220,7 +221,17 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schCons.start(schInstIds);
+		ScheduleStatusDetailsList stats = schCons.start(schInstIds);
+		
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		ScheduleStatusDetails stat = stats.get(0);
+		
+		assertNotNull(stat);
+		assertEquals(stat.getSchInstId(), schInstId);
+		assertNotNull(stat.getStatus());
+		assertFalse(stat.getStatus().isEmpty());
 	}
 	
 	@Test
@@ -242,7 +253,17 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schCons.pause(schInstIds);
+		ScheduleStatusDetailsList stats = schCons.pause(schInstIds);
+		
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		ScheduleStatusDetails stat = stats.get(0);
+		
+		assertNotNull(stat);
+		assertEquals(stat.getSchInstId(), schInstId);
+		assertNotNull(stat.getStatus());
+		assertFalse(stat.getStatus().isEmpty());
 	}
 	
 	@Test
@@ -264,7 +285,17 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schCons.resume(schInstIds);
+		ScheduleStatusDetailsList stats = schCons.resume(schInstIds);
+		
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		ScheduleStatusDetails stat = stats.get(0);
+		
+		assertNotNull(stat);
+		assertEquals(stat.getSchInstId(), schInstId);
+		assertNotNull(stat.getStatus());
+		assertFalse(stat.getStatus().isEmpty());
 	}
 	
 	@Test
@@ -286,7 +317,17 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		LongList schInstIds = new LongList();
 		schInstIds.add(schInstId);
 		
-		schCons.terminate(schInstIds);
+		ScheduleStatusDetailsList stats = schCons.terminate(schInstIds);
+		
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		ScheduleStatusDetails stat = stats.get(0);
+		
+		assertNotNull(stat);
+		assertEquals(stat.getSchInstId(), schInstId);
+		assertNotNull(stat.getStatus());
+		assertFalse(stat.getStatus().isEmpty());
 	}
 	
 	@Test

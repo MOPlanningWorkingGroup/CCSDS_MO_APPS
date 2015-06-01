@@ -424,13 +424,14 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		LongList ids = new LongList();
 		ids.add(schInstId);
 		
-		final boolean[] started = { false };
+		final ScheduleStatusDetailsList[] started = { null };
 		
 		MALMessage msg = schCons.asyncStart(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void startAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				started[0] = true;
+			public void startResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetailsList stats, Map qosProps) {
+				started[0] = stats;
 				synchronized (started) {
 					started.notifyAll();
 				}
@@ -446,11 +447,11 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		Util.waitFor(started, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return started[0];
+				return (null != started[0]);
 			}
 		});
 		
-		assertTrue(started[0]);
+		assertNotNull(started[0]);
 		
 		msg.free();
 	}
@@ -476,13 +477,14 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		LongList ids = new LongList();
 		ids.add(schInstId);
 		
-		final boolean[] paused = { false };
+		final ScheduleStatusDetailsList[] paused = { null };
 		
 		MALMessage msg = schCons.asyncPause(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void pauseAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				paused[0] = true;
+			public void pauseResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetailsList stats, Map qosProps) {
+				paused[0] = stats;
 				synchronized (paused) {
 					paused.notifyAll();
 				}
@@ -498,11 +500,11 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		Util.waitFor(paused, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return paused[0];
+				return (null != paused[0]);
 			}
 		});
 		
-		assertTrue(paused[0]);
+		assertNotNull(paused[0]);
 		
 		msg.free();
 	}
@@ -528,13 +530,14 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		LongList ids = new LongList();
 		ids.add(schInstId);
 		
-		final boolean[] resumed = { false };
+		final ScheduleStatusDetailsList[] resumed = { null };
 		
 		MALMessage msg = schCons.asyncResume(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void resumeAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				resumed[0] = true;
+			public void resumeResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetailsList stats, Map qosProps) {
+				resumed[0] = stats;
 				synchronized (resumed) {
 					resumed.notifyAll();
 				}
@@ -550,11 +553,11 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		Util.waitFor(resumed, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return resumed[0];
+				return (null != resumed[0]);
 			}
 		});
 		
-		assertTrue(resumed[0]);
+		assertNotNull(resumed[0]);
 		
 		msg.free();
 	}
@@ -580,13 +583,14 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		LongList ids = new LongList();
 		ids.add(schInstId);
 		
-		final boolean[] terminated = { false };
+		final ScheduleStatusDetailsList[] terminated = { null };
 		
 		MALMessage msg = schCons.asyncTerminate(ids, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void terminateAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				terminated[0] = true;
+			public void terminateResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetailsList stats, Map qosProps) {
+				terminated[0] = stats;
 				synchronized (terminated) {
 					terminated.notifyAll();
 				}
@@ -602,11 +606,11 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		Util.waitFor(terminated, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return terminated[0];
+				return (null != terminated[0]);
 			}
 		});
 		
-		assertTrue(terminated[0]);
+		assertNotNull(terminated[0]);
 		
 		msg.free();
 	}
