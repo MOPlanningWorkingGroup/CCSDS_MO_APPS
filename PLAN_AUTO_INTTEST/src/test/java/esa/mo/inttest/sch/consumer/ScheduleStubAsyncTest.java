@@ -240,13 +240,14 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
 		update.add(schInst);
 		
-		final boolean[] patched = { false };
+		final ScheduleStatusDetailsList[] patched = { null };
 		
 		MALMessage msg = schCons.asyncPatchSchedule(null, update, null, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void patchScheduleAckReceived(MALMessageHeader msgHeader, Map qosProps) {
-				patched[0] = true;
+			public void patchScheduleResponseReceived(MALMessageHeader msgHeader,
+					ScheduleStatusDetailsList stats, Map qosProps) {
+				patched[0] = stats;
 				synchronized (patched) {
 					patched.notifyAll();
 				}
@@ -262,11 +263,11 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		Util.waitFor(patched, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				return patched[0];
+				return (null != patched[0]);
 			}
 		});
 		
-		assertTrue(patched[0]);
+		assertNotNull(patched[0]);
 		
 		msg.free();
 	}

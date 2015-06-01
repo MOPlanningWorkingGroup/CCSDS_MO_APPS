@@ -509,7 +509,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#patchSchedule(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations, java.lang.Long, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void patchSchedule(ScheduleInstanceDetailsList toRemove, ScheduleInstanceDetailsList toUpdate,
+	public ScheduleStatusDetailsList patchSchedule(ScheduleInstanceDetailsList toRemove, ScheduleInstanceDetailsList toUpdate,
 			ScheduleInstanceDetailsList toAdd, MALInteraction interaction) throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{5}.patchSchedule(List:toRemove, List:toUpdate, List:toAdd)\n  toRemove={0}\n  toUpdate={1}\n  toAdd={2}",
 				new Object[] { Dumper.schInsts(toRemove), Dumper.schInsts(toUpdate), Dumper.schInsts(toAdd), Dumper.received(interaction) });
@@ -525,6 +525,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		publish(UpdateType.MODIFICATION, schStats);
 		LOG.log(Level.INFO, "{1}.patchSchedule() response: returning schStats={0}",
 				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
+		return schStats;
 	}
 
 	/**

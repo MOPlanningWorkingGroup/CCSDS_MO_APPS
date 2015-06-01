@@ -154,7 +154,15 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
 		update.add(schInst);
 		
-		schCons.patchSchedule(null, update, null);
+		ScheduleStatusDetailsList stats = schCons.patchSchedule(null, update, null);
+		
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		ScheduleStatusDetails stat = stats.get(0);
+		
+		assertNotNull(stat);
+		assertEquals(schInstId, stat.getSchInstId());
 	}
 	
 	@Test
