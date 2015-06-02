@@ -20,16 +20,13 @@ import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planning.planningrequest.provider.MonitorPlanningRequestsPublisher;
 import org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestInheritanceSkeleton;
+import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinition;
 import org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
@@ -48,8 +45,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 
 	private static final Logger LOG = Logger.getLogger(PlanningRequestProvider.class.getName());
 	
-	private TaskDefStore taskDefs = new TaskDefStore();
-	private PrDefStore prDefs = new PrDefStore();
+	private DefStore prDefs = new DefStore();
 	private InstStore prInsts = new InstStore();
 	private MonitorPlanningRequestsPublisher prPub = null;
 	private IdentifierList domain = null;
@@ -205,7 +201,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{1}.submitPlanningRequest(prInst)\n  prInst={0}",
 				new Object[] { Dumper.prInsts(prs), Dumper.received(interaction) });
 		Check.prInstList(prs);
-		Check.addPrInsts(prs, prDefs, prInsts, taskDefs);
+		Check.addPrInsts(prs, prDefs, prInsts);
 		// checks done, start storing instances and remembering statuses
 		PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
 		for (int i = 0; i < prs.size(); ++i) {
@@ -375,7 +371,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{1}.updatePlanningRequest(prInst)\n  prInst={0}",
 				new Object[] { Dumper.prInsts(prs), Dumper.received(interaction) });
 		Check.prInstList(prs);
-		List<InstStore.PrItem> items = Check.updatePrInsts(prs, prDefs, prInsts, taskDefs);
+		List<InstStore.PrItem> items = Check.updatePrInsts(prs, prDefs, prInsts);
 		// track pr status changes
 		PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
 		for (int i = 0; i < prs.size(); ++i) {
@@ -474,12 +470,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Object[] { defType, Dumper.names(names), Dumper.received(interaction) });
 		Check.defType(defType);
 		Check.nameList(names);
-		LongList ids = new LongList();
-		if (DefinitionType.TASK_DEF == defType) {
-			ids.addAll(taskDefs.listAll(names));
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
-			ids.addAll(prDefs.listAll(names));
-		}
+		Check.names(names);
+		LongList ids = prDefs.listAll(defType, names);
 		LOG.log(Level.INFO, "{1}.listDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
 		return ids;
@@ -494,76 +486,41 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{2}.addDefinition(defType={0}, List:baseDefs)\n  baseDefs[]={1}",
 				new Object[] { defType, Dumper.baseDefs(defs), Dumper.received(interaction) });
 		Check.defType(defType);
-		Check.baseDefList(defs);
-		Check.defTypes(defs, defType);
-		LongList ids = new LongList();
-		if (DefinitionType.TASK_DEF == defType) {
-			TaskDefinitionDetailsList defs2 = (TaskDefinitionDetailsList)defs;
-			ids.addAll(taskDefs.addAll(defs2));
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
-			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)defs;
-			ids.addAll(prDefs.addAll(defs2));
-		}
+		BaseDefinitionList<?> bdl = Check.defList(defs);
+		BaseDefinitionList<? extends BaseDefinition> baseDefs = Check.defs(defType, bdl);
+		LongList ids = prDefs.addAll(defType, baseDefs);
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
 		return ids;
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public BaseDefinitionList getDefinition(DefinitionType defType, LongList baseDefIds,
+	public BaseDefinitionList getDefinition(DefinitionType defType, LongList defIds,
 			MALInteraction interaction) throws MALException, MALInteractionException {
 		LOG.log(Level.INFO, "{2}.getDefinition(defType={0}, List:baseDefIds={1})",
-				new Object[] { defType, baseDefIds, Dumper.received(interaction) });
+				new Object[] { defType, defIds, Dumper.received(interaction) });
 		Check.defType(defType);
-		Check.defIdList(baseDefIds);
-		BaseDefinitionList baseDefs = null;
-		if (DefinitionType.TASK_DEF == defType) {
-			baseDefs = new TaskDefinitionDetailsList();
-			for (int i = 0; i < baseDefIds.size(); ++i) {
-				Long id = baseDefIds.get(i);
-				TaskDefinitionDetails taskDef = taskDefs.find(id);
-				baseDefs.add(taskDef);
-			}
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
-			baseDefs = new PlanningRequestDefinitionDetailsList();
-			for (int i = 0; i < baseDefIds.size(); ++i) {
-				Long id = baseDefIds.get(i);
-				PlanningRequestDefinitionDetails prDef = prDefs.find(id);
-				baseDefs.add(prDef);
-			}
-		}
+		Check.defIdList(defIds);
+		Check.defIds(defIds);
+		BaseDefinitionList<? extends BaseDefinition> baseDefs = prDefs.getAll(defType, defIds);
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning baseDefs={0}",
 				new Object[] { Dumper.baseDefs(baseDefs), Dumper.sending(interaction) });
 		return baseDefs;
-	}
-	
-	@SuppressWarnings("rawtypes")
-	protected void updateBaseDefs(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs)
-			throws MALException {
-		if (DefinitionType.TASK_DEF == defType) {
-			TaskDefinitionDetailsList defs2 = (TaskDefinitionDetailsList)baseDefs;
-			taskDefs.updateAll(defIds, defs2);
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
-			PlanningRequestDefinitionDetailsList defs2 = (PlanningRequestDefinitionDetailsList)baseDefs;
-			prDefs.updateAll(defIds, defs2);
-		}
 	}
 	
 	/**
 	 * @see org.ccsds.moims.mo.planning.planningrequest.provider.PlanningRequestHandler#updateDefinition(org.ccsds.moims.mo.planning.planningrequest.structures.DefinitionType, org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.planning.planningrequest.structures.BaseDefinitionList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@SuppressWarnings("rawtypes")
-	public void updateDefinition(DefinitionType defType, LongList defIds, BaseDefinitionList baseDefs,
+	public void updateDefinition(DefinitionType defType, BaseDefinitionList defs,
 			MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{3}.updateDefinition(defType={0}, List:defIds, List:baseDefs)\n  defIds[]={1}\n  baseDefs[]={2}",
-				new Object[] { defType, defIds, Dumper.baseDefs(baseDefs), Dumper.received(interaction) });
+		LOG.log(Level.INFO, "{3}.updateDefinition(defType={0}, List:baseDefs)\n  defIds[]={1}\n  baseDefs[]={2}",
+				new Object[] { defType, Dumper.baseDefs(defs), Dumper.received(interaction) });
 		Check.defType(defType);
-		Check.defIdList(defIds);
-		Check.baseDefList(baseDefs);
-		Check.defLists(defIds, baseDefs);
-		Check.defsExist(defIds, defType, prDefs, taskDefs);
-		Check.defTypes(baseDefs, defType);
-		updateBaseDefs(defType, defIds, baseDefs);
+		BaseDefinitionList<?> bdl = Check.defList(defs);
+		BaseDefinitionList<? extends BaseDefinition> baseDefs = Check.defs(defType, bdl);
+		Check.defsExist(defType, baseDefs, prDefs);
+		prDefs.updateAll(defType, baseDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
 	}
 
@@ -576,12 +533,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				new Object[] { defType, defIds, Dumper.received(interaction) });
 		Check.defType(defType);
 		Check.defIdList(defIds);
-		Check.defsExist(defIds, defType, prDefs, taskDefs);
-		if (DefinitionType.TASK_DEF == defType) {
-			taskDefs.removeAll(defIds);
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == defType) {
-			prDefs.removeAll(defIds);
-		}
+		Check.defsExist(defType, defIds, prDefs);
+		prDefs.removeAll(defType, defIds);
 		LOG.log(Level.INFO, "{0}.removeDefinition() response: returning nothing", Dumper.sending(interaction));
 	}
 

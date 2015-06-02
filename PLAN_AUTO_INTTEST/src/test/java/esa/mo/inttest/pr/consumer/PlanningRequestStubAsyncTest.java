@@ -540,15 +540,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		prDef.setDescription("updated desc");
 		
-		LongList prDefIds = new LongList();
-		prDefIds.add(prDef.getId());
-		
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
 		prDefs.add(prDef);
 		
 		final boolean[] updated = { false };
 		
-		MALMessage malMsg = prCons.asyncUpdateDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefIds, prDefs, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncUpdateDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefs, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
@@ -740,15 +737,12 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		taskDef.setDescription("whoa");
 		
-		LongList taskDefIds = new LongList();
-		taskDefIds.add(taskDef.getId());
-		
 		TaskDefinitionDetailsList taskDefs = new TaskDefinitionDetailsList();
 		taskDefs.add(taskDef);
 		
 		final boolean[] updated = { false };
 		LOG.log(Level.INFO, "sending update task def request");
-		MALMessage malMsg = prCons.asyncUpdateDefinition(DefinitionType.TASK_DEF, taskDefIds, taskDefs, new PlanningRequestAdapter() {
+		MALMessage malMsg = prCons.asyncUpdateDefinition(DefinitionType.TASK_DEF, taskDefs, new PlanningRequestAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
@@ -780,7 +774,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		assertNotNull(taskDefIds2);
 		// list() returns id, but unable to verify description
 		// update()d id is still list()ed
-		assertTrue(taskDefIds2.contains(taskDefIds.get(0)));
+		assertTrue(taskDefIds2.contains(taskDef.getId()));
 		
 		malMsg.free();
 		

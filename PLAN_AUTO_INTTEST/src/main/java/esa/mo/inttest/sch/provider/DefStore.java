@@ -82,12 +82,12 @@ public class DefStore {
 	 * @param def
 	 * @throws MALException
 	 */
-	protected void update(Long id, ScheduleDefinitionDetails def) throws MALException {
-		ScheduleDefinitionDetails def2 = defs.get(id);
+	protected void update(ScheduleDefinitionDetails def) throws MALException {
+		ScheduleDefinitionDetails def2 = defs.get(def.getId());
 		if (null == def2) {
-			throw new MALException("no schedule definition with id: " + id);
+			throw new MALException("no schedule definition with id: " + def.getId());
 		}
-		defs.put(id, def);
+		defs.put(def.getId(), def);
 	}
 	
 	/**
@@ -96,17 +96,16 @@ public class DefStore {
 	 * @param defs
 	 * @throws MALException
 	 */
-	public void updateAll(LongList ids, ScheduleDefinitionDetailsList defs) throws MALException {
+	public void updateAll(ScheduleDefinitionDetailsList defs) throws MALException {
 		for (int i = 0; i < defs.size(); ++i) {
-			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule def id[" + i + "] is null");
-			}
 			ScheduleDefinitionDetails def = defs.get(i);
 			if (null == def) {
 				throw new MALException("schedule def[" + i + "] is null");
 			}
-			update(id, def);
+			if (null == def.getId()) {
+				throw new MALException("schedule def[" + i + "].id is null");
+			}
+			update(def);
 		}
 	}
 	

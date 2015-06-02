@@ -193,13 +193,10 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		def.setDescription("updated desc");
 		
-		LongList ids = new LongList();
-		ids.add(def.getId());
-		
 		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
 		defs.add(def);
 		
-		prCons.updateDefinition(DefinitionType.PLANNING_REQUEST_DEF, ids, defs);
+		prCons.updateDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
 		// updated pr id is still listed, but cant verify description
 		LongList defIds = listPrDefs("*");
 		
@@ -267,13 +264,10 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		def.setDescription("whoa");
 		
-		LongList ids = new LongList();
-		ids.add(def.getId());
-		
 		TaskDefinitionDetailsList defs = new TaskDefinitionDetailsList();
 		defs.add(def);
 		
-		prCons.updateDefinition(DefinitionType.TASK_DEF, ids, defs);
+		prCons.updateDefinition(DefinitionType.TASK_DEF, defs);
 		
 		LongList defIds = listTaskDefs("*");
 		

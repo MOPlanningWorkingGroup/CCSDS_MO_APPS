@@ -104,14 +104,11 @@ public class GoceConsumer {
 		return id;
 	}
 
-	protected void updatePrDef(Long prDefId,
-			PlanningRequestDefinitionDetails prDef) throws MALException,
-			MALInteractionException {
-		LongList prDefIds = new LongList();
-		prDefIds.add(prDefId);
+	protected void updatePrDef(PlanningRequestDefinitionDetails prDef)
+			throws MALException, MALInteractionException {
 		PlanningRequestDefinitionDetailsList prDefs = new PlanningRequestDefinitionDetailsList();
 		prDefs.add(prDef);
-		prStub.updateDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefIds, prDefs);
+		prStub.updateDefinition(DefinitionType.PLANNING_REQUEST_DEF, prDefs);
 	}
 
 	/**
@@ -146,7 +143,7 @@ public class GoceConsumer {
 		Long taskDefId2 = submitTaskDef(taskDef2);
 
 		prDef.getTaskDefIds().add(taskDef2.getId());
-		updatePrDef(prDefId, prDef);
+		updatePrDef(prDef);
 
 		TaskInstanceDetails taskInst2 = ppf.createTaskInst(1, generateId(), taskDefId2, null);
 		

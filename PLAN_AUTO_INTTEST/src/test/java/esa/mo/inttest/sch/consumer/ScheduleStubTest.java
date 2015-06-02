@@ -385,7 +385,7 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 		schDef.setId(schDefIds.get(0));
 		schDef.setDescription("updated description");
 		
-		schCons.updateDefinition(schDefIds, schDefs);
+		schCons.updateDefinition(schDefs);
 		
 		IdentifierList schNames = new IdentifierList();
 		schNames.add(new Identifier("*"));

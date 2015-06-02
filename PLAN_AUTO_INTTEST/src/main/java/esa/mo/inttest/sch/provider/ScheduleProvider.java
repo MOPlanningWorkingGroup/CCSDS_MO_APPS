@@ -744,20 +744,14 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#updateDefinition(org.ccsds.moims.mo.mal.structures.LongList, org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public void updateDefinition(LongList schDefIds, ScheduleDefinitionDetailsList schDefs,
+	public void updateDefinition(ScheduleDefinitionDetailsList schDefs,
 			MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{2}.updateDefinition(List:schDefIds, List:schDefs)\n  schDefIds[]={0}\n  schDefs[]={1}",
-				new Object[] { schDefIds, Dumper.schDefs(schDefs), Dumper.received(interaction) });
-		if (null == schDefIds) {
-			throw new MALException("schedule def id list is null");
-		}
+		LOG.log(Level.INFO, "{2}.updateDefinition(List:schDefs)\n  schDefIds[]={0}\n  schDefs[]={1}",
+				new Object[] { Dumper.schDefs(schDefs), Dumper.received(interaction) });
 		if (null == schDefs) {
 			throw new MALException("schedule defs list is null");
 		}
-		if (schDefIds.size() != schDefs.size()) {
-			throw new MALException("schedule def ids list and schedule defs list are different size");
-		}
-		this.schDefs.updateAll(schDefIds, schDefs);
+		this.schDefs.updateAll(schDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));
 	}
 

@@ -708,12 +708,13 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		schDefs.add(schDef);
 		
 		LongList schDefIds = schCons.addDefinition(schDefs);
+		schDef.setId(schDefIds.get(0));
 		
 		schDefs.get(0).setDescription("updated description");
 		
 		final boolean[] updated = { false };
 		
-		MALMessage msg = schCons.asyncUpdateDefinition(schDefIds, schDefs, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncUpdateDefinition(schDefs, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
 			public void updateDefinitionAckReceived(MALMessageHeader msgHeader, Map qosProps) {
