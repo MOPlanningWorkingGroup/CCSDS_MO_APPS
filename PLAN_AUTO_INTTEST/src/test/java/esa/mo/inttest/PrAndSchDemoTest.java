@@ -91,13 +91,13 @@ public class PrAndSchDemoTest {
 		protected void setTaskStatus(InstStore.TaskItem taskItem, InstanceState is, String comm) {
 			// add (or update) task status
 			StatusRecordList srl = new StatusRecordList();
-			srl.add(Util.addOrUpdateStatus(taskItem.stat, is, Util.currentTime(), comm));
+			srl.add(Util.addOrUpdateStatus(taskItem.getStat(), is, Util.currentTime(), comm));
 			
 			TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
-			taskStats.add(new TaskStatusDetails(taskItem.task.getId(), srl));
+			taskStats.add(new TaskStatusDetails(taskItem.getTask().getId(), srl));
 			
 			PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
-			prStats.add(new PlanningRequestStatusDetails(taskItem.task.getPrInstId(), null, taskStats));
+			prStats.add(new PlanningRequestStatusDetails(taskItem.getTask().getPrInstId(), null, taskStats));
 			
 			try {
 				prProv.publishPr(UpdateType.UPDATE, prStats);
@@ -113,8 +113,8 @@ public class PrAndSchDemoTest {
 			InstStore.TaskItem taskItem = prProv.getInstStore().findTaskItem(schStat.getSchInstId());
 			assertNotNull(taskItem);
 			// assuming task name matches schedule name
-			assertTrue(taskItem.stat.getTaskInstId() == schStat.getSchInstId());
-			assertTrue(taskItem.task.getId() == schStat.getSchInstId());
+			assertTrue(taskItem.getStat().getTaskInstId() == schStat.getSchInstId());
+			assertTrue(taskItem.getTask().getId() == schStat.getSchInstId());
 			
 			InstanceState[] states = new InstanceState[] { InstanceState.INVALID, InstanceState.SCHEDULED,
 					InstanceState.PLANNED, InstanceState.DISTRIBUTED_FOR_EXECUTION };
@@ -167,11 +167,11 @@ public class PrAndSchDemoTest {
 		}
 		protected void addSchInst(ScheduleInstanceDetails schInst) {
 			try {
-				ScheduleInstanceDetailsList schInsts = new ScheduleInstanceDetailsList();
-				schInsts.add(schInst);
-				ScheduleStatusDetailsList schStats = schStub.submitSchedule(schInsts);
-				assertNotNull(schStats);
-				assertFalse(schStats.isEmpty());
+				ScheduleInstanceDetailsList insts = new ScheduleInstanceDetailsList();
+				insts.add(schInst);
+				ScheduleStatusDetailsList stats = schStub.submitSchedule(insts);
+				assertNotNull(stats);
+				assertFalse(stats.isEmpty());
 			} catch (MALException e) {
 				LOG.log(Level.INFO, "add schedule inst: {0}", e);
 			} catch (MALInteractionException e) {

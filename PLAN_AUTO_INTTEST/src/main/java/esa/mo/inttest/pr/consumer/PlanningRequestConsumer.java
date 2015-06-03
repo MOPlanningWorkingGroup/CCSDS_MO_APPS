@@ -125,7 +125,7 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	
 	/**
 	 * Creates List of given elements.
-	 * @param inst
+	 * @param insts
 	 * @return
 	 */
 	public static TaskInstanceDetailsList createTasksList(TaskInstanceDetails... insts) {

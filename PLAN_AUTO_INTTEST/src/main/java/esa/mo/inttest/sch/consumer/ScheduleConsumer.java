@@ -24,7 +24,6 @@ import org.ccsds.moims.mo.mal.structures.Attribute;
 import org.ccsds.moims.mo.mal.structures.Element;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
-import org.ccsds.moims.mo.mal.structures.UShort;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
@@ -106,8 +105,8 @@ public class ScheduleConsumer extends ScheduleAdapter {
 	 * @param area
 	 * @return
 	 */
-	public static ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs, String name, Byte attrType,
-			UShort area) {
+	public static ArgumentDefinitionDetailsList addArgDef(ArgumentDefinitionDetailsList defs,
+			String name, Byte attrType) {
 		ArgumentDefinitionDetailsList list = (null != defs) ? defs : new ArgumentDefinitionDetailsList();
 		list.add(new ArgumentDefinitionDetails(new Identifier(name), null, attrType, null, null, null, null));
 		return list;

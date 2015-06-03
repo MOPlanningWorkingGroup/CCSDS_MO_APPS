@@ -31,15 +31,44 @@ public class InstStore {
 	 * Schedule instance + status info.
 	 */
 	public static final class SchItem {
-		public ScheduleInstanceDetails inst;
-		public ScheduleStatusDetails stat;
+		
+		protected ScheduleInstanceDetails sch;
+		protected ScheduleStatusDetails stat;
+		
+		public SchItem(ScheduleInstanceDetails inst, ScheduleStatusDetails stat) {
+			this.sch = inst;
+			this.stat = stat;
+		}
+		
+		public ScheduleInstanceDetails getSch() {
+			return sch;
+		}
+		
+		public ScheduleStatusDetails getStat() {
+			return stat;
+		}
 	}
+	
 	/**
 	 * Schedule item instance + status.
 	 */
 	public static final class ItemItem {
-		public ScheduleItemInstanceDetails inst;
-		public ScheduleItemStatusDetails stat;
+		
+		protected ScheduleItemInstanceDetails item;
+		protected ScheduleItemStatusDetails stat;
+		
+		public ItemItem(ScheduleItemInstanceDetails inst, ScheduleItemStatusDetails stat) {
+			this.item = inst;
+			this.stat = stat;
+		}
+		
+		public ScheduleItemInstanceDetails getItem() {
+			return item;
+		}
+		
+		public ScheduleItemStatusDetails getStat() {
+			return stat;
+		}
 	}
 	
 	Map<Long, SchItem> scheds = new HashMap<Long, SchItem>();
@@ -64,7 +93,7 @@ public class InstStore {
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
 			SchItem it = findSchItem(id);
-			ScheduleInstanceDetails inst = (null != it) ? it.inst : null;
+			ScheduleInstanceDetails inst = (null != it) ? it.sch : null;
 			insts.add(inst);
 		}
 		return insts;
@@ -76,13 +105,10 @@ public class InstStore {
 	 * @return
 	 * @throws MALException
 	 */
-	public ScheduleStatusDetailsList listStats(LongList ids) throws MALException {
+	public ScheduleStatusDetailsList listStats(LongList ids) {
 		ScheduleStatusDetailsList stats = new ScheduleStatusDetailsList();
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);
-			if (null == id) {
-				throw new MALException("schedule instance id[" + i + "] is null");
-			}
 			SchItem it = findSchItem(id);
 			ScheduleStatusDetails stat = (null != it) ? it.stat : null;
 			stats.add(stat);
@@ -91,16 +117,13 @@ public class InstStore {
 	}
 	
 	protected void addItem(ScheduleItemInstanceDetails item, ScheduleItemStatusDetails stat) {
-		ItemItem it = new ItemItem();
-		it.inst = item;
-		it.stat = stat;
-		items.put(item.getId(), it);
+		items.put(item.getId(), new ItemItem(item, stat));
 	}
 	
 	protected void addItems(ScheduleItemInstanceDetailsList items, ScheduleItemStatusDetailsList stats) {
 		for (int i = 0; (null != items) && (i < items.size()); ++i) {
 			ScheduleItemInstanceDetails item = items.get(i);
-			ScheduleItemStatusDetails stat = stats.get(i); // FIXME hopefully stat matches item
+			ScheduleItemStatusDetails stat = stats.get(i);
 			addItem(item, stat);
 		}
 	}
@@ -113,12 +136,9 @@ public class InstStore {
 	 * @param stat
 	 * @throws MALException
 	 */
-	public void add(ScheduleInstanceDetails inst, ScheduleStatusDetails stat) {
-		SchItem it = new SchItem();
-		it.inst = inst;
-		it.stat = stat;
-		scheds.put(inst.getId(), it);
-		addItems(inst.getScheduleItems(), stat.getScheduleItemStatuses());
+	public void add(ScheduleInstanceDetails sch, ScheduleStatusDetails stat) {
+		scheds.put(sch.getId(), new SchItem(sch, stat));
+		addItems(sch.getScheduleItems(), stat.getScheduleItemStatuses());
 	}
 	
 	protected void removeItem(Long id) {
@@ -144,12 +164,12 @@ public class InstStore {
 	protected void updateItems(ScheduleItemInstanceDetailsList items, ScheduleItemStatusDetailsList stats) {
 		for (int i = 0; (null != items) && (i < items.size()); ++i) {
 			ScheduleItemInstanceDetails item = items.get(i);
-			ScheduleItemStatusDetails stat = stats.get(i); // FIXME hopefully stat matches item
+			ScheduleItemStatusDetails stat = stats.get(i);
 			ItemItem it = findItemItem(item.getId());
 			if (null == it) { // add
 				addItem(item, stat);
 			} else { // replace
-				it.inst = item;
+				it.item = item;
 				it.stat = stat;
 			}
 		}
@@ -164,8 +184,8 @@ public class InstStore {
 	 */
 	public void update(ScheduleInstanceDetails inst) {
 		SchItem it = findSchItem(inst.getId());
-		removeItems(it.inst, inst);
-		it.inst = inst;
+		removeItems(it.sch, inst);
+		it.sch = inst;
 		updateItems(inst.getScheduleItems(), it.stat.getScheduleItemStatuses());
 	}
 	
@@ -184,7 +204,7 @@ public class InstStore {
 	public SchItem remove(Long id) {
 		SchItem it = scheds.remove(id);
 		if (null != it) {
-			removeItems(it.inst.getScheduleItems());
+			removeItems(it.sch.getScheduleItems());
 		}
 		return it;
 	}
@@ -243,6 +263,14 @@ public class InstStore {
 		return it;
 	}
 	
+	protected void removeArgs(ArgumentValueList src, ArgumentValueList trg) {
+		for (int j = 0; j < src.size(); ++j) {
+			ArgumentValue srcArg = src.get(j);
+			ArgumentValue trgArg = findArg(srcArg.getArgDefName(), trg);
+			trg.remove(trgArg);
+		}
+	}
+	
 	/**
 	 * Update argument values.
 	 * @param idx
@@ -265,6 +293,34 @@ public class InstStore {
 		}
 	}
 	
+	protected void addArgs(int idx, ArgumentValueList src, ArgumentValueList trg) throws MALException {
+		for (int j = 0; j < src.size(); ++j) {
+			ArgumentValue srcArg = src.get(j);
+			if (null == srcArg) {
+				throw new MALException("add schedule instance[" + idx + "].argVal[" + j + "] is null");
+			}
+			ArgumentValue trgArg = findArg(srcArg.getArgDefName(), trg);
+			if (null != trgArg) {
+				throw new MALException("schedule already has argVal, instance[" + idx + "].argVal[" + j + "]: " + srcArg.getArgDefName());
+			}
+			trg.add(srcArg);
+		}
+	}
+	
+	protected void removeTimings(int idx, TimingDetailsList src, TimingDetailsList trg) throws MALException {
+		for (int j = 0; j < src.size(); ++j) {
+			TimingDetails srcTim = src.get(j);
+			if (null == srcTim) {
+				throw new MALException("remove schedule instance[" + idx + "].timing[" + j +"] is null");
+			}
+			TimingDetails trgTim = findTiming(srcTim.getTriggerName(), trg);
+			if (null == trgTim) {
+				throw new MALException("no such timing to remove, instance[" + idx + "].timing[" + j + "]: " + srcTim.getTriggerName());
+			}
+			trg.remove(trgTim);
+		}
+	}
+	
 	/**
 	 * Update timings.
 	 * @param idx
@@ -273,7 +329,7 @@ public class InstStore {
 	 * @throws MALException
 	 */
 	protected void updateTimings(int idx, TimingDetailsList src, TimingDetailsList trg) throws MALException {
-		for (int j = 0; (j < src.size()); ++j) {
+		for (int j = 0; j < src.size(); ++j) {
 			TimingDetails tim = src.get(j);
 			if (null == tim) {
 				throw new MALException("update schedule instance[" + idx + "].timing[" + j + "] is null");
@@ -289,6 +345,35 @@ public class InstStore {
 			trgTim.setRepeat(tim.getRepeat());
 			trgTim.setSeparation(tim.getSeparation());
 			trgTim.setTimeTrigger(tim.getTimeTrigger());
+		}
+	}
+	
+	protected void addTimings(int idx, TimingDetailsList src, TimingDetailsList trg) throws MALException {
+		for (int j = 0; j < src.size(); ++j) {
+			TimingDetails srcTim = src.get(j);
+			if (null == srcTim) {
+				throw new MALException("add schedule instance[" + idx + "].timing[" + j +"] is null");
+			}
+			TimingDetails trgTim = findTiming(srcTim.getTriggerName(), trg);
+			if (null != trgTim) {
+				throw new MALException("schedule already has timing, instance[" + idx + "].timing[" + j + "]: " + srcTim.getTriggerName());
+			}
+			trg.add(trgTim);
+		}
+	}
+	
+	protected void removeItems(int idx, ScheduleItemInstanceDetailsList src,
+			ScheduleItemInstanceDetailsList trg) throws MALException {
+		for (int j = 0; j < src.size(); ++j) {
+			ScheduleItemInstanceDetails srcItem = src.get(j);
+			if (null == srcItem) {
+				throw new MALException("remove schedule instance[" + idx + "].item[" + j + "] is null");
+			}
+			ScheduleItemInstanceDetails trgItem = findItem(srcItem.getId(), trg);
+			if (null == trgItem) {
+				throw new MALException("no such item to remove, instance[" + idx + "].item[" + j + "]: " + srcItem.getId());
+			}
+			trg.remove(trgItem);
 		}
 	}
 	
@@ -319,6 +404,121 @@ public class InstStore {
 		}
 	}
 	
+	protected void addItems(int idx, ScheduleItemInstanceDetailsList src,
+			ScheduleItemInstanceDetailsList trg) throws MALException {
+		for (int j = 0; j < src.size(); ++j) {
+			ScheduleItemInstanceDetails srcItem = src.get(j);
+			if (null == srcItem) {
+				throw new MALException("add schedule instance[" + idx + "].item[" + j + "] is null");
+			}
+			ScheduleItemInstanceDetails trgItem = findItem(srcItem.getId(), trg);
+			if (null != trgItem) {
+				throw new MALException("already has item, instance[" + idx + "].item[" + j + "]: " + srcItem.getId());
+			}
+			trg.add(trgItem);
+		}
+	}
+	
+	protected void patchRemove(Map<Long, ScheduleStatusDetails> mods, int i,
+			ScheduleInstanceDetails srcSch, SchItem it) throws MALException {
+		// remove field values
+		// can't remove def id?
+		if (null != srcSch.getComment()) {
+			it.sch.setComment(null);
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
+			if (null == it.sch.getArgumentValues()) {
+				it.sch.setArgumentValues(new ArgumentValueList());
+			}
+			// have arg to remove
+			removeArgs(srcSch.getArgumentValues(), it.sch.getArgumentValues());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
+			if (null == it.sch.getTimingConstraints()) {
+				it.sch.setTimingConstraints(new TimingDetailsList());
+			}
+			// have timing to remove
+			removeTimings(i, srcSch.getTimingConstraints(), it.sch.getTimingConstraints());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
+			if (null == it.sch.getScheduleItems()) {
+				it.sch.setScheduleItems(new ScheduleItemInstanceDetailsList());
+			}
+			// have items to remove
+			removeItems(i, srcSch.getScheduleItems(), it.sch.getScheduleItems());
+			mods.put(it.sch.getId(), it.stat);
+		}
+	}
+	
+	protected void patchUpdate(Map<Long, ScheduleStatusDetails> mods, int i,
+			ScheduleInstanceDetails srcSch, SchItem it) throws MALException {
+		// update fields
+		if (null != srcSch.getSchDefId()) {
+			it.sch.setSchDefId(srcSch.getSchDefId());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getComment()) {
+			it.sch.setComment(srcSch.getComment());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
+			if (null == it.sch.getArgumentValues()) {
+				it.sch.setArgumentValues(new ArgumentValueList());
+			}
+			// have something to update
+			updateArgs(i, srcSch.getArgumentValues(), it.sch.getArgumentValues());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
+			if (null == it.sch.getTimingConstraints()) {
+				it.sch.setTimingConstraints(new TimingDetailsList());
+			}
+			// have something to update
+			updateTimings(i, srcSch.getTimingConstraints(), it.sch.getTimingConstraints());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
+			if (null == it.sch.getScheduleItems()) {
+				it.sch.setScheduleItems(new ScheduleItemInstanceDetailsList());
+			}
+			// have something to update
+			updateItems(i, srcSch.getScheduleItems(), it.sch.getScheduleItems());
+			mods.put(it.sch.getId(), it.stat);
+		}
+	}
+	
+	protected void patchAdd(Map<Long, ScheduleStatusDetails> mods, int i,
+			ScheduleInstanceDetails srcSch, SchItem it) throws MALException {
+		// no fields to add
+		if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
+			if (null == it.sch.getArgumentValues()) {
+				it.sch.setArgumentValues(new ArgumentValueList());
+			}
+			// have args to add
+			addArgs(i, srcSch.getArgumentValues(), it.sch.getArgumentValues());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
+			if (null == it.sch.getTimingConstraints()) {
+				it.sch.setTimingConstraints(new TimingDetailsList());
+			}
+			// have timing to add
+			addTimings(i, srcSch.getTimingConstraints(), it.sch.getTimingConstraints());
+			mods.put(it.sch.getId(), it.stat);
+		}
+		if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
+			if (null == it.sch.getScheduleItems()) {
+				it.sch.setScheduleItems(new ScheduleItemInstanceDetailsList());
+			}
+			// have items to add
+			addItems(i, srcSch.getScheduleItems(), it.sch.getScheduleItems());
+			mods.put(it.sch.getId(), it.stat);
+		}
+	}
+	
 	/**
 	 * Patch schedule instances - update fields, add/remove elements from lists.
 	 * @param remove
@@ -329,169 +529,25 @@ public class InstStore {
 	 */
 	public ScheduleStatusDetailsList patch(ScheduleInstanceDetailsList remove, ScheduleInstanceDetailsList update,
 			ScheduleInstanceDetailsList add) throws MALException {
+		// TODO changed item statuses
 		Map<Long, ScheduleStatusDetails> mods = new HashMap<Long, ScheduleStatusDetails>();
-		// updates
-		for (int i = 0; (null != update) && (i < update.size()); ++i) {
-			ScheduleInstanceDetails srcSch = update.get(i);
-			SchItem it = findSchItem(srcSch.getId()); // storage item, not schedule item
-			// update fields
-			if (null != srcSch.getSchDefId()) {
-				it.inst.setSchDefId(srcSch.getSchDefId());
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getComment()) {
-				it.inst.setComment(srcSch.getComment());
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
-				if (null == it.inst.getArgumentValues()) {
-					it.inst.setArgumentValues(new ArgumentValueList());
-				}
-				// have something to update
-				updateArgs(i, srcSch.getArgumentValues(), it.inst.getArgumentValues());
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
-				if (null == it.inst.getTimingConstraints()) {
-					it.inst.setTimingConstraints(new TimingDetailsList());
-				}
-				// have something to update
-				updateTimings(i, srcSch.getTimingConstraints(), it.inst.getTimingConstraints());
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
-				if (null == it.inst.getScheduleItems()) {
-					it.inst.setScheduleItems(new ScheduleItemInstanceDetailsList());
-				}
-				// have something to update
-				updateItems(i, srcSch.getScheduleItems(), it.inst.getScheduleItems());
-				mods.put(it.inst.getId(), it.stat);
-			}
-		}
 		// removals
 		for (int i = 0; (null != remove) && (i < remove.size()); ++i) {
 			ScheduleInstanceDetails srcSch = remove.get(i);
 			SchItem it = findSchItem(srcSch.getId());
-			// remove field values
-			// can't remove def id
-			if (null != srcSch.getComment()) {
-				it.inst.setComment(null);
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
-				if (null == it.inst.getArgumentValues()) {
-					it.inst.setArgumentValues(new ArgumentValueList());
-				}
-				// have arg to remove
-				for (int j = 0; j < srcSch.getArgumentValues().size(); ++j) {
-					ArgumentValue srcArg = srcSch.getArgumentValues().get(j);
-					if (null == srcArg) {
-						throw new MALException("remove schedule instance[" + i + "].argVal[" + j + "] is null");
-					}
-					ArgumentValue trgArg = findArg(srcArg.getArgDefName(), it.inst.getArgumentValues());
-					if (null == trgArg) {
-						throw new MALException("no such argument to remove, instance[" + i + "].arg[" + j + "]: " + srcArg.getArgDefName());
-					}
-					it.inst.getArgumentValues().remove(trgArg);
-				}
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
-				if (null == it.inst.getTimingConstraints()) {
-					it.inst.setTimingConstraints(new TimingDetailsList());
-				}
-				// have timing to remove
-				for (int j = 0; j < srcSch.getTimingConstraints().size(); ++j) {
-					TimingDetails srcTim = srcSch.getTimingConstraints().get(j);
-					if (null == srcTim) {
-						throw new MALException("remove schedule instance[" + i + "].timing[" + j +"] is null");
-					}
-					TimingDetails trgTim = findTiming(srcTim.getTriggerName(), it.inst.getTimingConstraints());
-					if (null == trgTim) {
-						throw new MALException("no such timing to remove, instance[" + i + "].timing[" + j + "]: " + srcTim.getTriggerName());
-					}
-					it.inst.getTimingConstraints().remove(trgTim);
-				}
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
-				if (null == it.inst.getScheduleItems()) {
-					it.inst.setScheduleItems(new ScheduleItemInstanceDetailsList());
-				}
-				// have items to remove
-				for (int j = 0; j < srcSch.getScheduleItems().size(); ++j) {
-					ScheduleItemInstanceDetails srcItem = srcSch.getScheduleItems().get(j);
-					if (null == srcItem) {
-						throw new MALException("remove schedule instance[" + i + "].item[" + j + "] is null");
-					}
-					ScheduleItemInstanceDetails trgItem = findItem(srcItem.getId(), it.inst.getScheduleItems());
-					if (null == trgItem) {
-						throw new MALException("no such item to remove, instance[" + i + "].item[" + j + "]: " + srcItem.getId());
-					}
-					it.inst.getScheduleItems().remove(trgItem);
-				}
-				mods.put(it.inst.getId(), it.stat);
-			}
+			patchRemove(mods, i, srcSch, it);
+		}
+		// updates
+		for (int i = 0; (null != update) && (i < update.size()); ++i) {
+			ScheduleInstanceDetails srcSch = update.get(i);
+			SchItem it = findSchItem(srcSch.getId()); // storage item, not schedule item
+			patchUpdate(mods, i, srcSch, it);
 		}
 		// additions
 		for (int i = 0; (null != add) && (i < add.size()); ++i) {
 			ScheduleInstanceDetails srcSch = add.get(i);
 			SchItem it = findSchItem(srcSch.getId());
-			// no fields to add
-			if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
-				if (null == it.inst.getArgumentValues()) {
-					it.inst.setArgumentValues(new ArgumentValueList());
-				}
-				// have args to add
-				for (int j = 0; i < srcSch.getArgumentValues().size(); ++j) {
-					ArgumentValue srcArg = srcSch.getArgumentValues().get(j);
-					if (null == srcArg) {
-						throw new MALException("add schedule instance[" + i + "].argVal[" + j + "] is null");
-					}
-					ArgumentValue trgArg = findArg(srcArg.getArgDefName(), it.inst.getArgumentValues());
-					if (null != trgArg) {
-						throw new MALException("schedule already has argVal, instance[" + i + "].argVal[" + j + "]: " + srcArg.getArgDefName());
-					}
-					it.inst.getArgumentValues().add(srcArg);
-				}
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
-				if (null == it.inst.getTimingConstraints()) {
-					it.inst.setTimingConstraints(new TimingDetailsList());
-				}
-				// have timing to add
-				for (int j = 0; j < srcSch.getTimingConstraints().size(); ++j) {
-					TimingDetails srcTim = srcSch.getTimingConstraints().get(j);
-					if (null == srcTim) {
-						throw new MALException("add schedule instance[" + i + "].timing[" + j +"] is null");
-					}
-					TimingDetails trgTim = findTiming(srcTim.getTriggerName(), it.inst.getTimingConstraints());
-					if (null != trgTim) {
-						throw new MALException("schedule already has timing, instance[" + i + "].timing[" + j + "]: " + srcTim.getTriggerName());
-					}
-					it.inst.getTimingConstraints().add(trgTim);
-				}
-				mods.put(it.inst.getId(), it.stat);
-			}
-			if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
-				if (null == it.inst.getScheduleItems()) {
-					it.inst.setScheduleItems(new ScheduleItemInstanceDetailsList());
-				}
-				// have items to add
-				for (int j = 0; j < srcSch.getScheduleItems().size(); ++j) {
-					ScheduleItemInstanceDetails srcItem = srcSch.getScheduleItems().get(j);
-					if (null == srcItem) {
-						throw new MALException("add schedule instance[" + i + "].item[" + j + "] is null");
-					}
-					ScheduleItemInstanceDetails trgItem = findItem(srcItem.getId(), it.inst.getScheduleItems());
-					if (null != trgItem) {
-						throw new MALException("already has item, instance[" + i + "].item[" + j + "]: " + srcItem.getId());
-					}
-					it.inst.getScheduleItems().add(trgItem);
-				}
-				mods.put(it.inst.getId(), it.stat);
-			}
+			patchAdd(mods, i, srcSch, it);
 		}
 		// convert modifications list
 		ScheduleStatusDetailsList schStats = new ScheduleStatusDetailsList();

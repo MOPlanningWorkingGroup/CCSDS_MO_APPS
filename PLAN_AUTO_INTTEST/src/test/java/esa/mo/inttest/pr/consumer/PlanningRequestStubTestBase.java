@@ -608,14 +608,7 @@ public class PlanningRequestStubTestBase {
 			// check task statuses
 			for (int i = 0; i < pr.getTasks().size(); ++i) {
 				TaskInstanceDetails task = pr.getTasks().get(i);
-				// find status for task
-				TaskStatusDetails taskStat = null;
-				for (int j = 0; (null == taskStat) && (j < prStat.getTaskStatuses().size()); ++j) {
-					TaskStatusDetails ts = prStat.getTaskStatuses().get(j);
-					if (task.getId() == ts.getTaskInstId()) {
-						taskStat = ts; // found it
-					}
-				}
+				TaskStatusDetails taskStat = prStat.getTaskStatuses().get(i);
 				// task must have status
 				assertNotNull(taskStat);
 				assertEquals(task.getId(), taskStat.getTaskInstId());

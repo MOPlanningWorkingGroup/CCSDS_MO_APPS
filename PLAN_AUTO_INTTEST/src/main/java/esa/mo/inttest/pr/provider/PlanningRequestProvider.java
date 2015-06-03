@@ -260,7 +260,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	 * @return
 	 */
 	protected TaskStatusDetailsList removedTasks(InstStore.PrItem itemOld, TaskInstanceDetailsList tasksNew) {
-		TaskStatusDetailsList changes = null;
+		TaskStatusDetailsList changes = new TaskStatusDetailsList();
 		// put new task ids into list for easy lookup
 		List<Long> newTasks = new ArrayList<Long>();
 		for (int i = 0; (null != tasksNew) && (i < tasksNew.size()); ++i) {
@@ -275,14 +275,41 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 				// doesn't exist in new list - removed
 				StatusRecordList srl = new StatusRecordList();
 				srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
-				if (null == changes) {
-					changes = new TaskStatusDetailsList();
-				}
 				changes.add(new TaskStatusDetails(taskOld.getId(), srl));
 				// old statuses are discarded
 			}
 		}
 		return changes;
+	}
+	
+	protected void taskAdd(TaskStatusDetailsList changes, InstStore.PrItem itemOld, TaskInstanceDetails newTask) {
+		// no old task - addition, add to changes list
+		StatusRecordList srl = new StatusRecordList();
+		srl.add(new StatusRecord(InstanceState.SUBMITTED, Util.currentTime(), "added"));
+		TaskStatusDetails taskStat = new TaskStatusDetails(newTask.getId(), srl);
+		changes.add(taskStat);
+		// and add to all stats list
+		if (null == itemOld.stat.getTaskStatuses()) {
+			itemOld.stat.setTaskStatuses(new TaskStatusDetailsList());
+		}
+		itemOld.stat.getTaskStatuses().add(taskStat);
+	}
+	
+	protected void taskUpdate(TaskStatusDetailsList changes, InstStore.PrItem itemOld, TaskInstanceDetails oldTask) {
+		// changed, find task status
+		TaskStatusDetailsList oldStats = itemOld.stat.getTaskStatuses();
+		StatusRecord sr = null;
+		for (int j = 0; (null != oldStats) && (null == sr) && (j < oldStats.size()); ++j) {
+			TaskStatusDetails oldStat = oldStats.get(j);
+			if (oldTask.getId() == oldStat.getTaskInstId()) {
+				sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED,
+						Util.currentTime(), "updated");
+			}
+		}
+		// add to changes
+		StatusRecordList srl = new StatusRecordList();
+		srl.add(sr);
+		changes.add(new TaskStatusDetails(oldTask.getId(), srl));
 	}
 	
 	/**
@@ -292,9 +319,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 	 * @param itemOld
 	 * @return
 	 */
-	protected TaskStatusDetailsList addedOrUpdatedTasks(TaskStatusDetailsList stats,
+	protected void addedOrUpdatedTasks(TaskStatusDetailsList changes,
 			InstStore.PrItem itemOld, TaskInstanceDetailsList tasksNew) {
-		TaskStatusDetailsList changes = stats;
 		TaskInstanceDetailsList tasksOld = itemOld.pr.getTasks();
 		// put old tasks into map for easy lookup
 		Map<Long, TaskInstanceDetails> oldTasks = new HashMap<Long, TaskInstanceDetails>();
@@ -307,60 +333,25 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			TaskInstanceDetails newTask = tasksNew.get(i);
 			TaskInstanceDetails oldTask = oldTasks.get(newTask.getId());
 			if (null == oldTask) {
-				// no old task - addition, add to changes list
-				StatusRecordList srl = new StatusRecordList();
-				srl.add(new StatusRecord(InstanceState.SUBMITTED, Util.currentTime(), "added"));
-				TaskStatusDetails taskStat = new TaskStatusDetails(newTask.getId(), srl);
-				if (null == changes) {
-					changes = new TaskStatusDetailsList();
-				}
-				changes.add(taskStat);
-				// and add to all stats list
-				if (null == itemOld.stat.getTaskStatuses()) {
-					itemOld.stat.setTaskStatuses(new TaskStatusDetailsList());
-				}
-				itemOld.stat.getTaskStatuses().add(taskStat);
+				taskAdd(changes, itemOld, newTask);
 			} else {
 				// old task exists, check for change
 				if (!oldTask.equals(newTask)) {
-					// changed, find task status
-					TaskStatusDetailsList oldStats = itemOld.stat.getTaskStatuses();
-					StatusRecord sr = null;
-					for (int j = 0; (null != oldStats) && (null == sr) && (j < oldStats.size()); ++j) {
-						TaskStatusDetails oldStat = oldStats.get(j);
-						if (oldTask.getId() == oldStat.getTaskInstId()) {
-							sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED,
-									Util.currentTime(), "updated");
-						}
-					}
-					// add to changes
-					StatusRecordList srl = new StatusRecordList();
-					srl.add(sr);
-					if (null == changes) {
-						changes = new TaskStatusDetailsList();
-					}
-					changes.add(new TaskStatusDetails(oldTask.getId(), srl));
+					taskUpdate(changes, itemOld, oldTask);
 				} // else no change, ignore
 			}
 		}
-		return changes;
 	}
 	
 	protected boolean didPrChange(PlanningRequestInstanceDetails oldPr, PlanningRequestInstanceDetails newPr) {
 		// compare PRs field by field except tasks
-		boolean argsChange = (null != oldPr.getArgumentValues()) ? !oldPr.getArgumentValues().equals(newPr.getArgumentValues())
-				: (null != newPr.getArgumentValues()) ? !newPr.getArgumentValues().equals(oldPr.getArgumentValues())
-						: (oldPr.getArgumentValues() != newPr.getArgumentValues());
-		boolean commChange = (null != oldPr.getComment()) ? !oldPr.getComment().equals(newPr.getComment())
-				: (null != newPr.getComment()) ? !newPr.getComment().equals(oldPr.getComment()) : (oldPr != newPr);
-		boolean idChange = (null != oldPr.getId()) ? !oldPr.getId().equals(newPr.getId())
-				: (null != newPr.getId()) ? !newPr.equals(oldPr.getId()) : (oldPr.getComment() != newPr.getComment());
-		boolean defChange = (null != oldPr.getPrDefId()) ? !oldPr.getPrDefId().equals(newPr.getPrDefId())
-				: (null != newPr.getPrDefId()) ? !newPr.getPrDefId().equals(oldPr.getPrDefId()) : (oldPr.getPrDefId() != newPr.getPrDefId());
-		boolean trigsChange = (null != oldPr.getTimingConstraints()) ? !oldPr.getTimingConstraints().equals(newPr.getTimingConstraints())
-				: (null != newPr.getTimingConstraints()) ? !newPr.getTimingConstraints().equals(oldPr.getTimingConstraints())
-						: (oldPr.getTimingConstraints() != newPr.getTimingConstraints());
-		return argsChange || commChange || idChange || defChange || trigsChange;
+		PlanningRequestInstanceDetails old2 = new PlanningRequestInstanceDetails(oldPr.getId(),
+				oldPr.getPrDefId(), oldPr.getComment(), oldPr.getArgumentValues(),
+				oldPr.getTimingConstraints(), null);
+		PlanningRequestInstanceDetails new2 = new PlanningRequestInstanceDetails(newPr.getId(),
+				newPr.getPrDefId(), newPr.getComment(), newPr.getArgumentValues(),
+				newPr.getTimingConstraints(), null);
+		return !new2.equals(old2);
 	}
 	
 	/**
@@ -379,7 +370,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 			PlanningRequestInstanceDetails pr = prs.get(i);
 			// generate changed statuses for tasks
 			TaskStatusDetailsList taskChanges = removedTasks(itemOld, pr.getTasks());
-			taskChanges = addedOrUpdatedTasks(taskChanges, itemOld, pr.getTasks());
+			addedOrUpdatedTasks(taskChanges, itemOld, pr.getTasks());
 			// now pr change
 			boolean prChanged = didPrChange(itemOld.pr, pr);
 			StatusRecordList srl = null;
@@ -486,8 +477,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{2}.addDefinition(defType={0}, List:baseDefs)\n  baseDefs[]={1}",
 				new Object[] { defType, Dumper.baseDefs(defs), Dumper.received(interaction) });
 		Check.defType(defType);
-		BaseDefinitionList<?> bdl = Check.defList(defs);
-		BaseDefinitionList<? extends BaseDefinition> baseDefs = Check.defs(defType, bdl);
+		BaseDefinitionList<BaseDefinition> bdl = Check.defList(defs);
+		BaseDefinitionList<BaseDefinition> baseDefs = Check.defs(defType, bdl);
 		LongList ids = prDefs.addAll(defType, baseDefs);
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning defIds={0}",
 				new Object[] { ids, Dumper.sending(interaction) });
@@ -502,7 +493,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		Check.defType(defType);
 		Check.defIdList(defIds);
 		Check.defIds(defIds);
-		BaseDefinitionList<? extends BaseDefinition> baseDefs = prDefs.getAll(defType, defIds);
+		BaseDefinitionList<BaseDefinition> baseDefs = prDefs.getAll(defType, defIds);
 		LOG.log(Level.INFO, "{1}.addDefinition() response: returning baseDefs={0}",
 				new Object[] { Dumper.baseDefs(baseDefs), Dumper.sending(interaction) });
 		return baseDefs;
@@ -517,8 +508,8 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		LOG.log(Level.INFO, "{3}.updateDefinition(defType={0}, List:baseDefs)\n  defIds[]={1}\n  baseDefs[]={2}",
 				new Object[] { defType, Dumper.baseDefs(defs), Dumper.received(interaction) });
 		Check.defType(defType);
-		BaseDefinitionList<?> bdl = Check.defList(defs);
-		BaseDefinitionList<? extends BaseDefinition> baseDefs = Check.defs(defType, bdl);
+		BaseDefinitionList<BaseDefinition> bdl = Check.defList(defs);
+		BaseDefinitionList<BaseDefinition> baseDefs = Check.defs(defType, bdl);
 		Check.defsExist(defType, baseDefs, prDefs);
 		prDefs.updateAll(defType, baseDefs);
 		LOG.log(Level.INFO, "{0}.updateDefinition() response: returning nothing", Dumper.sending(interaction));

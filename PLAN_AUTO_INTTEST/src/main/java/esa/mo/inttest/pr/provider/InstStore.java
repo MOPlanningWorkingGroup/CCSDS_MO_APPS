@@ -22,23 +22,39 @@ public class InstStore {
 	 */
 	public static final class PrItem {
 		
-		public PlanningRequestInstanceDetails pr;
-		public PlanningRequestStatusDetails stat;
+		protected PlanningRequestInstanceDetails pr;
+		protected PlanningRequestStatusDetails stat;
 		
 		public PrItem(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			this.pr = pr;
 			this.stat = stat;
 		}
+		
+		public PlanningRequestInstanceDetails getPr() {
+			return pr;
+		}
+		
+		public PlanningRequestStatusDetails getStat() {
+			return stat;
+		}
 	}
 	
 	public static final class TaskItem {
 		
-		public TaskInstanceDetails task;
-		public TaskStatusDetails stat;
+		protected TaskInstanceDetails task;
+		protected TaskStatusDetails stat;
 		
 		public TaskItem(TaskInstanceDetails task, TaskStatusDetails stat) {
 			this.task = task;
 			this.stat = stat;
+		}
+		
+		public TaskInstanceDetails getTask() {
+			return task;
+		}
+		
+		public TaskStatusDetails getStat() {
+			return stat;
 		}
 	}
 	
@@ -52,7 +68,7 @@ public class InstStore {
 	protected void addTasks(TaskInstanceDetailsList tasks, TaskStatusDetailsList stats) {
 		for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
 			TaskInstanceDetails t = tasks.get(i);
-			TaskStatusDetails s = stats.get(i); // FIXME hopefully stat matches task
+			TaskStatusDetails s = stats.get(i);
 			addTask(t, s);
 		}
 	}
@@ -79,18 +95,6 @@ public class InstStore {
 	public PrItem findPrItem(Long prInstId) {
 		return prs.get(prInstId);
 	}
-	
-//	/**
-//	 * Replaces PR status by id.
-//	 * @param prInstId
-//	 * @param prStat
-//	 */
-//	public void setPrStatus(Long prInstId, PlanningRequestStatusDetails prStat) {
-//		PrItem item = findPrItem(prInstId);
-//		if (null != item) {
-//			item.stat = prStat;
-//		}
-//	}
 	
 	public TaskItem findTaskItem(Long taskInstId) {
 		return tasks.get(taskInstId);
@@ -161,16 +165,4 @@ public class InstStore {
 		}
 		return item;
 	}
-	
-//	/**
-//	 * Replaces Task status by id.
-//	 * @param taskInstId
-//	 * @param taskStat
-//	 */
-//	public void setTaskStatus(Long taskInstId, TaskStatusDetails taskStat) {
-//		TaskItem item = findTaskItem(taskInstId);
-//		if (null != item) {
-//			item.stat = taskStat;
-//		}
-//	}
 }

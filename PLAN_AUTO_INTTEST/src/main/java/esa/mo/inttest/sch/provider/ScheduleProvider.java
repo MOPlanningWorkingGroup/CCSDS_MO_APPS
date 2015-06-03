@@ -31,11 +31,9 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
-import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
-import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 
 import esa.mo.inttest.Dumper;
 import esa.mo.inttest.Util;
@@ -307,14 +305,14 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @return
 	 */
 	protected ScheduleItemStatusDetailsList removedItems(InstStore.SchItem itemsOld, ScheduleItemInstanceDetailsList itemsNew) {
-		ScheduleItemStatusDetailsList changes = null;
+		ScheduleItemStatusDetailsList changes = new ScheduleItemStatusDetailsList();
 		// put new item ids into list for easy lookup
 		List<Long> newItems = new ArrayList<Long>();
 		for (int i = 0; (null != itemsNew) && (i < itemsNew.size()); ++i) {
 			ScheduleItemInstanceDetails newItem = itemsNew.get(i);
 			newItems.add(newItem.getId());
 		}
-		ScheduleItemInstanceDetailsList oldItems = itemsOld.inst.getScheduleItems();
+		ScheduleItemInstanceDetailsList oldItems = itemsOld.sch.getScheduleItems();
 		// go through old items and create change status for removed ones
 		for (int i = 0; (null != oldItems) && (i < oldItems.size()); ++i) {
 			ScheduleItemInstanceDetails oldItem = oldItems.get(i);
@@ -322,9 +320,6 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 				// old id not present in new ids list - generate removed status
 				StatusRecordList srl = new StatusRecordList();
 				srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
-				if (null == changes) {
-					changes = new ScheduleItemStatusDetailsList();
-				}
 				changes.add(new ScheduleItemStatusDetails(oldItem.getId(), srl));
 				// old status is discarded
 				ScheduleItemStatusDetailsList oldStats = itemsOld.stat.getScheduleItemStatuses();
@@ -340,6 +335,37 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		return changes;
 	}
 	
+	protected void itemAdd(ScheduleItemStatusDetailsList changes, InstStore.SchItem itemOld,
+			ScheduleItemInstanceDetails newItem) {
+		// no such item in old items list - generate add status
+		StatusRecordList srl = new StatusRecordList();
+		srl.add(new StatusRecord(InstanceState.SUBMITTED, Util.currentTime(), "added"));
+		ScheduleItemStatusDetails itemStat = new ScheduleItemStatusDetails(newItem.getId(), srl);
+		changes.add(itemStat);
+		// and add status to other item statuses
+		if (null == itemOld.stat.getScheduleItemStatuses()) {
+			itemOld.stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList());
+		}
+		itemOld.stat.getScheduleItemStatuses().add(itemStat);
+	}
+	
+	protected void itemUpdate(ScheduleItemStatusDetailsList changes, InstStore.SchItem itemOld,
+			ScheduleItemInstanceDetails oldItem) {
+		// find item statuses list and update it
+		ScheduleItemStatusDetailsList oldStats = itemOld.stat.getScheduleItemStatuses();
+		StatusRecord sr = null;
+		for (int j = 0; (null != oldStats) && (j < oldStats.size()); ++j) {
+			ScheduleItemStatusDetails oldStat = oldStats.get(j);
+			if (oldItem.getId() == oldStat.getSchItemInstId()) {
+				sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED, Util.currentTime(), "updated");
+			}
+		}
+		// generate status change
+		StatusRecordList srl = new StatusRecordList();
+		srl.add(sr);
+		changes.add(new ScheduleItemStatusDetails(oldItem.getId(), srl));
+	}
+	
 	/**
 	 * Generate status changes for added and updated schedule items.
 	 * @param stats
@@ -347,10 +373,9 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @param itemsNew
 	 * @return
 	 */
-	protected ScheduleItemStatusDetailsList addedOrUpdatedItems(ScheduleItemStatusDetailsList stats,
+	protected ScheduleItemStatusDetailsList addedOrUpdatedItems(ScheduleItemStatusDetailsList changes,
 			InstStore.SchItem itemOld, ScheduleItemInstanceDetailsList itemsNew) {
-		ScheduleItemStatusDetailsList changes = stats;
-		ScheduleItemInstanceDetailsList itemsOld = itemOld.inst.getScheduleItems();
+		ScheduleItemInstanceDetailsList itemsOld = itemOld.sch.getScheduleItems();
 		// put old items into map for easy lookup
 		Map<Long, ScheduleItemInstanceDetails> oldItems = new HashMap<Long, ScheduleItemInstanceDetails>();
 		for (int i = 0; (null != itemsOld) && (i < itemsOld.size()); ++i) {
@@ -362,38 +387,11 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			ScheduleItemInstanceDetails newItem = itemsNew.get(i);
 			ScheduleItemInstanceDetails oldItem = oldItems.get(newItem.getId());
 			if (null == oldItem) {
-				// no such item in old items list - generate add status
-				StatusRecordList srl = new StatusRecordList();
-				srl.add(new StatusRecord(InstanceState.SUBMITTED, Util.currentTime(), "added"));
-				if (null == changes) {
-					changes = new ScheduleItemStatusDetailsList();
-				}
-				ScheduleItemStatusDetails itemStat = new ScheduleItemStatusDetails(newItem.getId(), srl);
-				changes.add(itemStat);
-				// and add status to other item statuses
-				if (null == itemOld.stat.getScheduleItemStatuses()) {
-					itemOld.stat.setScheduleItemStatuses(new ScheduleItemStatusDetailsList());
-				}
-				itemOld.stat.getScheduleItemStatuses().add(itemStat);
+				itemAdd(changes, itemOld, newItem);
 			} else {
 				// update - did item actually change?
 				if (!oldItem.equals(newItem)) {
-					// find item statuses list and update it
-					ScheduleItemStatusDetailsList oldStats = itemOld.stat.getScheduleItemStatuses();
-					StatusRecord sr = null;
-					for (int j = 0; (null != oldStats) && (j < oldStats.size()); ++i) {
-						ScheduleItemStatusDetails oldStat = oldStats.get(j);
-						if (oldItem.getId() == oldStat.getSchItemInstId()) {
-							sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED, Util.currentTime(), "updated");
-						}
-					}
-					// generate status change
-					StatusRecordList srl = new StatusRecordList();
-					srl.add(sr);
-					if (null == changes) {
-						changes = new ScheduleItemStatusDetailsList();
-					}
-					changes.add(new ScheduleItemStatusDetails(oldItem.getId(), srl));
+					itemUpdate(changes, itemOld, oldItem);
 				} // else no change
 			}
 		}
@@ -401,25 +399,12 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	}
 	
 	protected boolean didSchChange(ScheduleInstanceDetails oldSch, ScheduleInstanceDetails newSch) {
-		// compare schedules ignoring schedule items
-		ArgumentValueList oldArgs = oldSch.getArgumentValues();
-		ArgumentValueList newArgs = newSch.getArgumentValues();
-		boolean argsChange = (null != oldArgs) ? !oldArgs.equals(newArgs)
-				: (null != newArgs) ? !newArgs.equals(oldArgs) : (oldArgs != newArgs);
-		boolean commChange = (null != oldSch.getComment()) ? !oldSch.getComment().equals(newSch.getComment())
-				: (null != newSch.getComment()) ? !newSch.getComment().equals(oldSch.getComment())
-						: (oldSch.getComment() != newSch.getComment());
-		boolean idChange = (null != oldSch.getId()) ? !oldSch.getId().equals(newSch.getId())
-				: (null != newSch.getId()) ? !newSch.getId().equals(oldSch.getId())
-						: (oldSch.getId() != newSch.getId());
-		boolean defChange = (null != oldSch.getSchDefId()) ? !oldSch.getSchDefId().equals(newSch.getSchDefId())
-				: (null != newSch.getSchDefId()) ? !newSch.getSchDefId().equals(oldSch.getSchDefId())
-						: (oldSch.getSchDefId() != newSch.getSchDefId());
-		TimingDetailsList oldTims = oldSch.getTimingConstraints();
-		TimingDetailsList newTims = newSch.getTimingConstraints();
-		boolean trigChange = (null != oldTims) ? !oldTims.equals(newTims)
-				: (null != newTims) ? !newTims.equals(oldTims) : (oldTims != newTims);
-		return argsChange || commChange || idChange || defChange || trigChange;
+		// compare schedules excluding schedule items
+		ScheduleInstanceDetails old2 = new ScheduleInstanceDetails(oldSch.getId(), oldSch.getSchDefId(),
+				oldSch.getComment(), oldSch.getArgumentValues(), oldSch.getTimingConstraints(), null);
+		ScheduleInstanceDetails new2 = new ScheduleInstanceDetails(newSch.getId(), newSch.getSchDefId(),
+				newSch.getComment(), newSch.getArgumentValues(), newSch.getTimingConstraints(), null);
+		return !new2.equals(old2);
 	}
 	/**
 	 * Implements Schedule modification in the system.
@@ -439,16 +424,13 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 			ScheduleInstanceDetails sch = scheds.get(i);
 			// work through item differences
 			ScheduleItemStatusDetailsList itemChanges = removedItems(itemOld, sch.getScheduleItems());
-			itemChanges = addedOrUpdatedItems(itemChanges, itemOld, sch.getScheduleItems());
+			addedOrUpdatedItems(itemChanges, itemOld, sch.getScheduleItems());
 			// has schedule itself changed?
-			boolean schChanged = didSchChange(itemOld.inst, sch);
+			boolean schChanged = didSchChange(itemOld.sch, sch);
 			StatusRecordList srl = null;
 			if (schChanged) {
 				srl = new StatusRecordList();
 				srl.add(new StatusRecord(InstanceState.LAST_MODIFIED, Util.currentTime(), "updated"));
-			}
-			if (null == itemChanges) { // FIXME temp workaround
-				itemChanges = new ScheduleItemStatusDetailsList();
 			}
 			schStats.add(new ScheduleStatusDetails(sch.getId(), srl, itemChanges));
 			schInsts.update(sch);
@@ -479,21 +461,18 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		for (int i = 0; i < schIds.size(); ++i) {
 			InstStore.SchItem item = items.get(i);
 			// item changes
-			ScheduleItemStatusDetailsList itemStats = (null != item.inst.getScheduleItems()) ? new ScheduleItemStatusDetailsList() : null;
-			for (int j = 0; (null != item.inst.getScheduleItems()) && (j < item.inst.getScheduleItems().size()); ++j) {
-				ScheduleItemInstanceDetails schItem = item.inst.getScheduleItems().get(j);
+			ScheduleItemStatusDetailsList itemStats = new ScheduleItemStatusDetailsList();
+			for (int j = 0; (null != item.sch.getScheduleItems()) && (j < item.sch.getScheduleItems().size()); ++j) {
+				ScheduleItemInstanceDetails schItem = item.sch.getScheduleItems().get(j);
 				StatusRecordList srl = new StatusRecordList();
 				srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
 				itemStats.add(new ScheduleItemStatusDetails(schItem.getId(), srl));
 			}
 			StatusRecordList srl = new StatusRecordList();
 			srl.add(new StatusRecord(InstanceState.REMOVED, Util.currentTime(), "removed"));
-			if (null == itemStats) { // FIXME temp workaround
-				itemStats = new ScheduleItemStatusDetailsList();
-			}
-			schStats.add(new ScheduleStatusDetails(item.inst.getId(), srl, itemStats));
+			schStats.add(new ScheduleStatusDetails(item.sch.getId(), srl, itemStats.isEmpty() ? null : itemStats));
 			// remove
-			schInsts.remove(item.inst.getId());
+			schInsts.remove(item.sch.getId());
 		}
 		// notify plugin
 		plugRemoved(schIds);
@@ -505,7 +484,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	}
 
 	/**
-	 * Implements Schedule patching.. how does it differ from updating?
+	 * Implements Schedule patching (another for of update).
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#patchSchedule(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations, java.lang.Long, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
@@ -538,6 +517,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		LOG.log(Level.INFO, "{1}.getScheduleStatus(List:schIds)\n  schIds[]={0}",
 				new Object[] { schIds, Dumper.received(interaction) });
 		Check.schInstIdList(schIds);
+		Check.schInstIds(schIds);
 		
 		ScheduleStatusDetailsList schStats = schInsts.listStats(schIds);
 		
@@ -553,7 +533,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		// return change
 		StatusRecordList srl = new StatusRecordList();
 		srl.add(sr);
-		return new ScheduleStatusDetails(item.inst.getId(), srl, new ScheduleItemStatusDetailsList()); // FIXME
+		return new ScheduleStatusDetails(item.sch.getId(), srl, null);
 	}
 	
 	/**
@@ -589,7 +569,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		// return changes
 		StatusRecordList srl = new StatusRecordList();
 		srl.add(sr);
-		return new ScheduleStatusDetails(item.inst.getId(), srl, new ScheduleItemStatusDetailsList()); // FIXME
+		return new ScheduleStatusDetails(item.sch.getId(), srl, null);
 	}
 	
 	/**
@@ -625,7 +605,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		// return change
 		StatusRecordList srl = new StatusRecordList();
 		srl.add(sr);
-		return new ScheduleStatusDetails(item.inst.getId(), srl, new ScheduleItemStatusDetailsList()); // FIXME
+		return new ScheduleStatusDetails(item.sch.getId(), srl, null);
 	}
 	
 	/**
@@ -662,7 +642,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		// return change
 		StatusRecordList srl = new StatusRecordList();
 		srl.add(sr);
-		return new ScheduleStatusDetails(item.inst.getId(), srl, new ScheduleItemStatusDetailsList()); // FIXME
+		return new ScheduleStatusDetails(item.sch.getId(), srl, null);
 	}
 	
 	/**
@@ -724,19 +704,19 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		return schDefIds;
 	}
 	
-	public ScheduleDefinitionDetailsList getDefinition(LongList schDefIds, MALInteraction interaction)
+	public ScheduleDefinitionDetailsList getDefinition(LongList ids, MALInteraction interaction)
 			throws MALInteractionException, MALException {
 		LOG.log(Level.INFO, "{1}.getDefinition(schDefIds={0})",
-				new Object[] { schDefIds, Dumper.received(interaction) });
-		ScheduleDefinitionDetailsList schDefs = new ScheduleDefinitionDetailsList();
-		for (int i = 0; i < schDefIds.size(); ++i) {
-			Long id = schDefIds.get(i);
+				new Object[] { ids, Dumper.received(interaction) });
+		ScheduleDefinitionDetailsList defs = new ScheduleDefinitionDetailsList();
+		for (int i = 0; i < ids.size(); ++i) {
+			Long id = ids.get(i);
 			ScheduleDefinitionDetails def = this.schDefs.find(id);
-			schDefs.add(def);
+			defs.add(def);
 		}
 		LOG.log(Level.INFO, "{1}.getDefinition() response: returning schDefs={0}",
-				new Object[] { Dumper.schDefs(schDefs), Dumper.sending(interaction) });
-		return schDefs;
+				new Object[] { Dumper.schDefs(defs), Dumper.sending(interaction) });
+		return defs;
 	}
 	
 	/**

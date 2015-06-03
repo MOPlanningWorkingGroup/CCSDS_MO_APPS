@@ -25,6 +25,12 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 public class Check {
 
 	/**
+	 * Hidden ctor.
+	 */
+	private Check() {
+	}
+	
+	/**
 	 * Check schedule id list.
 	 * @param ids
 	 * @throws MALException
@@ -97,25 +103,82 @@ public class Check {
 		}
 	}
 	
+	protected static ArgumentValue findArg(Identifier name, ArgumentValueList args) {
+		ArgumentValue val = null;
+		for (int i = 0; (null == val) && (null != args) && (i < args.size()); ++i) {
+			ArgumentValue argVal = args.get(i);
+			if (name.equals(argVal.getArgDefName())) {
+				val = argVal;
+			}
+		}
+		return val;
+	}
+
+	protected static void schArg(int i, int j, ArgumentValue val, String pre) throws MALException {
+		if (null == val) {
+			throw new MALException(pre+"schedule instance[" + i + "].argVal[" + j + "] is null");
+		}
+	}
+	
+	protected static void schArgName(int i, int j, Identifier name, String pre) throws MALException {
+		if (null == name || null == name.getValue()) {
+			throw new MALException(pre+"schedule instance[" + i + "].argVal[" + j + "].name is null");
+		}
+		if (name.getValue().isEmpty()) {
+			throw new MALException(pre+"schedule instance[" + i + "].argVal[" + j + "].name is empty");
+		}
+	}
+	
+	protected static void schArgs(int i, ArgumentValueList vals, ArgumentValueList args) throws MALException {
+		for (int j = 0; (null != vals) && (j < vals.size()); ++j) {
+			ArgumentValue val = vals.get(j);
+			schArg(i, j, val, "remove ");
+			schArgName(i, j, val.getArgDefName(), "remove ");
+			ArgumentValue argVal = findArg(val.getArgDefName(), args);
+			if (null == argVal) {
+				throw new MALException("remove schedule instance[" + i + "].argVal[" + j + "] not found by name: " + val.getArgDefName());
+			}
+		}
+	}
+
+	/**
+	 * Check schedule for nullpointer.
+	 * @param schInst
+	 * @throws MALException
+	 */
+	protected static void schInst(int i, ScheduleInstanceDetails sch, String pre) throws MALException {
+		if (null == sch) {
+			throw new MALException(pre+"schedule instance[" + i + "] is null");
+		}
+	}
+
+	/**
+	 * Check schedule for id.
+	 * @param id
+	 * @throws MALException
+	 */
+	protected static void schInstId(int i, Long id, String pre) throws MALException {
+		if (null == id) {
+			throw new MALException(pre+"schedule instance[" + i + "] id is null");
+		}
+	}
+
 	/**
 	 * Check patch remove list.
 	 * @param remove
-	 * @param insts
+	 * @param store
 	 * @throws MALException
 	 */
-	public static void patchRemove(ScheduleInstanceDetailsList remove, InstStore insts) throws MALException {
+	public static void patchRemove(ScheduleInstanceDetailsList remove, InstStore store) throws MALException {
 		for (int i = 0; (null != remove) && (i < remove.size()); ++i) {
 			ScheduleInstanceDetails sch = remove.get(i);
-			if (null == sch) {
-				throw new MALException("remove schedule instance[" + i + "] is null");
-			}
-			if (null == sch.getId()) {
-				throw new MALException("remove schedule instance[" + i + "].id is null");
-			}
-			InstStore.SchItem it = insts.findSchItem(sch.getId());
+			schInst(i, sch, "remove ");
+			schInstId(i, sch.getId(), "remove ");
+			InstStore.SchItem it = store.findSchItem(sch.getId());
 			if (null == it) {
 				throw new MALException("can't find schedule instance[" + i + "] to remove from, id: " + sch.getId());
 			}
+			schArgs(i, sch.getArgumentValues(), it.sch.getArgumentValues());
 		}
 	}
 	
@@ -128,12 +191,8 @@ public class Check {
 	public static void patchUpdate(ScheduleInstanceDetailsList update, InstStore insts) throws MALException {
 		for (int i = 0; (null != update) && (i < update.size()); ++i) {
 			ScheduleInstanceDetails sch = update.get(i);
-			if (null == sch) {
-				throw new MALException("update schedule instance[" + i + "] is null");
-			}
-			if (null == sch.getId()) {
-				throw new MALException("update schedule instance[" + i + "].id is null");
-			}
+			schInst(i, sch, "update ");
+			schInstId(i, sch.getId(), "update ");
 			InstStore.SchItem it = insts.findSchItem(sch.getId());
 			if (null == it) {
 				throw new MALException("can't find schedule instance[" + i + "] to update, id: " + sch.getId());
@@ -150,12 +209,8 @@ public class Check {
 	public static void patchAdd(ScheduleInstanceDetailsList add, InstStore insts) throws MALException {
 		for (int i = 0; (null != add) && (i < add.size()); ++i) {
 			ScheduleInstanceDetails sch = add.get(i);
-			if (null == sch) {
-				throw new MALException("add schedule instance[" + i + "] is null");
-			}
-			if (null == sch.getId()) {
-				throw new MALException("add schedule instance[" + i + "].id is null");
-			}
+			schInst(i, sch, "add ");
+			schInstId(i, sch.getId(), "add ");
 			InstStore.SchItem it = insts.findSchItem(sch.getId());
 			if (null == it) {
 				throw new MALException("can't find schedule instance[" + i + "] to add to, id: " + sch.getId());
@@ -197,28 +252,6 @@ public class Check {
 		}
 		if (insts.isEmpty()) {
 			throw new MALException("schedule instance list is empty");
-		}
-	}
-	
-	/**
-	 * Check schedule for nullpointer.
-	 * @param schInst
-	 * @throws MALException
-	 */
-	protected static void schInst(int i, ScheduleInstanceDetails schInst) throws MALException {
-		if (null == schInst) {
-			throw new MALException("schedule instance[" + i + "] is null");
-		}
-	}
-
-	/**
-	 * Check schedule for id.
-	 * @param id
-	 * @throws MALException
-	 */
-	protected static void schInstId(int i, Long id) throws MALException {
-		if (null == id) {
-			throw new MALException("schedule instance[" + i + "] id is null");
 		}
 	}
 
@@ -304,21 +337,6 @@ public class Check {
 		}
 	}
 	
-	protected static void schArg(int i, int j, ArgumentValue arg) throws MALException {
-		if (null == arg) {
-			throw new MALException("schedule instance[" + i + "].arg[" + j + "] is null");
-		}
-	}
-	
-	protected static void schArgName(int i, int j, Identifier name) throws MALException {
-		if (null == name || null == name.getValue()) {
-			throw new MALException("schedule instance[" + i + "].arg[" + j + "].name is null");
-		}
-		if (name.getValue().isEmpty()) {
-			throw new MALException("schedule instance[" + i + "].arg[" + j + "].name is empty");
-		}
-	}
-	
 	protected static ArgumentDefinitionDetails findArg(Identifier name, ArgumentDefinitionDetailsList args) {
 		ArgumentDefinitionDetails def = null;
 		for (int i = 0; (null == def) && (null != args) && (i < args.size()); ++i) {
@@ -354,8 +372,8 @@ public class Check {
 		// args are optional
 		for (int j = 0; (null != args) && (j < args.size()); ++j) {
 			ArgumentValue arg = args.get(j);
-			schArg(i, j, arg);
-			schArgName(i, j, arg.getArgDefName());
+			schArg(i, j, arg, "");
+			schArgName(i, j, arg.getArgDefName(), "");
 			ArgumentDefinitionDetails argDef = schArgDefExists(i, j, arg.getArgDefName(), def.getArgumentDefs());
 			schArgVal(i, j, arg.getValue(), argDef);
 		}
@@ -391,8 +409,8 @@ public class Check {
 	public static void addSchInsts(ScheduleInstanceDetailsList scheds, DefStore defs, InstStore insts) throws MALException {
 		for (int i = 0; i < scheds.size(); ++i) {
 			ScheduleInstanceDetails sch = scheds.get(i);
-			schInst(i, sch);
-			schInstId(i, sch.getId());
+			schInst(i, sch, "");
+			schInstId(i, sch.getId(), "");
 			schDefId(i, sch.getSchDefId());
 			ScheduleDefinitionDetails def = schDefExists(i, sch.getSchDefId(), defs);
 			schArgs(i, sch, def);
@@ -409,7 +427,7 @@ public class Check {
 		return item;
 	}
 	
-	protected static void updateSchItems(int i, ScheduleInstanceDetails sch, InstStore insts) throws MALException {
+	protected static void updateSchItems(int i, ScheduleInstanceDetails sch) throws MALException {
 		ScheduleItemInstanceDetailsList items = sch.getScheduleItems();
 		// items are optional, list may be null and empty
 		for (int j = 0; (null != items) && (j < items.size()); ++j) {
@@ -420,7 +438,6 @@ public class Check {
 			// item doesn't have definition
 			schItemArgs(i, j, item);
 			// item exists -> update; doesn exist -> add
-//			schItemNoExist(i, j, item.getId(), insts);
 		}
 	}
 	
@@ -428,13 +445,14 @@ public class Check {
 		List<InstStore.SchItem> items = new ArrayList<InstStore.SchItem>();
 		for (int i = 0; i < scheds.size(); ++i) {
 			ScheduleInstanceDetails sch = scheds.get(i);
-			schInst(i, sch);
-			schInstId(i, sch.getId());
+			schInst(i, sch, "");
+			schInstId(i, sch.getId(), "");
 			schDefId(i, sch.getSchDefId());
 			ScheduleDefinitionDetails def = schDefExists(i, sch.getSchDefId(), defs);
 			schArgs(i, sch, def);
+			// schedule has to exist for update
 			items.add(schInstExists(i, sch.getId(), insts));
-			updateSchItems(i, sch, insts);
+			updateSchItems(i, sch); // items don't have to exist
 		}
 		return items;
 	}

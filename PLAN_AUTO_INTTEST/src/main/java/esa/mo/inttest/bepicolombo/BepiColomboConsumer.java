@@ -90,13 +90,13 @@ public class BepiColomboConsumer {
 		prDef.setTaskDefIds(taskDefIds(taskDef1, taskDef2, taskDef3, taskDef4));
 		Long prDefId = submitPrDef(prDef);
 		
-		TaskInstanceDetails taskInst1 = crf.createPassTaskInst(generateId(), taskDefId1, null);
+		TaskInstanceDetails taskInst1 = crf.createPassTaskInst(generateId(), taskDefId1);
 		
-		TaskInstanceDetails taskInst2 = crf.createExecTaskInst(generateId(), taskDefId2, null);
+		TaskInstanceDetails taskInst2 = crf.createExecTaskInst(generateId(), taskDefId2);
 		
-		TaskInstanceDetails taskInst3 = crf.createMaesTaskInst(generateId(), taskDefId3, null);
+		TaskInstanceDetails taskInst3 = crf.createMaesTaskInst(generateId(), taskDefId3);
 		
-		TaskInstanceDetails taskInst4 = crf.createSeqTaskInst(generateId(), taskDefId4, null);
+		TaskInstanceDetails taskInst4 = crf.createSeqTaskInst(generateId(), taskDefId4);
 		
 		PlanningRequestInstanceDetails prInst = crf.createPrInst(generateId(), prDefId);
 		setTaskInsts(prInst, taskInst1, taskInst2, taskInst3, taskInst4);

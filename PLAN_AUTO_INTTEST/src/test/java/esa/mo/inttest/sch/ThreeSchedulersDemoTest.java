@@ -95,10 +95,10 @@ public class ThreeSchedulersDemoTest {
 		public void acceptSubmitted() throws MALException, MALInteractionException {
 			for (Long id: submitted) {
 				InstStore.SchItem item = prov.getInstStore().findSchItem(id);
-				StatusRecord asr = Util.findStatus(item.stat.getStatus(), InstanceState.ACCEPTED);
+				StatusRecord asr = Util.findStatus(item.getStat().getStatus(), InstanceState.ACCEPTED);
 				if (null == asr) {
 					asr = new StatusRecord(InstanceState.ACCEPTED, Util.currentTime(), "accepted");
-					item.stat.getStatus().add(asr);
+					item.getStat().getStatus().add(asr);
 					// all statuses list was updated, now publish changed status
 					StatusRecordList srl = new StatusRecordList();
 					srl.add(asr);
@@ -185,7 +185,7 @@ public class ThreeSchedulersDemoTest {
 		LongList ids = cons1.getStub().addDefinition(defs);
 		defIds.add(ids.get(0));
 		
-		ArgumentDefinitionDetailsList argDefs = ScheduleConsumer.addArgDef(null, "arg1", Util.attrType(Attribute.STRING_TYPE_SHORT_FORM), null);
+		ArgumentDefinitionDetailsList argDefs = ScheduleConsumer.addArgDef(null, "arg1", Util.attrType(Attribute.STRING_TYPE_SHORT_FORM));
 		def = ScheduleConsumer.createDef("test schedule definition 2", "test 2");
 		def.setId(0L);
 		def.setArgumentDefs(argDefs);

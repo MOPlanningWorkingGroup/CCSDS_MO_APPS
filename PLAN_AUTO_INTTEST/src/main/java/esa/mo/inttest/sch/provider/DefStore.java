@@ -1,12 +1,14 @@
 package esa.mo.inttest.sch.provider;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.mal.MALException;
+import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 
@@ -24,17 +26,31 @@ public class DefStore {
 	public DefStore() {
 	}
 	
+	protected LongList list(Identifier name) {
+		LongList ids = new LongList();
+		Iterator<ScheduleDefinitionDetails> it = defs.values().iterator();
+		while (it.hasNext()) {
+			ScheduleDefinitionDetails def = it.next();
+			if ("*".equals(name.getValue()) || // "all" or "contains"
+					def.getName().getValue().contains(name.getValue())) {
+				ids.add(def.getId());
+			}
+		}
+		return ids;
+	}
+	
 	/**
 	 * Returns schedule definition ids.
 	 * @param schNames
 	 * @return
 	 * @throws MALException
 	 */
-	public LongList list(IdentifierList schNames) throws MALException {
+	public LongList list(IdentifierList schNames) {
 		LongList ids = new LongList();
-//		for (int i = 0; i < schNames.size(); ++i) {
-			ids.addAll(defs.keySet()); // TODO filtering
-//		}
+		for (int i = 0; i < schNames.size(); ++i) {
+			Identifier name = schNames.get(i);
+			ids.addAll(list(name));
+		}
 		return ids;
 	}
 	

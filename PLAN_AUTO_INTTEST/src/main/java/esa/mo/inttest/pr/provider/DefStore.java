@@ -22,11 +22,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
  */
 public class DefStore {
 
-	public static final class Item {
-		public DefinitionType type;
-		public BaseDefinition def;
-	}
-	
 	private AtomicLong lastId = new AtomicLong(0L);
 	private Map<Long, PlanningRequestDefinitionDetails> prDefs = new HashMap<Long, PlanningRequestDefinitionDetails>();
 	private Map<Long, TaskDefinitionDetails> taskDefs = new HashMap<Long, TaskDefinitionDetails>();
@@ -161,7 +156,7 @@ public class DefStore {
 		return (BaseDefinitionList<BaseDefinition>)list;
 	}
 	
-	public BaseDefinitionList<? extends BaseDefinition> getAll(DefinitionType dt, LongList ids) {
+	public BaseDefinitionList<BaseDefinition> getAll(DefinitionType dt, LongList ids) {
 		BaseDefinitionList<BaseDefinition> list = createList(dt);
 		for (int i = 0; i < ids.size(); ++i) {
 			Long id = ids.get(i);

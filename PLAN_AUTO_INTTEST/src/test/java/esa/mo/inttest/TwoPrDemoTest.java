@@ -116,7 +116,7 @@ public class TwoPrDemoTest {
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
 				// forward only change
 				StatusRecordList srl = new StatusRecordList();
-				srl.add(Util.addOrUpdateStatus(it.stat, is, t, c));
+				srl.add(Util.addOrUpdateStatus(it.getStat(), is, t, c));
 				PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
 				prStats.add(new PlanningRequestStatusDetails(stat.getPrInstId(), srl, null));
 				try {
@@ -159,11 +159,11 @@ public class TwoPrDemoTest {
 				String c = (null != sr) ? sr.getComment() : "planning conflict";
 				// forward only change
 				StatusRecordList srl = new StatusRecordList();
-				srl.add(Util.addOrUpdateStatus(taskItem.stat, is, t, c));
+				srl.add(Util.addOrUpdateStatus(taskItem.getStat(), is, t, c));
 				TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
 				taskStats.add(new TaskStatusDetails(stat.getTaskInstId(), srl));
 				PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
-				prStats.add(new PlanningRequestStatusDetails(taskItem.task.getPrInstId(), null, taskStats));
+				prStats.add(new PlanningRequestStatusDetails(taskItem.getTask().getPrInstId(), null, taskStats));
 				try {
 					instr.publishPr(UpdateType.UPDATE, prStats);
 				} catch (MALException e) {
@@ -237,14 +237,14 @@ public class TwoPrDemoTest {
 			// process submitted prs
 			for (int i = 0; i < prInstIds.size(); ++i) {
 				Long prInstId = prInstIds.get(i);
-				LongList taskInstIds = (null != this.taskInstIds && i < this.taskInstIds.size()) ? this.taskInstIds.get(i) : null;
+				LongList taskIds = (null != taskInstIds && i < taskInstIds.size()) ? taskInstIds.get(i) : null;
 				
 				PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(prInstId, gsPrDefId, null);
 				
-				if (null != taskInstIds && null != gsTaskDefIds) {
-					TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(taskInstIds.get(0), gsTaskDefIds.get(0), null);
+				if (null != taskIds && null != gsTaskDefIds) {
+					TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(taskIds.get(0), gsTaskDefIds.get(0), null);
 					taskInst.setPrInstId(prInst.getId());
-					TaskInstanceDetails taskInst2 = PlanningRequestConsumer.createTaskInst(taskInstIds.get(1), gsTaskDefIds.get(1), null);
+					TaskInstanceDetails taskInst2 = PlanningRequestConsumer.createTaskInst(taskIds.get(1), gsTaskDefIds.get(1), null);
 					taskInst2.setPrInstId(prInst.getId());
 					prInst.setTasks(new TaskInstanceDetailsList());
 					prInst.getTasks().add(taskInst);
@@ -266,15 +266,15 @@ public class TwoPrDemoTest {
 	 */
 	public static class GsPrProcessor implements Plugin {
 		
-		private PlanningRequestProvider pr;
+		private PlanningRequestProvider prov;
 		private LongList prInstIds = new LongList();
 		
 		/**
 		 * Parent provider this plugin is plugged into.
 		 * @see esa.mo.inttest.pr.provider.Plugin#setProv(esa.mo.inttest.pr.provider.PlanningRequestProvider)
 		 */
-		public void setProv(PlanningRequestProvider pr) {
-			this.pr = pr;
+		public void setProv(PlanningRequestProvider prov) {
+			this.prov = prov;
 		}
 		
 		/**
@@ -311,15 +311,15 @@ public class TwoPrDemoTest {
 		public void doPlanning() throws MALException, MALInteractionException {
 			// process submitted prs
 			for (Long id: prInstIds) {
-				InstStore.PrItem it = pr.getInstStore().findPrItem(id);
+				InstStore.PrItem it = prov.getInstStore().findPrItem(id);
 				if (null != it) {
 					// publish only change
 					StatusRecordList srl = new StatusRecordList();
-					srl.add(Util.addOrUpdateStatus(it.stat, InstanceState.PLAN_CONFLICT,
+					srl.add(Util.addOrUpdateStatus(it.getStat(), InstanceState.PLAN_CONFLICT,
 							Util.currentTime(), "planning conflict"));
 					PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
-					prStats.add(new PlanningRequestStatusDetails(it.stat.getPrInstId(), srl, null));
-					pr.publishPr(UpdateType.UPDATE, prStats);
+					prStats.add(new PlanningRequestStatusDetails(it.getStat().getPrInstId(), srl, null));
+					prov.publishPr(UpdateType.UPDATE, prStats);
 				}
 			}
 		}

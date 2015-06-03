@@ -166,7 +166,7 @@ public class ThreeGoceConsumersTest {
 				InstStore.TaskItem item = prov.getInstStore().findTaskItem(taskId);
 				boolean doRemove = true;
 				if (null != item) {
-					doRemove = checkTaskAccept(item.task.getPrInstId(), taskId, item.stat);
+					doRemove = checkTaskAccept(item.getTask().getPrInstId(), taskId, item.getStat());
 				} // for taskStats
 				if (doRemove) {
 					newTasks.remove(i0);
@@ -220,7 +220,7 @@ public class ThreeGoceConsumersTest {
 				InstStore.PrItem item = prov.getInstStore().findPrItem(prId);
 				boolean doRemove = true;
 				if (null != item) {
-					doRemove = checkPrAccept(prId, item.stat);
+					doRemove = checkPrAccept(prId, item.getStat());
 				} // for
 				if (doRemove) {
 					newPrs.remove(i0);
@@ -394,7 +394,7 @@ public class ThreeGoceConsumersTest {
 			proc.process();
 			b1 = proc.newTasks.isEmpty();
 			b2 = proc.newPrs.isEmpty();
-		} while (false == b1 && false == b2 && (System.currentTimeMillis() < before+10*1000L));
+		} while (!b1 && !b2 && (System.currentTimeMillis() < before+10*1000L));
 		
 		assertTrue(proc.newTasks.isEmpty());
 		assertTrue(proc.newPrs.isEmpty());

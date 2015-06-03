@@ -131,26 +131,24 @@ public class Check {
 	 * @param defs
 	 * @throws MALException
 	 */
-	@SuppressWarnings("rawtypes")
-	public static BaseDefinitionList<?> defList(BaseDefinitionList defs) throws MALException {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static BaseDefinitionList<BaseDefinition> defList(BaseDefinitionList defs) throws MALException {
 		if (null == defs) {
-			throw new MALException("no definition list given");
+			throw new MALException("definitions list is null");
 		}
 		if (defs.isEmpty()) {
-			throw new MALException("no definitions in list");
+			throw new MALException("definitions list is empty");
 		}
-		return (BaseDefinitionList<?>)defs;
+		return (BaseDefinitionList<BaseDefinition>)defs;
 	}
 	
 	protected static void extendsBaseDef(int i, DefinitionType dt, BaseDefinition bd) throws MALException {
-		if (DefinitionType.TASK_DEF == dt) {
-			if (!(bd instanceof TaskDefinitionDetails)) {
-				throw new MALException("definition[" + i + "] is not task definition");
-			}
-		} else if (DefinitionType.PLANNING_REQUEST_DEF == dt) {
-			if (!(bd instanceof PlanningRequestDefinitionDetails)) {
-				throw new MALException("definition[" + i + "] is not pr definition");
-			}
+		if ((DefinitionType.TASK_DEF == dt) &&
+				!(bd instanceof TaskDefinitionDetails)) {
+			throw new MALException("definition[" + i + "] is not task definition");
+		} else if ((DefinitionType.PLANNING_REQUEST_DEF == dt) &&
+				!(bd instanceof PlanningRequestDefinitionDetails)) {
+			throw new MALException("definition[" + i + "] is not pr definition");
 		}
 	}
 	
@@ -176,15 +174,15 @@ public class Check {
 	 * @param type
 	 * @throws MALException
 	 */
-	public static BaseDefinitionList<? extends BaseDefinition> defs(DefinitionType type,
-			BaseDefinitionList<?> defs) throws MALException {
+	public static BaseDefinitionList<BaseDefinition> defs(DefinitionType type,
+			BaseDefinitionList<BaseDefinition> defs) throws MALException {
 		for (int i = 0; (null != defs) && (i < defs.size()); ++i) {
 			Object obj = defs.get(i);
 			def(i, obj);
 			BaseDefinition bd = baseDef(i, obj);
 			extendsBaseDef(i, type, bd);
 		}
-		return (BaseDefinitionList<? extends BaseDefinition>)defs;
+		return defs;
 	}
 
 	/**
@@ -550,8 +548,8 @@ public class Check {
 		return it;
 	}
 
-	protected static void updatePrTasks(int i, PlanningRequestInstanceDetails pr, DefStore taskDefs,
-			InstStore store) throws MALException {
+	protected static void updatePrTasks(int i, PlanningRequestInstanceDetails pr,
+			DefStore taskDefs) throws MALException {
 		TaskInstanceDetailsList tasks = pr.getTasks();
 		// tasks are optional, tasks list can be null and empty
 		for (int j = 0; (null != tasks) && (j < tasks.size()); ++j) {
@@ -563,7 +561,6 @@ public class Check {
 			TaskDefinitionDetails def = prTaskDefExists(i, j, task.getTaskDefId(), taskDefs);
 			prTaskArgs(i, j, task, def);
 			// task may exist or not -> depends if it's update or add
-//			prTaskInstExists(i, j, task.getId(), store);
 		}
 	}
 
@@ -579,7 +576,7 @@ public class Check {
 			prArgs(i, pr, def);
 			// pr must exist in order to update it
 			items.add(prInstExists(i, pr.getId(), store));
-			updatePrTasks(i, pr, prDefs, store);
+			updatePrTasks(i, pr, prDefs); // tasks don't have to exist
 		}
 		return items;
 	}

@@ -160,8 +160,8 @@ public class CommandRequestFile {
 		return new Time(d.getTime());
 	}
 	
-	public TaskInstanceDetails createPassTaskInst(Long id, Long defId, Long prId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"ZXC01060"*/id, defId, "some useful comments"/*, getPrInstName()*/);
+	public TaskInstanceDetails createPassTaskInst(Long id, Long defId) throws ParseException {
+		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"ZXC01060"*/id, defId, "some useful comments");
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.RELEASE, parseAbsTime("2009-300T12:00:00.000Z")));
 		inst.setTimingConstraints(tims);
@@ -176,8 +176,8 @@ public class CommandRequestFile {
 		return new TimingDetails(name, null, et, null, null, null, null);
 	}
 	
-	public TaskInstanceDetails createExecTaskInst(Long id, Long defId, Long prId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"ZAC003340"*/id, defId, "some useful comments"/*, getPrInstName()*/);
+	public TaskInstanceDetails createExecTaskInst(Long id, Long defId) throws ParseException {
+		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"ZAC003340"*/id, defId, "some useful comments");
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.START, "AOD", "1", "2", parseRelTime("12:33:44")));
 		inst.setTimingConstraints(tims);
@@ -194,8 +194,8 @@ public class CommandRequestFile {
 		return new TimingDetails(name, null, et, new ULong(new BigInteger(repeat)), separ, early, late);
 	}
 
-	public TaskInstanceDetails createMaesTaskInst(Long id, Long defId, Long prId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"MAP3"*/id, defId, "mission specific comment"/*, getPrInstName()*/);
+	public TaskInstanceDetails createMaesTaskInst(Long id, Long defId) throws ParseException {
+		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"MAP3"*/id, defId, "mission specific comment");
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.START, "MAP1", "1", "14", parseRelTime("01:00:00"), "9",
 				parseRelTime("00:00:10").getRelativeTime(), parseRelTime("-10:59:00"), parseRelTime("001.23:59:59.000"), 2));
@@ -218,8 +218,8 @@ public class CommandRequestFile {
 		return new TimingDetails(name, tt, null, null, null, null, null);
 	}
 	
-	public TaskInstanceDetails createSeqTaskInst(Long id, Long defId, Long prId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"SQRA0030"*/id, defId, "mission specific comment"/*, getPrInstName()*/);
+	public TaskInstanceDetails createSeqTaskInst(Long id, Long defId) throws ParseException {
+		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"SQRA0030"*/id, defId, "mission specific comment");
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.RELEASE, parseRelTime("10:00:00")));
 		tims.add(createEventTrig(TriggerName.START, parseAbsTime("2009-301T18:43:22Z")));
@@ -274,7 +274,7 @@ public class CommandRequestFile {
 	}
 	
 	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId) throws ParseException {
-		PlanningRequestInstanceDetails inst = PlanningRequestConsumer.createPrInst(/*getPrInstName()*/id, defId, null);
+		PlanningRequestInstanceDetails inst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.VALIDITY_START, "AOS", "123", parseRelTime("-188.12:32:00.123"), 0));
 		tims.add(createEventTrig(TriggerName.VALIDITY_END, "LOS", "1234", parseRelTime("12:32:00"), -2));

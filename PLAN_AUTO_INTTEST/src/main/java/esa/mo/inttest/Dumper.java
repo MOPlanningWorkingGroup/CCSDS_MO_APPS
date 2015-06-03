@@ -980,57 +980,6 @@ public final class Dumper {
 		return dumpSchStats(ssl, STEP);
 	}
 	
-//	private static String dumpPatchOp(PatchOperation po) {
-//		StringBuilder s = new StringBuilder();
-//		if (null != po) {
-//			s.append("{ enum=").append(po);
-//			s.append(", ordinal=").append(po.getOrdinal());
-//			s.append(", numbericValue=").append(po.getNumericValue());
-//			s.append(" }");
-//		} else {
-//			s.append(NULL);
-//		}
-//		return s.toString();
-//	}
-//	
-//	private static String dumpPatchOps(PatchOperationList pol, String ind) {
-//		StringBuilder s = new StringBuilder();
-//		if (null != pol) {
-//			openList(s, pol);
-//			for (int i = 0; i < pol.size(); ++i) {
-//				s.append(ind).append(STEP).append(i).append(": ").append(dumpPatchOp(pol.get(i))).append(",\n");
-//			}
-//			closeList(s, pol, ind);
-//		} else {
-//			s.append(NULL);
-//		}
-//		return s.toString();
-//	}
-//	
-//	private static String dumpSchPatchOp(SchedulePatchOperations spo, String ind) {
-//		StringBuilder s = new StringBuilder();
-//		if (null != spo) {
-//			s.append("{\n");
-//			s.append(ind).append(STEP).append("scheduleInstName=").append(dumpId(spo.getScheduleInstName())).append(",\n");
-//			s.append(ind).append(STEP).append("argValues=").append(dumpPatchOps(spo.getArgumentValues(), ind+STEP)).append(",\n");
-//			s.append(ind).append(STEP).append("timingConstraints=").append(dumpPatchOps(spo.getTimingConstraints(), ind+STEP)).append(",\n");
-//			s.append(ind).append(STEP).append("scheduleItems=").append(dumpPatchOps(spo.getScheduleItems(), ind+STEP)).append("\n");
-//			s.append(ind).append("}");
-//		} else {
-//			s.append(NULL);
-//		}
-//		return s.toString();
-//	}
-//	
-//	/**
-//	 * Outputs Schedule Patch Operations.
-//	 * @param spo
-//	 * @return
-//	 */
-//	public static String schPatchOp(SchedulePatchOperations spo) {
-//		return dumpSchPatchOp(spo, STEP);
-//	}
-	
 	private static String dumpFT(FineTime t) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
