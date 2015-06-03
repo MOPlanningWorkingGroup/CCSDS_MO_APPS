@@ -168,7 +168,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		assertNotNull(response[0]);
 		
-		verifyPrStat(prInst.getId());
+		verifyPrStat(prInst);
 		
 		malMsg.free();
 		
@@ -214,7 +214,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		assertNotNull(response[0]);
 		
-		verifyPrStat(prInst.getId());
+		verifyPrStat(prInst);
 		
 		LongList taskIds = new LongList();
 		taskIds.add(taskInst.getId());
@@ -271,7 +271,7 @@ public class PlanningRequestStubAsyncTest extends PlanningRequestStubTestBase {
 		
 		assertTrue(updated[0]);
 		
-		verifyPrStat(prInst.getId());
+		verifyPrStat(prInst);
 		
 		LongList taskIds = new LongList();
 		taskIds.add(prInst.getTasks().get(0).getId());

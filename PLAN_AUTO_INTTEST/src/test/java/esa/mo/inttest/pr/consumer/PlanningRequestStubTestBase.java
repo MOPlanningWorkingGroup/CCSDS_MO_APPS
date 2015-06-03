@@ -39,11 +39,13 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDef
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
@@ -331,7 +333,20 @@ public class PlanningRequestStubTestBase {
 		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
 		insts.add(prInst);
 		
-		prCons.submitPlanningRequest(insts);
+		PlanningRequestStatusDetailsList stats = prCons.submitPlanningRequest(insts);
+		// submit returns changed statuses
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		PlanningRequestStatusDetails stat = stats.get(0);
+		// has submitted pr status
+		assertNotNull(stat);
+		assertEquals(prInst.getId(), stat.getPrInstId());
+		// status has record(s)
+		assertNotNull(stat.getStatus());
+		assertFalse(stat.getStatus().isEmpty());
+		// and no task statuses
+		assertTrue((null == stat.getTaskStatuses()) || stat.getTaskStatuses().isEmpty());
 		
 		return prInst;
 	}
@@ -404,7 +419,29 @@ public class PlanningRequestStubTestBase {
 		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
 		insts.add(prInst);
 		
-		prCons.submitPlanningRequest(insts);
+		PlanningRequestStatusDetailsList stats = prCons.submitPlanningRequest(insts);
+		// submit returns changed statuses
+		assertNotNull(stats);
+		assertFalse(stats.isEmpty());
+		
+		PlanningRequestStatusDetails stat = stats.get(0);
+		// submitted pr status
+		assertNotNull(stat);
+		assertEquals(stat.getPrInstId(), prInst.getId());
+		// pr has status record(s)
+		assertNotNull(stat.getStatus());
+		assertFalse(stat.getStatus().isEmpty());
+		// has task statuses
+		assertNotNull(stat.getTaskStatuses());
+		assertFalse(stat.getTaskStatuses().isEmpty());
+		
+		TaskStatusDetails taskStat = stat.getTaskStatuses().get(0);
+		// submitted task
+		assertNotNull(taskStat);
+		assertEquals(taskStat.getTaskInstId(), taskInst.getId());
+		// has status record(s)
+		assertNotNull(taskStat.getStatus());
+		assertFalse(taskStat.getStatus().isEmpty());
 		
 		return prInst;
 	}
@@ -429,13 +466,57 @@ public class PlanningRequestStubTestBase {
 		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
 		insts.add(prInst);
 		
-		prCons.updatePlanningRequest(insts);
+		PlanningRequestStatusDetailsList prStats = prCons.updatePlanningRequest(insts);
+		// update returns changed status(es)
+		assertNotNull(prStats);
+		assertFalse(prStats.isEmpty());
+		
+		PlanningRequestStatusDetails prStat = prStats.get(0);
+		// updated pr status
+		assertNotNull(prStat);
+		assertEquals(prInst.getId(), prStat.getPrInstId());
+		// has status records
+		assertNotNull(prStat.getStatus());
+		assertFalse(prStat.getStatus().isEmpty());
+		// has task status
+		assertNotNull(prStat.getTaskStatuses());
+		assertFalse(prStat.getTaskStatuses().isEmpty());
+		
+		TaskStatusDetails taskStat = prStat.getTaskStatuses().get(0);
+		// added task status
+		assertNotNull(taskStat);
+		assertEquals(taskInst.getId(), taskStat.getTaskInstId());
+		// has status record(s)
+		assertNotNull(taskStat.getStatus());
+		assertFalse(taskStat.getStatus().isEmpty());
 	}
 	
-	protected void removePlanningRequest(Long prId) throws MALException, MALInteractionException {
+	protected void removePlanningRequest(PlanningRequestInstanceDetails pr) throws MALException, MALInteractionException {
 		LongList ids = new LongList();
-		ids.add(prId);
-		prCons.removePlanningRequest(ids);
+		ids.add(pr.getId());
+		PlanningRequestStatusDetailsList prStats = prCons.removePlanningRequest(ids);
+		// changed statuses
+		assertNotNull(prStats);
+		assertFalse(prStats.isEmpty());
+		
+		PlanningRequestStatusDetails prStat = prStats.get(0);
+		// has removed pr status
+		assertNotNull(prStat);
+		assertEquals(pr.getId(), prStat.getPrInstId());
+		// has status records
+		assertNotNull(prStat.getStatus());
+		assertFalse(prStat.getStatus().isEmpty());
+		// has task status
+		assertNotNull(prStat.getTaskStatuses());
+		assertFalse(prStat.getTaskStatuses().isEmpty());
+		
+		TaskStatusDetails taskStat = prStat.getTaskStatuses().get(0);
+		// has task status
+		assertNotNull(taskStat);
+		assertEquals(pr.getTasks().get(0).getId(), taskStat.getTaskInstId());
+		// has status records
+		assertNotNull(taskStat.getStatus());
+		assertFalse(taskStat.getStatus().isEmpty());
 	}
 	
 	protected PlanningRequestStatusDetailsList getPlanningRequestStatus(Long prInstId) throws MALException, MALInteractionException {
@@ -501,15 +582,47 @@ public class PlanningRequestStubTestBase {
 		return taskDef;
 	}
 
-	protected void verifyPrStat(Long id) throws MALException, MALInteractionException {
+	protected void verifyPrStat(PlanningRequestInstanceDetails pr) throws MALException, MALInteractionException {
 		LongList prIds = new LongList();
-		prIds.add(id);
+		prIds.add(pr.getId());
 		
 		PlanningRequestStatusDetailsList prStats = prCons.getPlanningRequestStatus(prIds);
 		
 		assertNotNull(prStats);
 		assertEquals(1, prStats.size());
-		assertNotNull(prStats.get(0));
-		assertEquals(id, prStats.get(0).getPrInstId());
+		
+		PlanningRequestStatusDetails prStat = prStats.get(0);
+		
+		assertNotNull(prStat);
+		assertEquals(pr.getId(), prStat.getPrInstId());
+		// pr status has status record(s)
+		assertNotNull(prStat.getStatus());
+		assertFalse(prStat.getStatus().isEmpty());
+		
+		int taskCount = (null != pr.getTasks()) ? pr.getTasks().size() : 0;
+		int taskStatCount = (null != prStat.getTaskStatuses()) ? prStat.getTaskStatuses().size() : 0;
+		
+		assertEquals(taskCount, taskStatCount);
+		
+		if (0 < taskCount) {
+			// check task statuses
+			for (int i = 0; i < pr.getTasks().size(); ++i) {
+				TaskInstanceDetails task = pr.getTasks().get(i);
+				// find status for task
+				TaskStatusDetails taskStat = null;
+				for (int j = 0; (null == taskStat) && (j < prStat.getTaskStatuses().size()); ++j) {
+					TaskStatusDetails ts = prStat.getTaskStatuses().get(j);
+					if (task.getId() == ts.getTaskInstId()) {
+						taskStat = ts; // found it
+					}
+				}
+				// task must have status
+				assertNotNull(taskStat);
+				assertEquals(task.getId(), taskStat.getTaskInstId());
+				// task has status record(s)
+				assertNotNull(taskStat.getStatus());
+				assertFalse(taskStat.getStatus().isEmpty());
+			}
+		}
 	}
 }

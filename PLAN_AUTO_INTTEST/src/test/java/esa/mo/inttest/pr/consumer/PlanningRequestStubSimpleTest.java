@@ -14,6 +14,7 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestIns
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
+import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequest();
 		
-		verifyPrStat(prInst.getId());
+		verifyPrStat(prInst);
 		
 		leave("testSubmitPlanningRequest");
 	}
@@ -72,7 +73,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
 		
-		verifyPrStat(prInst.getId());
+		verifyPrStat(prInst);
 		
 		LongList ids = new LongList();
 		ids.add(prInst.getTasks().get(0).getId());
@@ -81,8 +82,14 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		assertNotNull(taskStats);
 		assertEquals(1, taskStats.size());
-		assertNotNull(taskStats.get(0));
-		assertEquals(prInst.getTasks().get(0).getId(), taskStats.get(0).getTaskInstId());
+		
+		TaskStatusDetails taskStat = taskStats.get(0);
+		
+		assertNotNull(taskStat);
+		assertEquals(prInst.getTasks().get(0).getId(), taskStat.getTaskInstId());
+		
+		assertNotNull(taskStat.getStatus());
+		assertFalse(taskStat.getStatus().isEmpty());
 		
 		leave("testSubmitPlanningRequestWithTask");
 	}
@@ -95,7 +102,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		updatePlanningRequestWithTask(prInst);
 		
-		verifyPrStat(prInst.getId());
+		verifyPrStat(prInst);
 		
 		leave("testUpdatePlanningRequest");
 	}
@@ -106,7 +113,7 @@ public class PlanningRequestStubSimpleTest extends PlanningRequestStubTestBase {
 		
 		PlanningRequestInstanceDetails prInst = createAndSubmitPlanningRequestWithTask();
 		
-		removePlanningRequest(prInst.getId());
+		removePlanningRequest(prInst);
 		
 		leave("testRemovePlanningRequest");
 	}

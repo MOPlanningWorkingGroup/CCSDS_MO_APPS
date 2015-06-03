@@ -188,11 +188,9 @@ public class CommandRequestFile {
 	}
 	
 	protected TimingDetails createEventTrig(TriggerName name, String id, String startCount, String endCount,
-			RelativeTime delta, String repeat, Time separ, RelativeTime earliest, RelativeTime latest, int propFact) {
+			RelativeTime delta, String repeat, Time separ, RelativeTime early, RelativeTime late, int propFact) {
 		EventTrigger et = new EventTrigger(new Identifier(id), null, null,
 				new ULong(new BigInteger(startCount)), new ULong(new BigInteger(endCount)), null, delta, propFact);
-		EventTrigger early = new EventTrigger(null, null, null, null, null, null, earliest, propFact);
-		EventTrigger late = new EventTrigger(null, null, null, null, null, null, latest, propFact);
 		return new TimingDetails(name, null, et, new ULong(new BigInteger(repeat)), separ, early, late);
 	}
 

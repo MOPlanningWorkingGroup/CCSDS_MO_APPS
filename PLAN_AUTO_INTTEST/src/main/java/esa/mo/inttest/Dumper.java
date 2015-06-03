@@ -318,7 +318,7 @@ public final class Dumper {
 	private static String dumpTimeTrig(TimeTrigger t) {
 		StringBuilder s = new StringBuilder();
 		if (null != t) {
-			s.append("{ absoluteTime=").append(t.getAbsoluteTime());
+			s.append("{ absoluteTime=").append(dumpTs(t.getAbsoluteTime()));
 			s.append(", relativeTime=").append(dumpRelTime(t.getRelativeTime()));
 			s.append(" }");
 		} else {
@@ -359,8 +359,8 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("eventTrigger=").append(dumpEventTrig(t.getEventTrigger(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("repeat=").append(t.getRepeat()).append(",\n");
 			s.append(ind).append(STEP).append("separation=").append(t.getSeparation()).append(",\n");
-			s.append(ind).append(STEP).append("earliestOffset=").append(dumpEventTrig(t.getEarliestOffset(), ind+STEP)).append(",\n");
-			s.append(ind).append(STEP).append("latestOffset=").append(dumpEventTrig(t.getLatestOffset(), ind+STEP)).append("\n");
+			s.append(ind).append(STEP).append("earliestOffset=").append(dumpRelTime(t.getEarliestOffset())).append(",\n");
+			s.append(ind).append(STEP).append("latestOffset=").append(dumpRelTime(t.getLatestOffset())).append("\n");
 			s.append(ind).append("}");
 		} else {
 			s.append(NULL);

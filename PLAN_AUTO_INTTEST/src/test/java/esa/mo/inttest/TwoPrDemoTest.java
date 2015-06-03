@@ -489,6 +489,10 @@ public class TwoPrDemoTest {
 		PlanningRequestStatusDetails prStat = normalInstrCons.submitPr(prInst);
 		
 		assertNotNull(prStat);
+		assertEquals(prInst.getId(), prStat.getPrInstId());
+		// has status records
+		assertNotNull(prStat.getStatus());
+		assertFalse(prStat.getStatus().isEmpty());
 		
 		return prInst;
 	}
@@ -510,28 +514,34 @@ public class TwoPrDemoTest {
 		GsPrProcessor gsPrProc = new GsPrProcessor();
 		gsPrProvFct.setPlugin(gsPrProc);
 		
-		// PR power user adds defs
+		// PR power user adds defs to gs prov
 		LongList gsPrDefIds = gsAddPrDefs();
 		
 		assertNotNull(gsPrDefIds);
 		assertFalse(gsPrDefIds.isEmpty());
 		assertNotNull(gsPrDefIds.get(0));
+		assertFalse(0L == gsPrDefIds.get(0));
 		
+		// tell instr processor to use that definition id
 		instrPrProc.setGsPrDefId(gsPrDefIds.get(0));
 		
+		// PR power user adds defs to instr prov
 		LongList instrPrDefIds = instrAddPrDefs();
 		
 		assertNotNull(instrPrDefIds);
 		assertFalse(instrPrDefIds.isEmpty());
 		assertNotNull(instrPrDefIds.get(0));
+		assertFalse(0L == instrPrDefIds.get(0));
 		
-		// PR normal user subscribes
+		// PR normal user subscribes to instr prov
 		IdentifierList instrDom = new IdentifierList();
+		instrDom.add(instrSubDom);
 		String sub2Id = "instrPrSub";
 		registerPrMonitor(sub2Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
 		
-		// instr pr subscribes to gs pr
+		// instr prov subscribes to gs prov
 		IdentifierList gsDom = new IdentifierList();
+		gsDom.add(gsSubDom);
 		String sub4Id = "gsPrSub";
 		registerPrMonitor(sub4Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
 		
@@ -623,6 +633,23 @@ public class TwoPrDemoTest {
 		PlanningRequestStatusDetails prStat = normalInstrCons.submitPr(prInst);
 		
 		assertNotNull(prStat);
+		assertEquals(prInst.getId(), prStat.getPrInstId());
+		// has status records
+		assertNotNull(prStat.getStatus());
+		assertFalse(prStat.getStatus().isEmpty());
+		// has task statuses
+		TaskStatusDetailsList taskStats = prStat.getTaskStatuses();
+		assertNotNull(taskStats);
+		assertEquals(2, taskStats.size());
+		
+		for (int i = 0; i < taskStats.size(); ++i) {
+			TaskStatusDetails taskStat = taskStats.get(i);
+			assertNotNull(taskStat);
+			assertEquals(prInst.getTasks().get(i).getId(), taskStat.getTaskInstId());
+			// has status records
+			assertNotNull(taskStat.getStatus());
+			assertFalse(taskStat.getStatus().isEmpty());
+		}
 		
 		return prInst;
 	}
@@ -672,11 +699,13 @@ public class TwoPrDemoTest {
 		
 		// PR normal user subscribes
 		IdentifierList instrDom = new IdentifierList();
+		instrDom.add(instrSubDom);
 		String sub2Id = "instrPrSub";
 		registerPrMonitor(sub2Id, instrDom, normalInstrCons.getStub(), normalInstrCons, CLIENT1, PR_PROV1);
 		
 		// instr pr subscribes to gs pr
 		IdentifierList gsDom = new IdentifierList();
+		gsDom.add(gsSubDom);
 		String sub4Id = "gsPrSub";
 		registerPrMonitor(sub4Id, gsDom, instrProv2GsProvCons, instrPrProc, PR_PROV1, PR_PROV2);
 		

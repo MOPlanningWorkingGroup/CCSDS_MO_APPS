@@ -28,9 +28,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		Util.waitFor(prMon, 1000, new Callable<Boolean>() {
 			@Override
 			public Boolean call() {
-				boolean b = prMon.haveData();
-				System.out.println(System.currentTimeMillis() + " call " + b);
-				return b;
+				return prMon.haveData();
 			}
 		});
 		// verify that we got pr notification
@@ -118,7 +116,7 @@ public class PlanningRequestStubMonitorTest extends PlanningRequestStubTestBase 
 		// reset notify helpers
 		prMon.clearData();
 		
-		removePlanningRequest(prInst.getId());
+		removePlanningRequest(prInst);
 		
 		waitAndVerifyPr(prMon);
 		
