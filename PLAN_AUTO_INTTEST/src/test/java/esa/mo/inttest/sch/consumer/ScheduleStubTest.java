@@ -9,6 +9,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -136,15 +137,16 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	}
 	
 	@Test
-	public void testPatchSchedule() throws MALException, MALInteractionException {
+	public void testSubmitScheduleIncrement() throws MALException, MALInteractionException {
 		ScheduleInstanceDetails schInst = createAndSubmitSch();
 		
+		schInst.setScheduleType(ScheduleType.INCREMENT_UPDATE);
 		schInst.setComment("new modified comment");
 		
-		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
-		update.add(schInst);
+		ScheduleInstanceDetailsList changes = new ScheduleInstanceDetailsList();
+		changes.add(schInst);
 		
-		ScheduleStatusDetailsList stats = schCons.patchSchedule(null, update, null);
+		ScheduleStatusDetailsList stats = schCons.submitScheduleIncrement(changes);
 		
 		assertNotNull(stats);
 		assertFalse(stats.isEmpty());

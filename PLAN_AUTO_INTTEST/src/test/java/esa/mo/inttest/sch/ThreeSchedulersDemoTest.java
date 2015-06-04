@@ -71,8 +71,7 @@ public class ThreeSchedulersDemoTest {
 		public void onRemove(LongList ids) {
 			// ignore
 		}
-		public void onPatch(ScheduleInstanceDetailsList removed, ScheduleInstanceDetailsList updated,
-				ScheduleInstanceDetailsList added, ScheduleStatusDetailsList stats) {
+		public void onPatch(ScheduleInstanceDetailsList changed, ScheduleStatusDetailsList stats) {
 			// ignore
 		}
 		

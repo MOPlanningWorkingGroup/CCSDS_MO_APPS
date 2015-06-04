@@ -39,8 +39,7 @@ public interface Plugin {
 	 * @param added
 	 * @param stats
 	 */
-	void onPatch(ScheduleInstanceDetailsList removed, ScheduleInstanceDetailsList updated,
-			ScheduleInstanceDetailsList added, ScheduleStatusDetailsList stats);
+	void onPatch(ScheduleInstanceDetailsList changes, ScheduleStatusDetailsList stats);
 	
 	/**
 	 * Schedule started callback.

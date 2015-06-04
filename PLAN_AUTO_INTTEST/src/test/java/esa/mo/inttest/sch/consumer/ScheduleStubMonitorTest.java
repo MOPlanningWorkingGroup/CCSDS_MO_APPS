@@ -15,6 +15,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -225,7 +226,7 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 	}
 	
 	@Test
-	public void testPatchSchedule() throws MALException, MALInteractionException, InterruptedException, Exception {
+	public void testsubmitScheduleIncrement() throws MALException, MALInteractionException, InterruptedException, Exception {
 		String subId = "schSub4Id";
 		final SchMonitor schMon = new SchMonitor();
 		schCons.monitorSchedulesRegister(createSub(subId), schMon);
@@ -238,12 +239,14 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		waitForSch(schMon);
 		
 		schMon.clear(); // clear submit info
+		
+		schInst.setScheduleType(ScheduleType.INCREMENT_UPDATE);
 		schInst.setComment("new modified comment");
 		
-		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
-		update.add(schInst);
+		ScheduleInstanceDetailsList changes = new ScheduleInstanceDetailsList();
+		changes.add(schInst);
 		
-		schCons.patchSchedule(null, update, null);
+		schCons.submitScheduleIncrement(changes);
 		
 		waitForSch(schMon);
 		

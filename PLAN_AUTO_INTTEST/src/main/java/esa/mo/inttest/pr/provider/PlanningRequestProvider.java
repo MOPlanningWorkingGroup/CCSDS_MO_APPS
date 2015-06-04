@@ -301,7 +301,7 @@ public class PlanningRequestProvider extends PlanningRequestInheritanceSkeleton 
 		StatusRecord sr = null;
 		for (int j = 0; (null != oldStats) && (null == sr) && (j < oldStats.size()); ++j) {
 			TaskStatusDetails oldStat = oldStats.get(j);
-			if (oldTask.getId() == oldStat.getTaskInstId()) {
+			if (oldTask.getId().equals(oldStat.getTaskInstId())) {
 				sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED,
 						Util.currentTime(), "updated");
 			}

@@ -865,6 +865,7 @@ public final class Dumper {
 			s.append(ind).append(STEP).append("id=").append(si.getId()).append(",\n");
 			s.append(ind).append(STEP).append("defId=").append(si.getSchDefId()).append(",\n");
 			s.append(ind).append(STEP).append("comment=").append(quote(si.getComment())).append(",\n");
+			s.append(ind).append(STEP).append("schType=").append(si.getScheduleType()).append(",\n");
 			s.append(ind).append(STEP).append("argValues=").append(dumpArgVals(si.getArgumentValues(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("scheduleItems=").append(dumpSchItems(si.getScheduleItems(), ind+STEP)).append(",\n");
 			s.append(ind).append(STEP).append("timingConstraints=").append(dumpTimings(si.getTimingConstraints(), ind+STEP)).append("\n");

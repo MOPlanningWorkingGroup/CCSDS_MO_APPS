@@ -22,6 +22,8 @@ import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 
+import esa.mo.inttest.Util;
+
 /**
  * Verification and validation of various PR fields. All error messages in one place.
  */
@@ -31,23 +33,6 @@ public class Check {
 	 * Hidden ctor.
 	 */
 	private Check() {
-	}
-
-	/**
-	 * Searches for argument def from list.
-	 * @param args
-	 * @param name
-	 * @return
-	 */
-	protected static ArgumentDefinitionDetails findArg(ArgumentDefinitionDetailsList args, Identifier name) {
-		ArgumentDefinitionDetails argDef = null;
-		for (int j = 0; (null != args) && (null == argDef) && (j < args.size()); ++j) {
-			ArgumentDefinitionDetails aDef2 = args.get(j);
-			if (name.equals(aDef2.getName())) { // Identifier.equals() is case sensitive
-				argDef = aDef2;
-			}
-		}
-		return argDef;
 	}
 
 	/**
@@ -359,7 +344,7 @@ public class Check {
 	
 	protected static ArgumentDefinitionDetails prArgDefExists(int i, int j, Identifier name,
 			ArgumentDefinitionDetailsList argDefs) throws MALException {
-		ArgumentDefinitionDetails argDef = findArg(argDefs, name);
+		ArgumentDefinitionDetails argDef = Util.findArgDef(name, argDefs);
 		if (null == argDef) {
 			throw new MALException("pr instance[" + i + "].arg[" + j + "] definition not found by name: " + name);
 		}
@@ -458,7 +443,7 @@ public class Check {
 
 	protected static ArgumentDefinitionDetails prTaskArgDefExists(int i, int j, int k, Identifier name,
 			ArgumentDefinitionDetailsList argDefs) throws MALException {
-		ArgumentDefinitionDetails argDef = findArg(argDefs, name);
+		ArgumentDefinitionDetails argDef = Util.findArgDef(name, argDefs);
 		if (null == argDef) {
 			throw new MALException("pr instance[" + i + "].task[" + j + "].arg[" + k + "] definition not found by name: " + name);
 		}

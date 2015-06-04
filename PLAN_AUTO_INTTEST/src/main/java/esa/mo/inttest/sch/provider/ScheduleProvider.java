@@ -137,10 +137,9 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @param added
 	 * @param stats
 	 */
-	protected void plugPatched(ScheduleInstanceDetailsList removed, ScheduleInstanceDetailsList updated,
-			ScheduleInstanceDetailsList added, ScheduleStatusDetailsList stats) {
+	protected void plugPatched(ScheduleInstanceDetailsList changes, ScheduleStatusDetailsList stats) {
 		if (null != plugin) {
-			plugin.onPatch(removed, updated, added, stats);
+			plugin.onPatch(changes, stats);
 		}
 	}
 	
@@ -325,7 +324,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 				ScheduleItemStatusDetailsList oldStats = itemsOld.stat.getScheduleItemStatuses();
 				for (int j = 0; (null != oldStats) && (j < oldStats.size()); ++j) {
 					ScheduleItemStatusDetails oldStat = oldStats.get(j);
-					if (oldItem.getId() == oldStat.getSchItemInstId()) {
+					if (oldItem.getId().equals(oldStat.getSchItemInstId())) {
 						oldStats.remove(oldStat);
 						break;
 					}
@@ -356,7 +355,7 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 		StatusRecord sr = null;
 		for (int j = 0; (null != oldStats) && (j < oldStats.size()); ++j) {
 			ScheduleItemStatusDetails oldStat = oldStats.get(j);
-			if (oldItem.getId() == oldStat.getSchItemInstId()) {
+			if (oldItem.getId().equals(oldStat.getSchItemInstId())) {
 				sr = Util.addOrUpdateStatus(oldStat, InstanceState.LAST_MODIFIED, Util.currentTime(), "updated");
 			}
 		}
@@ -401,9 +400,11 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	protected boolean didSchChange(ScheduleInstanceDetails oldSch, ScheduleInstanceDetails newSch) {
 		// compare schedules excluding schedule items
 		ScheduleInstanceDetails old2 = new ScheduleInstanceDetails(oldSch.getId(), oldSch.getSchDefId(),
-				oldSch.getComment(), oldSch.getArgumentValues(), oldSch.getTimingConstraints(), null);
+				oldSch.getScheduleType(), oldSch.getComment(), oldSch.getArgumentValues(),
+				oldSch.getTimingConstraints(), null);
 		ScheduleInstanceDetails new2 = new ScheduleInstanceDetails(newSch.getId(), newSch.getSchDefId(),
-				newSch.getComment(), newSch.getArgumentValues(), newSch.getTimingConstraints(), null);
+				newSch.getScheduleType(), newSch.getComment(), newSch.getArgumentValues(),
+				newSch.getTimingConstraints(), null);
 		return !new2.equals(old2);
 	}
 	/**
@@ -488,21 +489,19 @@ public class ScheduleProvider extends ScheduleInheritanceSkeleton {
 	 * @see org.ccsds.moims.mo.automation.schedule.provider.ScheduleHandler#patchSchedule(java.lang.Long, java.lang.Long, org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails, org.ccsds.moims.mo.automation.schedule.structures.SchedulePatchOperations, java.lang.Long, org.ccsds.moims.mo.mal.provider.MALInteraction)
 	 */
 	@Override
-	public ScheduleStatusDetailsList patchSchedule(ScheduleInstanceDetailsList toRemove, ScheduleInstanceDetailsList toUpdate,
-			ScheduleInstanceDetailsList toAdd, MALInteraction interaction) throws MALInteractionException, MALException {
-		LOG.log(Level.INFO, "{5}.patchSchedule(List:toRemove, List:toUpdate, List:toAdd)\n  toRemove={0}\n  toUpdate={1}\n  toAdd={2}",
-				new Object[] { Dumper.schInsts(toRemove), Dumper.schInsts(toUpdate), Dumper.schInsts(toAdd), Dumper.received(interaction) });
-		Check.patchLists(toRemove, toUpdate, toAdd);
-		Check.patchRemove(toRemove, schInsts);
-		Check.patchUpdate(toUpdate, schInsts);
-		Check.patchAdd(toAdd, schInsts);
+	public ScheduleStatusDetailsList submitScheduleIncrement(ScheduleInstanceDetailsList changes,
+			MALInteraction interaction) throws MALInteractionException, MALException {
+		LOG.log(Level.INFO, "{1}.submitScheduleIncrement(List:changes)\n  changes={0}",
+				new Object[] { Dumper.schInsts(changes), Dumper.received(interaction) });
+		Check.patchList(changes);
+		Check.patches(changes, schDefs, schInsts);
 		
-		ScheduleStatusDetailsList schStats = schInsts.patch(toRemove, toUpdate, toAdd);
+		ScheduleStatusDetailsList schStats = new Patcher(schInsts).patch(changes);
 		// notify plugin
-		plugPatched(toRemove, toUpdate, toAdd, schStats);
+		plugPatched(changes, schStats);
 		// and publish
 		publish(UpdateType.MODIFICATION, schStats);
-		LOG.log(Level.INFO, "{1}.patchSchedule() response: returning schStats={0}",
+		LOG.log(Level.INFO, "{1}.submitScheduleIncrement() response: returning schStats={0}",
 				new Object[] { Dumper.schStats(schStats), Dumper.sending(interaction) });
 		return schStats;
 	}

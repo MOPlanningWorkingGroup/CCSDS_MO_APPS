@@ -114,7 +114,7 @@ public class PrAndSchDemoTest {
 			assertNotNull(taskItem);
 			// assuming task name matches schedule name
 			assertTrue(taskItem.getStat().getTaskInstId() == schStat.getSchInstId());
-			assertTrue(taskItem.getTask().getId() == schStat.getSchInstId());
+			assertTrue(taskItem.getTask().getId().equals(schStat.getSchInstId()));
 			
 			InstanceState[] states = new InstanceState[] { InstanceState.INVALID, InstanceState.SCHEDULED,
 					InstanceState.PLANNED, InstanceState.DISTRIBUTED_FOR_EXECUTION };

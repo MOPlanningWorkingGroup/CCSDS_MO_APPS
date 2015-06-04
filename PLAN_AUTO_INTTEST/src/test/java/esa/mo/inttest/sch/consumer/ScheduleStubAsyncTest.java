@@ -11,6 +11,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
@@ -204,22 +205,23 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 	}
 	
 	@Test
-	public void testAsyncPatchSchedule() throws MALException, MALInteractionException, InterruptedException, Exception {
+	public void testAsyncSubmitScheduleIncrement() throws MALException, MALInteractionException, InterruptedException, Exception {
 		ScheduleInstanceDetails sch = createInst();
 		
 		submitSchedule(sch);
 		
+		sch.setScheduleType(ScheduleType.INCREMENT_UPDATE);
 		sch.setComment("new modified comment");
 		
-		ScheduleInstanceDetailsList update = new ScheduleInstanceDetailsList();
-		update.add(sch);
+		ScheduleInstanceDetailsList changes = new ScheduleInstanceDetailsList();
+		changes.add(sch);
 		
 		final ScheduleStatusDetailsList[] patched = { null };
 		
-		MALMessage msg = schCons.asyncPatchSchedule(null, update, null, new ScheduleAdapter() {
+		MALMessage msg = schCons.asyncSubmitScheduleIncrement(changes, new ScheduleAdapter() {
 			
 			@SuppressWarnings("rawtypes")
-			public void patchScheduleResponseReceived(MALMessageHeader msgHeader,
+			public void submitScheduleIncrementResponseReceived(MALMessageHeader msgHeader,
 					ScheduleStatusDetailsList stats, Map qosProps) {
 				patched[0] = stats;
 				synchronized (patched) {
@@ -228,7 +230,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 			}
 			
 			@SuppressWarnings("rawtypes")
-			public void patchScheduleErrorReceived(MALMessageHeader msgHeader,
+			public void submitScheduleIncrementErrorReceived(MALMessageHeader msgHeader,
 					MALStandardError error, Map qosProps) {
 				assertTrue(false);
 			}

@@ -2,6 +2,8 @@ package esa.mo.inttest;
 
 import java.util.concurrent.Callable;
 
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.com.structures.ObjectType;
@@ -21,9 +23,16 @@ import org.ccsds.moims.mo.mal.structures.UpdateHeader;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 
 public class Util {
 
@@ -234,5 +243,49 @@ public class Util {
 		uh.setTimestamp(currentTime());
 		uh.setUpdateType(ut);
 		return uh;
+	}
+	
+	public static ArgumentDefinitionDetails findArgDef(Identifier name, ArgumentDefinitionDetailsList args) {
+		ArgumentDefinitionDetails def = null;
+		for (int i = 0; (null == def) && (null != args) && (i < args.size()); ++i) {
+			ArgumentDefinitionDetails argDef = args.get(i);
+			if (name.equals(argDef.getName())) {
+				def = argDef;
+			}
+		}
+		return def;
+	}
+
+	public static ArgumentValue findArg(Identifier name, ArgumentValueList args) {
+		ArgumentValue val = null;
+		for (int i = 0; (null == val) && (null != args) && (i < args.size()); ++i) {
+			ArgumentValue argVal = args.get(i);
+			if (name.equals(argVal.getArgDefName())) {
+				val = argVal;
+			}
+		}
+		return val;
+	}
+
+	public static TimingDetails findTiming(TriggerName tn, TimingDetailsList tdl) {
+		TimingDetails td = null;
+		for (int i = 0; (null != tdl) && (null == td) && (i < tdl.size()); ++i) {
+			TimingDetails td2 = tdl.get(i);
+			if (tn.equals(td2.getTriggerName())) {
+				td = td2;
+			}
+		}
+		return td;
+	}
+	
+	public static ScheduleItemInstanceDetails findItem(Long id, ScheduleItemInstanceDetailsList sil) {
+		ScheduleItemInstanceDetails it = null;
+		for (int i = 0; (null == it) && (null != sil) && (i < sil.size()); ++i) {
+			ScheduleItemInstanceDetails it2 = sil.get(i);
+			if (id.equals(it2.getId())) {
+				it = it2;
+			}
+		}
+		return it;
 	}
 }
