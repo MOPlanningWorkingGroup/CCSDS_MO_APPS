@@ -18,41 +18,70 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsL
 public class InstStore {
 
 	/**
-	 * Structure to hold PR instance, PR status.
+	 * Structure to hold PR instance & PR status.
 	 */
 	public static final class PrItem {
 		
 		protected PlanningRequestInstanceDetails pr;
 		protected PlanningRequestStatusDetails stat;
 		
+		/**
+		 * Ctor.
+		 * @param pr
+		 * @param stat
+		 */
 		public PrItem(PlanningRequestInstanceDetails pr, PlanningRequestStatusDetails stat) {
 			this.pr = pr;
 			this.stat = stat;
 		}
 		
+		/**
+		 * Returns PR instance.
+		 * @return
+		 */
 		public PlanningRequestInstanceDetails getPr() {
 			return pr;
 		}
 		
+		/**
+		 * Returns PR status.
+		 * @return
+		 */
 		public PlanningRequestStatusDetails getStat() {
 			return stat;
 		}
 	}
 	
+	/**
+	 * Structure to hold Task instance & status.
+	 */
 	public static final class TaskItem {
 		
 		protected TaskInstanceDetails task;
 		protected TaskStatusDetails stat;
 		
+		/**
+		 * Ctor.
+		 * @param task
+		 * @param stat
+		 */
 		public TaskItem(TaskInstanceDetails task, TaskStatusDetails stat) {
 			this.task = task;
 			this.stat = stat;
 		}
 		
+		/**
+		 * Returns Task instance.
+		 * @return
+		 */
 		public TaskInstanceDetails getTask() {
 			return task;
 		}
 		
+		/**
+		 * Returns Task stats.
+		 * @return
+		 */
 		public TaskStatusDetails getStat() {
 			return stat;
 		}
@@ -88,7 +117,7 @@ public class InstStore {
 	}
 	
 	/**
-	 * Looks up PR inst by id.
+	 * Looks up PR store item by id.
 	 * @param prInstId
 	 * @return
 	 */
@@ -96,6 +125,11 @@ public class InstStore {
 		return prs.get(prInstId);
 	}
 	
+	/**
+	 * Looks up Task store item by id.
+	 * @param taskInstId
+	 * @return
+	 */
 	public TaskItem findTaskItem(Long taskInstId) {
 		return tasks.get(taskInstId);
 	}

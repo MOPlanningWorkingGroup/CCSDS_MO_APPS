@@ -22,40 +22,45 @@ import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 /**
  * COM Archive consumer for testing.
  */
-public class ComArchiveConsumer extends ArchiveAdapter {
+public class ComArchiveConsumer {
 
+	public static class MyAdapter extends ArchiveAdapter {
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void retrieveAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
+			LOG.log(Level.INFO, "retrieve ack");
+		}
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void retrieveAckErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
+				Map qosProperties) {
+			LOG.log(Level.INFO, "retrieve ack error={0}", error);
+		}
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void retrieveResponseReceived(MALMessageHeader msgHeader,
+				ArchiveDetailsList objDetails, ElementList objBodies, Map qosProperties) {
+			LOG.log(Level.INFO, "retrieve resp: objDetails={0}, objBodies={1}",
+					new Object[] { objDetails,  objBodies });
+		}
+		
+		@SuppressWarnings("rawtypes")
+		@Override
+		public void retrieveResponseErrorReceived(MALMessageHeader msgHeader,
+				MALStandardError error, Map qosProperties) {
+			LOG.log(Level.INFO, "retrieve error={0}", error);
+		}
+	}
+	
 	private static final Logger LOG = Logger.getLogger(ComArchiveConsumer.class.getName());
 
 	private ArchiveStub stub;
 
 	public ComArchiveConsumer(ArchiveStub stub) {
 		this.stub = stub;
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void retrieveAckReceived(MALMessageHeader msgHeader, Map qosProperties) {
-		LOG.log(Level.INFO, "retrieve ack={0}", msgHeader);
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void retrieveAckErrorReceived(MALMessageHeader msgHeader, MALStandardError error, Map qosProperties) {
-		LOG.log(Level.INFO, "retrieve ack error={0}", error);
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void retrieveResponseReceived(MALMessageHeader msgHeader, ArchiveDetailsList objDetails,
-			ElementList objBodies, Map qosProperties) {
-		LOG.log(Level.INFO, "retrieve resp: objDetails={0}, objBodies={1}", new Object[] { objDetails,  objBodies });
-	}
-	
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void retrieveResponseErrorReceived(MALMessageHeader msgHeader, MALStandardError error,
-			Map qosProperties) {
-		LOG.log(Level.INFO, "retrieve error={0}", error);
 	}
 	
 	public void retrieveSomething() throws MALException, MALInteractionException {
@@ -69,7 +74,7 @@ public class ComArchiveConsumer extends ArchiveAdapter {
 		objIds.add(new Long(1L));
 		
 		LOG.log(Level.INFO, "retrieving..");
-		stub.retrieve(objType, domain, objIds, this);
+		stub.retrieve(objType, domain, objIds, new MyAdapter());
 		LOG.log(Level.INFO, "retrieved.");
 	}
 }

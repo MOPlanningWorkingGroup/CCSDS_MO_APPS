@@ -100,7 +100,7 @@ public class Util {
 	}
 	
 	/**
-	 * Add or update existing state in list.
+	 * Add or update existing (PR) state in list.
 	 * @param stat
 	 * @param is
 	 * @param t
@@ -123,7 +123,7 @@ public class Util {
 	}
 	
 	/**
-	 * Add or update existing state in list.
+	 * Add or update existing (Task) state in list.
 	 * @param stat
 	 * @param is
 	 * @param t
@@ -146,7 +146,7 @@ public class Util {
 	}
 	
 	/**
-	 * Add or update existing state in list.
+	 * Add or update existing (Schedule) state in list.
 	 * @param stat
 	 * @param is
 	 * @param t
@@ -169,7 +169,7 @@ public class Util {
 	}
 	
 	/**
-	 * Add or update existing state in list.
+	 * Add or update existing (ScheduleItem) state in list.
 	 * @param stat
 	 * @param is
 	 * @param t
@@ -245,6 +245,12 @@ public class Util {
 		return uh;
 	}
 	
+	/**
+	 * Find ArgumentDefinition.
+	 * @param name
+	 * @param args
+	 * @return
+	 */
 	public static ArgumentDefinitionDetails findArgDef(Identifier name, ArgumentDefinitionDetailsList args) {
 		ArgumentDefinitionDetails def = null;
 		for (int i = 0; (null == def) && (null != args) && (i < args.size()); ++i) {
@@ -256,6 +262,12 @@ public class Util {
 		return def;
 	}
 
+	/**
+	 * Find ArgumentValue.
+	 * @param name
+	 * @param args
+	 * @return
+	 */
 	public static ArgumentValue findArg(Identifier name, ArgumentValueList args) {
 		ArgumentValue val = null;
 		for (int i = 0; (null == val) && (null != args) && (i < args.size()); ++i) {
@@ -267,6 +279,12 @@ public class Util {
 		return val;
 	}
 
+	/**
+	 * Find Timing.
+	 * @param tn
+	 * @param tdl
+	 * @return
+	 */
 	public static TimingDetails findTiming(TriggerName tn, TimingDetailsList tdl) {
 		TimingDetails td = null;
 		for (int i = 0; (null != tdl) && (null == td) && (i < tdl.size()); ++i) {
@@ -278,6 +296,12 @@ public class Util {
 		return td;
 	}
 	
+	/**
+	 * Find ScheduleItem.
+	 * @param id
+	 * @param sil
+	 * @return
+	 */
 	public static ScheduleItemInstanceDetails findItem(Long id, ScheduleItemInstanceDetailsList sil) {
 		ScheduleItemInstanceDetails it = null;
 		for (int i = 0; (null == it) && (null != sil) && (i < sil.size()); ++i) {

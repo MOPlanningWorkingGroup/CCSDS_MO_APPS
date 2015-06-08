@@ -45,6 +45,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import esa.mo.inttest.DemoUtils;
@@ -106,50 +107,6 @@ public class TwoPrDemoTest {
 			this.gsTaskDefIds = ids;
 		}
 		
-		// forward pr status update from gs to instr consumer
-		private void forward(PlanningRequestStatusDetails stat) {
-			InstStore.PrItem it = instr.getInstStore().findPrItem(stat.getPrInstId());
-			if (null != it) {
-				StatusRecord sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
-				InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
-				Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
-				String c = (null != sr) ? sr.getComment() : "planning conflict";
-				// forward only change
-				StatusRecordList srl = new StatusRecordList();
-				srl.add(Util.addOrUpdateStatus(it.getStat(), is, t, c));
-				PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
-				prStats.add(new PlanningRequestStatusDetails(stat.getPrInstId(), srl, null));
-				try {
-					instr.publishPr(UpdateType.UPDATE, prStats);
-				} catch (MALException e) {
-					LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
-				} catch (MALInteractionException e) {
-					LOG.log(Level.INFO, "instr pr status forward error: mal interaction: {0}", e);
-				}
-			}
-		}
-		
-		/**
-		 * Pr notifications from gs pr.
-		 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorPlanningRequestsNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList, java.util.Map)
-		 */
-		@SuppressWarnings("rawtypes")
-		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id,
-				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps)
-		{
-			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(id={0}, List:updHdrs, List:objIds, " +
-					"List:prStats, Map:qosProps)\n  updHdrs[]={1}\n  objIds[]={2}\n  prStats[]={3}",
-					new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
-					Dumper.fromBroker(PR_PROV2, msgHdr) });
-			for (int i = 0; i < updHdrs.size(); ++i) {
-				UpdateHeader uh = updHdrs.get(i);
-				if (UpdateType.UPDATE == uh.getUpdateType()) {
-					PlanningRequestStatusDetails prStat = prStats.get(i);
-					forward(prStat);
-				}
-			}
-		}
-		
 		private void forwardTask(TaskStatusDetails stat) {
 			InstStore.TaskItem taskItem = instr.getInstStore().findTaskItem(stat.getTaskInstId());
 			if (null != taskItem) {
@@ -174,22 +131,56 @@ public class TwoPrDemoTest {
 			}
 		}
 		
+		// forward pr status update from gs to instr consumer
+		private void forward(PlanningRequestStatusDetails stat) {
+			InstStore.PrItem it = instr.getInstStore().findPrItem(stat.getPrInstId());
+			StatusRecord sr = null;
+			if (null != it) {
+				sr = Util.findStatus(stat.getStatus(), InstanceState.PLAN_CONFLICT);
+				if (null != sr) {
+					InstanceState is = (null != sr) ? sr.getState() : InstanceState.PLAN_CONFLICT;
+					Time t = (null != sr) ? sr.getTimeStamp() : Util.currentTime();
+					String c = (null != sr) ? sr.getComment() : "planning conflict";
+					// forward only change
+					StatusRecordList srl = new StatusRecordList();
+					srl.add(Util.addOrUpdateStatus(it.getStat(), is, t, c));
+					PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+					prStats.add(new PlanningRequestStatusDetails(stat.getPrInstId(), srl, null));
+					try {
+						instr.publishPr(UpdateType.UPDATE, prStats);
+					} catch (MALException e) {
+						LOG.log(Level.INFO, "instr pr status forward error: mal: {0}", e);
+					} catch (MALInteractionException e) {
+						LOG.log(Level.INFO, "instr pr status forward error: mal interaction: {0}", e);
+					}
+				}
+			}
+			if (null == sr) {
+				// no pr status, check task status
+				for (int i = 0; (null != stat.getTaskStatuses()) && (i < stat.getTaskStatuses().size()); ++i) {
+					TaskStatusDetails taskStat = stat.getTaskStatuses().get(i);
+					forwardTask(taskStat);
+				}
+			}
+		}
+		
 		/**
-		 * Task notifications from gs pr.
-		 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorTasksNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList, java.util.Map)
+		 * Pr notifications from gs pr.
+		 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorPlanningRequestsNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.PlanningRequestStatusDetailsList, java.util.Map)
 		 */
 		@SuppressWarnings("rawtypes")
-		public void monitorTasksNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
-				ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProperties)
+		public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id,
+				UpdateHeaderList updHdrs, ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps)
 		{
-			LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(id={0}, List:updHdrs, List:objIds, List:taskStats)" +
-					"\n  updHdrs[]={1}\n  objIds[]={2}\n  taskStats[]={3}", new Object[] { id, Dumper.updHdrs(updHdrs),
-					Dumper.objIds(objIds), Dumper.taskStats(taskStats), Dumper.fromBroker(PR_PROV2, msgHdr) });
+			LOG.log(Level.INFO, "{4}.monitorPlanningRequestsNotifyReceived(id={0}, List:updHdrs, List:objIds, " +
+					"List:prStats, Map:qosProps)\n  updHdrs[]={1}\n  objIds[]={2}\n  prStats[]={3}",
+					new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
+					Dumper.fromBroker(PR_PROV2, msgHdr) });
 			for (int i = 0; i < updHdrs.size(); ++i) {
 				UpdateHeader uh = updHdrs.get(i);
 				if (UpdateType.UPDATE == uh.getUpdateType()) {
-					TaskStatusDetails taskStat = taskStats.get(i);
-					forwardTask(taskStat);
+					PlanningRequestStatusDetails prStat = prStats.get(i);
+					forward(prStat);
 				}
 			}
 		}
@@ -257,6 +248,18 @@ public class TwoPrDemoTest {
 				
 				assertNotNull(prStats);
 				assertFalse(prStats.isEmpty());
+				
+				PlanningRequestStatusDetails prStat = prStats.get(0);
+				
+				assertNotNull(prStat);
+				
+				TaskStatusDetailsList taskStats = prStat.getTaskStatuses();
+				
+				assertNotNull(taskStats);
+				assertEquals(2, taskStats.size());
+				
+				assertNotNull(taskStats.get(0));
+				assertNotNull(taskStats.get(1));
 			}
 		}
 	}
@@ -313,12 +316,32 @@ public class TwoPrDemoTest {
 			for (Long id: prInstIds) {
 				InstStore.PrItem it = prov.getInstStore().findPrItem(id);
 				if (null != it) {
+					// process tasks first
+					TaskInstanceDetailsList tasks = it.getPr().getTasks();
+					TaskStatusDetailsList tasks2 = it.getStat().getTaskStatuses();
+					for (int i = 0; (null != tasks) && (i < tasks.size()); ++i) {
+						TaskInstanceDetails task = tasks.get(i);
+						TaskStatusDetails taskStat = tasks2.get(i);
+						StatusRecordList srl = new StatusRecordList();
+						srl.add(Util.addOrUpdateStatus(taskStat, InstanceState.PLAN_CONFLICT,
+								Util.currentTime(), "planning conflict"));
+						
+						TaskStatusDetailsList taskStats = new TaskStatusDetailsList();
+						taskStats.add(new TaskStatusDetails(task.getId(), srl));
+						
+						PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
+						prStats.add(new PlanningRequestStatusDetails(it.getStat().getPrInstId(), null, taskStats));
+						
+						prov.publishPr(UpdateType.UPDATE, prStats);
+					}
 					// publish only change
 					StatusRecordList srl = new StatusRecordList();
 					srl.add(Util.addOrUpdateStatus(it.getStat(), InstanceState.PLAN_CONFLICT,
 							Util.currentTime(), "planning conflict"));
+					
 					PlanningRequestStatusDetailsList prStats = new PlanningRequestStatusDetailsList();
 					prStats.add(new PlanningRequestStatusDetails(it.getStat().getPrInstId(), srl, null));
+					
 					prov.publishPr(UpdateType.UPDATE, prStats);
 				}
 			}
@@ -505,6 +528,7 @@ public class TwoPrDemoTest {
 		}
 	}
 	
+	@Ignore // don't log
 	@Test
 	public void testPrWithoutTasks() throws MALException, MALInteractionException {
 		// instr pr plugin
@@ -572,14 +596,6 @@ public class TwoPrDemoTest {
 	}
 	
 	private Object[] gsAddPrDefsWithTasks() throws MALException, MALInteractionException {
-		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("gs pr def 2", "gs pr def 2");
-		def.setId(0L);
-		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
-		defs.add(def);
-		
-		LongList prDefIds = powerGsCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
-		def.setId(prDefIds.get(0));
-		
 		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("gs task def 1", "gs task def 1");
 		taskDef.setId(0L);
 		TaskDefinitionDetails taskDef2 = PlanningRequestConsumer.createTaskDef("gs task def 2", "gs task def 2");
@@ -593,18 +609,19 @@ public class TwoPrDemoTest {
 		taskDef.setId(taskDefIds.get(0));
 		taskDef2.setId(taskDefIds.get(1));
 		
+		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("gs pr def 2", "gs pr def 2");
+		def.setId(0L);
+		def.setTaskDefIds(taskDefIds);
+		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
+		defs.add(def);
+		
+		LongList prDefIds = powerGsCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		def.setId(prDefIds.get(0));
+
 		return new Object[] { prDefIds, taskDefIds };
 	}
 	
 	private Object[] instrAddPrDefsWithTasks() throws MALException, MALInteractionException {
-		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("instr pr def 2", "instr pr def 2");
-		def.setId(0L);
-		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
-		defs.add(def);
-		
-		LongList prDefIds = powerInstrCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
-		def.setId(prDefIds.get(0));
-		
 		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("instr task def 1", "instr task def 1");
 		taskDef.setId(0L);
 		TaskDefinitionDetails taskDef2 = PlanningRequestConsumer.createTaskDef("instr task def 2", "instr task def 2");
@@ -618,6 +635,15 @@ public class TwoPrDemoTest {
 		taskDef.setId(taskDefIds.get(0));
 		taskDef2.setId(taskDefIds.get(1));
 		
+		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef("instr pr def 2", "instr pr def 2");
+		def.setId(0L);
+		def.setTaskDefIds(taskDefIds);
+		PlanningRequestDefinitionDetailsList defs = new PlanningRequestDefinitionDetailsList();
+		defs.add(def);
+		
+		LongList prDefIds = powerInstrCons.getStub().addDefinition(DefinitionType.PLANNING_REQUEST_DEF, defs);
+		def.setId(prDefIds.get(0));
+
 		return new Object[] { prDefIds, taskDefIds };
 	}
 	

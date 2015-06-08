@@ -24,7 +24,6 @@ import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDeta
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskDefinitionDetailsList;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetails;
 import org.ccsds.moims.mo.planning.planningrequest.structures.TaskInstanceDetailsList;
-import org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList;
 
 import esa.mo.inttest.Dumper;
 
@@ -54,6 +53,10 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 		 return this.stub;
 	}
 	
+	/**
+	 * Mask broker name with something other.
+	 * @param name
+	 */
 	public void setBrokerName(String name) {
 		broker = name;
 	}
@@ -65,20 +68,9 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	@SuppressWarnings("rawtypes")
 	public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 			ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps) {
-		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHeaders, List:objIds, List:schStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  schStatuses[]={3}",
+		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHeaders, List:objIds, List:schStatuses)" +
+				"\n  updHeaders[]={1}\n  objIds[]={2}\n  prStatuses[]={3}",
 				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
-				Dumper.fromBroker(broker, msgHdr) });
-	}
-	
-	/**
-	 * Implements Task status notification callback.
-	 * @see org.ccsds.moims.mo.planning.planningrequest.consumer.PlanningRequestAdapter#monitorTasksNotifyReceived(org.ccsds.moims.mo.mal.transport.MALMessageHeader, org.ccsds.moims.mo.mal.structures.Identifier, org.ccsds.moims.mo.mal.structures.UpdateHeaderList, org.ccsds.moims.mo.com.structures.ObjectIdList, org.ccsds.moims.mo.planning.planningrequest.structures.TaskStatusDetailsList, java.util.Map)
-	 */
-	@SuppressWarnings("rawtypes")
-	public void monitorTasksNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
-			ObjectIdList objIds, TaskStatusDetailsList taskStats, Map qosProps) {
-		LOG.log(Level.INFO, "{4}.monitorTasksNotifyReceived(id={0}, List:updHeaders, List:objIds, List:taskStatuses)\n  updHeaders[]={1}\n  objIds[]={2}\n  taskStatuses[]={3}",
-				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.taskStats(taskStats),
 				Dumper.fromBroker(broker, msgHdr) });
 	}
 
@@ -150,6 +142,11 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 		return inst;
 	}
 	
+	/**
+	 * Sample Task def, PR def and instances submission.
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	public void submitPlanWithOneTask() throws MALException, MALInteractionException {
 		
 		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("id", null);
@@ -182,6 +179,13 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 		submitPr(prInst);
 	}
 	
+	/**
+	 * Submit single instance and return single status.
+	 * @param inst
+	 * @return
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 */
 	public PlanningRequestStatusDetails submitPr(PlanningRequestInstanceDetails inst) throws MALException, MALInteractionException {
 		PlanningRequestInstanceDetailsList insts = new PlanningRequestInstanceDetailsList();
 		insts.add(inst);

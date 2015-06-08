@@ -65,6 +65,13 @@ public class ScheduleConsumerFactory extends ScheduleFactory {
 		return cons;
 	}
 
+	/**
+	 * Create (start) Schedule consumer.
+	 * @param name
+	 * @return
+	 * @throws IOException
+	 * @throws MALException
+	 */
 	public ScheduleStub start(String name) throws IOException, MALException {
 		LOG.entering(getClass().getName(), "start");
 		
@@ -79,6 +86,11 @@ public class ScheduleConsumerFactory extends ScheduleFactory {
 		return stub;
 	}
 
+	/**
+	 * Dispose (stop) Schedule consumer.
+	 * @param cons
+	 * @throws MALException
+	 */
 	public void stop(ScheduleStub cons) throws MALException {
 		LOG.entering(getClass().getName(), "stop");
 		

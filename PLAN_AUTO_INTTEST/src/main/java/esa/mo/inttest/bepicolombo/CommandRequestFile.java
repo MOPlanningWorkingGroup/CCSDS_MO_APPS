@@ -30,28 +30,73 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
 
 public class CommandRequestFile {
 
+	/**
+	 * Creates ArgumentDefinition.
+	 * @param name
+	 * @param desc
+	 * @param iType
+	 * @param unit
+	 * @param repr
+	 * @param radix
+	 * @param defVal
+	 * @return
+	 */
 	protected ArgumentDefinitionDetails createArgDef(String name, String desc, int iType, String unit, String repr,
 			String radix, Attribute defVal) {
 		byte bType = (byte)(iType & 0xff);
 		return new ArgumentDefinitionDetails(new Identifier(name), desc, bType, unit, repr, radix, defVal);
 	}
 	
+	/**
+	 * Create ArgDef variation.
+	 * @param name
+	 * @param desc
+	 * @param iType
+	 * @param unit
+	 * @param repr
+	 * @return
+	 */
 	protected ArgumentDefinitionDetails createArgDef(String name, String desc, int iType, String unit, String repr) {
 		return createArgDef(name, desc, iType, unit, repr, null, null);
 	}
 	
+	/**
+	 * Create ArgDef variation.
+	 * @param name
+	 * @param desc
+	 * @param iType
+	 * @param repr
+	 * @return
+	 */
 	protected ArgumentDefinitionDetails createArgDef(String name, String desc, int iType, String repr) {
 		return createArgDef(name, desc, iType, repr, null, null, null);
 	}
 	
+	/**
+	 * Create ArgDef variation.
+	 * @param name
+	 * @param iType
+	 * @param defVal
+	 * @return
+	 */
 	protected ArgumentDefinitionDetails createArgDef(String name, int iType, Attribute defVal) {
 		return createArgDef(name, null, iType, null, null, null, defVal);
 	}
 	
+	/**
+	 * Create ArgDef variation.
+	 * @param name
+	 * @param iType
+	 * @return
+	 */
 	protected ArgumentDefinitionDetails createArgDef(String name, int iType) {
 		return createArgDef(name, null, iType, null, null, null, null);
 	}
 	
+	/**
+	 * Creates Task definition for command ZXC01060. <command> element in XML.
+	 * @return
+	 */
 	public TaskDefinitionDetails createPassTaskDef() {
 		TaskDefinitionDetails def = PlanningRequestConsumer.createTaskDef("ZXC01060", "Definition of command ZXC01060");
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
@@ -63,6 +108,10 @@ public class CommandRequestFile {
 		return def;
 	}
 	
+	/**
+	 * Creates Task definition for command ZAC03340. <command> element in XML.
+	 * @return
+	 */
 	public TaskDefinitionDetails createExecTaskDef() {
 		TaskDefinitionDetails def = PlanningRequestConsumer.createTaskDef("ZAC03340", "Definition of command ZAC03340");
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
@@ -74,24 +123,10 @@ public class CommandRequestFile {
 		return def;
 	}
 	
-	public TaskDefinitionDetails createMaesTaskDef() {
-		TaskDefinitionDetails def = PlanningRequestConsumer.createTaskDef("MAESEvent", "Definition of event MAES");
-		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
-		argDefs.add(createArgDef("uniqueID", Attribute.IDENTIFIER_TYPE_SHORT_FORM));
-		argDefs.add(createArgDef("parameterCount", Attribute.USHORT_TYPE_SHORT_FORM));
-		argDefs.add(createArgDef("Antenna", "G/S antenna mnemonic", Attribute.STRING_TYPE_SHORT_FORM, "Engineering"));
-		argDefs.add(createArgDef("Elevation", "Elevation of horizon Mask", Attribute.FLOAT_TYPE_SHORT_FORM, "deg", "Engineering"));
-		argDefs.add(createArgDef("RTLT", "Round Trip Light Time", Attribute.FLOAT_TYPE_SHORT_FORM, "sec", null, "Decimal", null));
-		argDefs.add(createArgDef("X-Start", Attribute.TIME_TYPE_SHORT_FORM));
-		argDefs.add(createArgDef("Y-End_eventId", "Event Id of Y-End", Attribute.STRING_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("Y-End_eventCount", "Event count of Y-End", Attribute.ULONG_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("Y-End_delta", "Event delta of Y-End", Attribute.TIME_TYPE_SHORT_FORM, null));
-		argDefs.add(createArgDef("Y-End_deltaPositive", "Event delta sign of Y-End, since delta Time is absolute value",
-				Attribute.BOOLEAN_TYPE_SHORT_FORM, null));
-		def.setArgumentDefs(argDefs);
-		return def;
-	}
-	
+	/**
+	 * Creates Task definition for sequence SQRA0030. <sequence> element in XML.
+	 * @return
+	 */
 	public TaskDefinitionDetails createSeqTaskDef() {
 		TaskDefinitionDetails def = PlanningRequestConsumer.createTaskDef("SQRA0030", "Definition of command sequence SQRA0030");
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
@@ -110,10 +145,18 @@ public class CommandRequestFile {
 		return def;
 	}
 	
+	/**
+	 * Return pr definition name.
+	 * @return
+	 */
 	public String getPrDefName() {
 		return "CRF-PR-Def";
 	}
 	
+	/**
+	 * Creates PR definition. <commandRequests> element in XML.
+	 * @return
+	 */
 	public PlanningRequestDefinitionDetails createPrDef() {
 		PlanningRequestDefinitionDetails def = PlanningRequestConsumer.createPrDef(getPrDefName(), null);
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
@@ -125,10 +168,20 @@ public class CommandRequestFile {
 		return def;
 	}
 	
+	/**
+	 * Returns PR instance name.
+	 * @return
+	 */
 	public String getPrInstName() {
 		return "CRF-PR-1";
 	}
 	
+	/**
+	 * Adds argument to Task.
+	 * @param inst
+	 * @param name
+	 * @param val
+	 */
 	protected void addTaskArg(TaskInstanceDetails inst, String name, Attribute val) {
 		if (null == inst.getArgumentValues()) {
 			inst.setArgumentValues(new ArgumentValueList());
@@ -136,11 +189,23 @@ public class CommandRequestFile {
 		inst.getArgumentValues().add(new ArgumentValue(new Identifier(name), val));
 	}
 	
+	/**
+	 * Create Event Trigger.
+	 * @param name
+	 * @param t
+	 * @return
+	 */
 	public TimingDetails createEventTrig(TriggerName name, Time t) {
 		TimeTrigger tt = new TimeTrigger(t, null);
 		return new TimingDetails(name, tt, null, null, null, null, null);
 	}
 	
+	/**
+	 * Parses absolute time-string to Time class.
+	 * @param t
+	 * @return
+	 * @throws ParseException
+	 */
 	protected Time parseAbsTime(String t) throws ParseException {
 		if (t.endsWith("Z")) {
 			t = t.substring(0, t.length()-1);
@@ -160,8 +225,15 @@ public class CommandRequestFile {
 		return new Time(d.getTime());
 	}
 	
+	/**
+	 * Creates Task instance for command ZXC01060. <command> element in XML.
+	 * @param id
+	 * @param defId
+	 * @return
+	 * @throws ParseException
+	 */
 	public TaskInstanceDetails createPassTaskInst(Long id, Long defId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"ZXC01060"*/id, defId, "some useful comments");
+		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(id, defId, "some useful comments");
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.RELEASE, parseAbsTime("2009-300T12:00:00.000Z")));
 		inst.setTimingConstraints(tims);
@@ -170,14 +242,30 @@ public class CommandRequestFile {
 		return inst;
 	}
 	
+	/**
+	 * Creates Event Trigger.
+	 * @param name
+	 * @param id
+	 * @param startCount
+	 * @param endCount
+	 * @param delta
+	 * @return
+	 */
 	protected TimingDetails createEventTrig(TriggerName name, String id, String startCount, String endCount, RelativeTime delta) {
 		EventTrigger et = new EventTrigger(new Identifier(id), null, null,
 				new ULong(new BigInteger(startCount)), new ULong(new BigInteger(endCount)), null, delta, null);
 		return new TimingDetails(name, null, et, null, null, null, null);
 	}
 	
+	/**
+	 * Creates Task instance for command ZAC003340. <command> element in XML.
+	 * @param id
+	 * @param defId
+	 * @return
+	 * @throws ParseException
+	 */
 	public TaskInstanceDetails createExecTaskInst(Long id, Long defId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"ZAC003340"*/id, defId, "some useful comments");
+		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(id, defId, "some useful comments");
 		TimingDetailsList tims = new TimingDetailsList();
 		tims.add(createEventTrig(TriggerName.START, "AOD", "1", "2", parseRelTime("12:33:44")));
 		inst.setTimingConstraints(tims);
@@ -187,37 +275,24 @@ public class CommandRequestFile {
 		return inst;
 	}
 	
-	protected TimingDetails createEventTrig(TriggerName name, String id, String startCount, String endCount,
-			RelativeTime delta, String repeat, Time separ, RelativeTime early, RelativeTime late, int propFact) {
-		EventTrigger et = new EventTrigger(new Identifier(id), null, null,
-				new ULong(new BigInteger(startCount)), new ULong(new BigInteger(endCount)), null, delta, propFact);
-		return new TimingDetails(name, null, et, new ULong(new BigInteger(repeat)), separ, early, late);
-	}
-
-	public TaskInstanceDetails createMaesTaskInst(Long id, Long defId) throws ParseException {
-		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"MAP3"*/id, defId, "mission specific comment");
-		TimingDetailsList tims = new TimingDetailsList();
-		tims.add(createEventTrig(TriggerName.START, "MAP1", "1", "14", parseRelTime("01:00:00"), "9",
-				parseRelTime("00:00:10").getRelativeTime(), parseRelTime("-10:59:00"), parseRelTime("001.23:59:59.000"), 2));
-		inst.setTimingConstraints(tims);
-		addTaskArg(inst, "uniqueID", new Identifier("JS0003"));
-		addTaskArg(inst, "parameterCount", new UShort(5));
-		addTaskArg(inst, "Antenna", new Union("MAD"));
-		addTaskArg(inst, "Elevation", new Union(10.4f));
-		addTaskArg(inst, "RTLT", new Union(1856f));
-		addTaskArg(inst, "X-Start", parseAbsTime("2009-324T23:59:59.000Z"));
-		addTaskArg(inst, "Y-End_eventId", new Union("VPER"));
-		addTaskArg(inst, "Y-End_eventCount", new ULong(new BigInteger("4")));
-		addTaskArg(inst, "Y-End_delta", parseAbsTime("324.23:59:59.000"));
-		addTaskArg(inst, "Y-End_deltaPositive", new Union(true));
-		return inst;
-	}
-	
+	/**
+	 * Creates Event Trigger.
+	 * @param name
+	 * @param t
+	 * @return
+	 */
 	protected TimingDetails createEventTrig(TriggerName name, RelativeTime t) {
 		TimeTrigger tt = new TimeTrigger(null, t);
 		return new TimingDetails(name, tt, null, null, null, null, null);
 	}
 	
+	/**
+	 * Creates Task instance for sequence SQRA0030. <sequence> element in XML.
+	 * @param id
+	 * @param defId
+	 * @return
+	 * @throws ParseException
+	 */
 	public TaskInstanceDetails createSeqTaskInst(Long id, Long defId) throws ParseException {
 		TaskInstanceDetails inst = PlanningRequestConsumer.createTaskInst(/*"SQRA0030"*/id, defId, "mission specific comment");
 		TimingDetailsList tims = new TimingDetailsList();
@@ -237,6 +312,12 @@ public class CommandRequestFile {
 		return inst;
 	}
 	
+	/**
+	 * Adds arg to PR.
+	 * @param inst
+	 * @param name
+	 * @param val
+	 */
 	protected void addPrArg(PlanningRequestInstanceDetails inst, String name, Attribute val) {
 		if (null == inst.getArgumentValues()) {
 			inst.setArgumentValues(new ArgumentValueList());
@@ -244,6 +325,12 @@ public class CommandRequestFile {
 		inst.getArgumentValues().add(new ArgumentValue(new Identifier(name), val));
 	}
 	
+	/**
+	 * Parses relative time-string to RelativeTime class.
+	 * @param t
+	 * @return
+	 * @throws ParseException
+	 */
 	protected RelativeTime parseRelTime(String t) throws ParseException {
 		boolean isPos = !t.startsWith("-");
 		if (!isPos) {
@@ -268,11 +355,27 @@ public class CommandRequestFile {
 		return new RelativeTime(time, isPos);
 	}
 	
+	/**
+	 * Creates Event Trigger.
+	 * @param name
+	 * @param id
+	 * @param evCount
+	 * @param delta
+	 * @param propF
+	 * @return
+	 */
 	protected TimingDetails createEventTrig(TriggerName name, String id, String evCount, RelativeTime delta, int propF) {
 		EventTrigger et = new EventTrigger(new Identifier(id), null, null, null, null, new ULong(new BigInteger(evCount)), delta, propF);
 		return new TimingDetails(name, null, et, null, null, null, null);
 	}
 	
+	/**
+	 * Creates PR instance. <commandRequests> element in XML.
+	 * @param id
+	 * @param defId
+	 * @return
+	 * @throws ParseException
+	 */
 	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId) throws ParseException {
 		PlanningRequestInstanceDetails inst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		TimingDetailsList tims = new TimingDetailsList();

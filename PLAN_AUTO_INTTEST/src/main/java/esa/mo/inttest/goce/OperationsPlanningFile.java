@@ -18,6 +18,10 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
  */
 public class OperationsPlanningFile extends CommonFile {
 
+	/**
+	 * Creates Task definition. <RQ> element in XML.
+	 * @return
+	 */
 	public TaskDefinitionDetails createTaskDef() {
 		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("MCDD10HZ", "DIS_DFACS_10_HZ v01");
 		ArgumentDefinitionDetailsList argDefs = createSrcDestTypeArgDefs("FCT");
@@ -26,23 +30,48 @@ public class OperationsPlanningFile extends CommonFile {
 		return taskDef;
 	}
 	
+	/**
+	 * Creates PR definition. <EVRQ> element in XML.
+	 * @param taskDefIds
+	 * @return
+	 */
 	public PlanningRequestDefinitionDetails createPrDef(LongList taskDefIds) {
 		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("OPF", "EVRQ from OPF");
 		prDef.setTaskDefIds(taskDefIds);
 		return prDef;
 	}
 	
+	/**
+	 * Returns PR name.
+	 * @return
+	 */
 	public String getPrName() {
 		return "OPF-1";
 	}
 	
+	/**
+	 * Creates Task instance. <RQ> element in XML.
+	 * @param id
+	 * @param defId
+	 * @param prId
+	 * @return
+	 * @throws ParseException
+	 */
 	public TaskInstanceDetails createTaskInst(Long id, Long defId, Long prId) throws ParseException {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCDD10HZ"*/id, defId, null/*, getPrName()*/);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"MCDD10HZ"*/id, defId, null);
 		addTaskArg(taskInst, "RQ_Parameters_count", new UShort(0));
 		taskInst.setTimingConstraints(createPpfTaskTriggers(null, parseTime("UTC=2007-01-02T12:10:00")));
 		return taskInst;
 	}
 	
+	/**
+	 * Creates PR instance. <EVRQ> element in XML.
+	 * @param id
+	 * @param defId
+	 * @param taskInsts
+	 * @return
+	 * @throws ParseException
+	 */
 	public PlanningRequestInstanceDetails createPrInst(Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
 		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(/*getPrName()*/id, defId, null);
 		prInst.setTasks(taskInsts);

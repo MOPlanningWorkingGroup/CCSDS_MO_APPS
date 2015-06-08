@@ -26,6 +26,10 @@ public class Patcher {
 
 	private InstStore store;
 	
+	/**
+	 * Ctor.
+	 * @param store
+	 */
 	public Patcher(InstStore store) {
 		this.store = store;
 	}
@@ -216,6 +220,11 @@ public class Patcher {
 		}
 	}
 
+	/**
+	 * Do patching. Main entry point.
+	 * @param changes
+	 * @return
+	 */
 	public ScheduleStatusDetailsList patch(ScheduleInstanceDetailsList changes) {
 		// TODO changed item statuses
 		Map<Long, ScheduleStatusDetails> mods = new HashMap<Long, ScheduleStatusDetails>();

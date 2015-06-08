@@ -80,34 +80,22 @@ public class BepiColomboConsumer {
 		TaskDefinitionDetails taskDef2 = crf.createExecTaskDef();
 		Long taskDefId2 = submitTaskDef(taskDef2);
 		
-		TaskDefinitionDetails taskDef3 = crf.createMaesTaskDef();
+		TaskDefinitionDetails taskDef3 = crf.createSeqTaskDef();
 		Long taskDefId3 = submitTaskDef(taskDef3);
 		
-		TaskDefinitionDetails taskDef4 = crf.createSeqTaskDef();
-		Long taskDefId4 = submitTaskDef(taskDef4);
-		
 		PlanningRequestDefinitionDetails prDef = crf.createPrDef();
-		prDef.setTaskDefIds(taskDefIds(taskDef1, taskDef2, taskDef3, taskDef4));
+		prDef.setTaskDefIds(taskDefIds(taskDef1, taskDef2, taskDef3));
 		Long prDefId = submitPrDef(prDef);
 		
 		TaskInstanceDetails taskInst1 = crf.createPassTaskInst(generateId(), taskDefId1);
 		
 		TaskInstanceDetails taskInst2 = crf.createExecTaskInst(generateId(), taskDefId2);
 		
-		TaskInstanceDetails taskInst3 = crf.createMaesTaskInst(generateId(), taskDefId3);
-		
-		TaskInstanceDetails taskInst4 = crf.createSeqTaskInst(generateId(), taskDefId4);
+		TaskInstanceDetails taskInst3 = crf.createSeqTaskInst(generateId(), taskDefId3);
 		
 		PlanningRequestInstanceDetails prInst = crf.createPrInst(generateId(), prDefId);
-		setTaskInsts(prInst, taskInst1, taskInst2, taskInst3, taskInst4);
+		setTaskInsts(prInst, taskInst1, taskInst2, taskInst3);
 		
 		return cons.submitPr(prInst);
-	}
-	
-	public PlanningRequestStatusDetails crrf() throws MALException, MALInteractionException, ParseException {
-		CommandRequestFile crf = new CommandRequestFile();
-		CommandRequestResponseFile crrf = new CommandRequestResponseFile();
-		
-		return crf();
 	}
 }

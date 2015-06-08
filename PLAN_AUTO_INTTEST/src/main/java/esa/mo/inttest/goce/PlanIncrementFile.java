@@ -37,7 +37,7 @@ public class PlanIncrementFile extends CommonFile {
 	}
 	
 	/**
-	 * Defines version arguments.
+	 * Defines version arguments from <PIF_Header>.
 	 * @return
 	 */
 	protected ArgumentDefinitionDetailsList createPifVersionArgDefs() {
@@ -118,7 +118,7 @@ public class PlanIncrementFile extends CommonFile {
 	}
 
 	/**
-	 * Creates task definition.
+	 * Creates Task definition. <RQ> element in XML.
 	 * @return
 	 */
 	public TaskDefinitionDetails createTaskDef() {
@@ -132,7 +132,7 @@ public class PlanIncrementFile extends CommonFile {
 	}
 	
 	/**
-	 * Creates PR definition.
+	 * Creates PR definition. <PIF_Header> element in XML.
 	 * @param taskDefNames
 	 * @return
 	 */
@@ -152,7 +152,7 @@ public class PlanIncrementFile extends CommonFile {
 	}
 	
 	/**
-	 * Creates Task instance.
+	 * Creates Task instance. <RQ> element in XML.
 	 * @return
 	 * @throws ParseException
 	 */
@@ -170,7 +170,7 @@ public class PlanIncrementFile extends CommonFile {
 	}
 	
 	/**
-	 * Creates PR instance.
+	 * Creates PR instance. <PIF_Header> element in XML.
 	 * @param taskInsts
 	 * @return
 	 * @throws ParseException

@@ -19,6 +19,10 @@ import esa.mo.inttest.pr.consumer.PlanningRequestConsumer;
  */
 public class SkeletonPlanningFile extends CommonFile {
 
+	/**
+	 * Creates Task def args.
+	 * @return
+	 */
 	protected ArgumentDefinitionDetailsList createSpfTaskDefArgs() {
 		ArgumentDefinitionDetailsList argDefs = new ArgumentDefinitionDetailsList();
 		argDefs.add(createArgDef("EV_Parameters_count", null, Attribute.USHORT_TYPE_SHORT_FORM, null, null, null, null));
@@ -26,33 +30,69 @@ public class SkeletonPlanningFile extends CommonFile {
 		return argDefs;
 	}
 	
+	/**
+	 * Creates Task definition.
+	 * @return
+	 */
 	public TaskDefinitionDetails createTaskDef() {
 		TaskDefinitionDetails taskDef = PlanningRequestConsumer.createTaskDef("NODE", "EV from SPF");
 		taskDef.setArgumentDefs(createSpfTaskDefArgs());
 		return taskDef;
 	}
 	
+	/**
+	 * Creates PR definition.
+	 * @param taskDefIds
+	 * @return
+	 */
 	public PlanningRequestDefinitionDetails createPrDef(LongList taskDefIds) {
 		PlanningRequestDefinitionDetails prDef = PlanningRequestConsumer.createPrDef("EVRQ", "Ascending node crossing");
 		prDef.setTaskDefIds(taskDefIds);
 		return prDef;
 	}
 	
+	/**
+	 * Creates Task instance.
+	 * @param idx
+	 * @param id
+	 * @param defId
+	 * @param prId
+	 * @return
+	 */
 	public TaskInstanceDetails createTaskInst(int idx, Long id, Long defId, Long prId) {
-		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(/*"NODE-"+(idx+1)*/id, defId, null);
+		TaskInstanceDetails taskInst = PlanningRequestConsumer.createTaskInst(id, defId, null);
 		addTaskArg(taskInst, "EV_Parameters_count", new UShort(0));
 		return taskInst;
 	}
 	
+	/**
+	 * Returns number of PR instances to create.
+	 * @return
+	 */
 	public int getPrInstCount() {
 		return 3;
 	}
 	
+	/**
+	 * Returns PR name for index.
+	 * @param idx
+	 * @return
+	 */
 	protected String getPrName(int idx) {
 		return "EVRQ-"+ (idx+1);
 	}
 	
-	public PlanningRequestInstanceDetails createPrInst(int idx, Long id, Long defId, TaskInstanceDetailsList taskInsts) throws ParseException {
+	/**
+	 * Creates PR instance.
+	 * @param idx
+	 * @param id
+	 * @param defId
+	 * @param taskInsts
+	 * @return
+	 * @throws ParseException
+	 */
+	public PlanningRequestInstanceDetails createPrInst(int idx, Long id, Long defId,
+			TaskInstanceDetailsList taskInsts) throws ParseException {
 		PlanningRequestInstanceDetails prInst = PlanningRequestConsumer.createPrInst(id, defId, null);
 		prInst.setTasks(taskInsts);
 		return prInst;

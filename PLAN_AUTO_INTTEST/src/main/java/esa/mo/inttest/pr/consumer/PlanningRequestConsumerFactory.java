@@ -65,6 +65,13 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		return cons;
 	}
 
+	/**
+	 * Start (create) PR Consumer.
+	 * @param name
+	 * @return
+	 * @throws IOException
+	 * @throws MALException
+	 */
 	public PlanningRequestStub start(String name) throws IOException, MALException {
 		LOG.entering(getClass().getName(), "start");
 		
@@ -79,6 +86,11 @@ public class PlanningRequestConsumerFactory extends PlanningRequestFactory {
 		return stub;
 	}
 
+	/**
+	 * Stop (dispose) PR Consumer.
+	 * @param cons
+	 * @throws MALException
+	 */
 	public void stop(PlanningRequestStub cons) throws MALException {
 		LOG.entering(getClass().getName(), "stop");
 		

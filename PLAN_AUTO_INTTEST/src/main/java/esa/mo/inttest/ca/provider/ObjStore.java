@@ -26,7 +26,7 @@ public class ObjStore {
 	/**
 	 * Mapping object to object Id. Plus ElementList factory for that Element.
 	 */
-	public static class ObjPairs {
+	public static final class ObjPairs {
 		protected Map<ArchiveDetails, Element> idMap = new HashMap<ArchiveDetails, Element>();
 		@SuppressWarnings("rawtypes")
 		protected ElementList factory = null;
@@ -35,7 +35,7 @@ public class ObjStore {
 	/**
 	 * Mapping objects to domain.
 	 */
-	public static class TypeDomains {
+	public static final class TypeDomains {
 		protected Map<IdentifierList, ObjPairs> domMap = new HashMap<IdentifierList, ObjPairs>();
 	}
 	

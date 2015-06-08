@@ -64,6 +64,13 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 		return cons;
 	}
 	
+	/**
+	 * Create (start) Consumer.
+	 * @param name
+	 * @return
+	 * @throws IOException
+	 * @throws MALException
+	 */
 	public ArchiveStub start(String name) throws IOException, MALException {
 		LOG.entering(getClass().getName(), "start");
 		
@@ -78,6 +85,11 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 		return stub;
 	}
 	
+	/**
+	 * Dispose (stop) Consumer.
+	 * @param cons
+	 * @throws MALException
+	 */
 	public void stop(ArchiveStub cons) throws MALException {
 		LOG.entering(getClass().getName(), "stop");
 		

@@ -87,12 +87,4 @@ public class BepiColomboConsumerTest {
 		PlanningRequestStatusDetails prStat = bepi.crf();
 		assertNotNull(prStat);
 	}
-	
-	@Test
-	public void testCrrf() throws MALException, MALInteractionException, ParseException {
-		PlanningRequestStatusDetails prStat = bepi.crrf();
-		assertNotNull(prStat);
-		// TODO not sure what to test for
-		assertFalse(0L == prStat.getPrInstId());
-	}
 }

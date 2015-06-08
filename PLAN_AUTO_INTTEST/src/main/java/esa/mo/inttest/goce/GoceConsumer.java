@@ -379,6 +379,13 @@ public class GoceConsumer {
 		return id;
 	}
 
+	/**
+	 * Creates structures from SIST example and submits them to SCH provider.
+	 * 
+	 * @throws MALException
+	 * @throws MALInteractionException
+	 * @throws ParseException
+	 */
 	public void sist() throws MALException, MALInteractionException, ParseException {
 		
 		StationScheduleIncrementFile sist = new StationScheduleIncrementFile();

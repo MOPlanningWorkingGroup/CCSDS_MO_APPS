@@ -248,6 +248,11 @@ public final class Dumper {
 		return s.toString();
 	}
 	
+	/**
+	 * Outputs PR definitions list.
+	 * @param prdl
+	 * @return
+	 */
 	public static String prDefs(PlanningRequestDefinitionDetailsList prdl) {
 		StringBuilder s = new StringBuilder();
 		if (null != prdl) {
@@ -527,7 +532,7 @@ public final class Dumper {
 	}
 	
 	/**
-	 * Outputs Object Types list.
+	 * Outputs ObjectTypes list.
 	 * @param ot
 	 * @return
 	 */
@@ -573,7 +578,7 @@ public final class Dumper {
 	}
 	
 	/**
-	 * Outputs Object Ids list.
+	 * Outputs ObjectIds list.
 	 * @param oil
 	 * @return
 	 */
@@ -823,7 +828,7 @@ public final class Dumper {
 	}
 	
 	/**
-	 * Outputs Schedule Definition.
+	 * Outputs Schedule definition.
 	 * @param sdl
 	 * @return
 	 */
@@ -950,7 +955,7 @@ public final class Dumper {
 	}
 	
 	/**
-	 * Outputs ScheduleStatus.
+	 * Outputs Schedule status.
 	 * @param ss
 	 * @return
 	 */
@@ -973,7 +978,7 @@ public final class Dumper {
 	}
 	
 	/**
-	 * Outputs ScheduleStatuses list.
+	 * Outputs Schedule statuses list.
 	 * @param ssl
 	 * @return
 	 */
@@ -1020,7 +1025,7 @@ public final class Dumper {
 	}
 	
 	/**
-	 * Outputs Archive Details list.
+	 * Outputs ArchiveDetails list.
 	 * @param adl
 	 * @return
 	 */

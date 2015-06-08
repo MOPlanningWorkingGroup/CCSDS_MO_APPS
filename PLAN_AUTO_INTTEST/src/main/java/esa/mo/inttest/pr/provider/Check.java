@@ -504,6 +504,13 @@ public class Check {
 		}
 	}
 	
+	/**
+	 * Verify that PR instances are valid for addition.
+	 * @param insts
+	 * @param prDefs
+	 * @param store
+	 * @throws MALException
+	 */
 	public static void addPrInsts(PlanningRequestInstanceDetailsList insts, DefStore prDefs,
 			InstStore store) throws MALException {
 		for (int i = 0; i < insts.size(); ++i) {
@@ -549,6 +556,14 @@ public class Check {
 		}
 	}
 
+	/**
+	 * Verify that PR instances are valid for update.
+	 * @param insts
+	 * @param prDefs
+	 * @param store
+	 * @return
+	 * @throws MALException
+	 */
 	public static List<InstStore.PrItem> updatePrInsts(PlanningRequestInstanceDetailsList insts,
 			DefStore prDefs, InstStore store) throws MALException {
 		List<InstStore.PrItem> items = new ArrayList<InstStore.PrItem>();
@@ -566,6 +581,13 @@ public class Check {
 		return items;
 	}
 
+	/**
+	 * Verify that PR instances exist.
+	 * @param ids
+	 * @param store
+	 * @return
+	 * @throws MALException
+	 */
 	public static List<InstStore.PrItem> prInstsExist(LongList ids, InstStore store) throws MALException {
 		List<InstStore.PrItem> items = new ArrayList<InstStore.PrItem>();
 		for (int i = 0; i < ids.size(); ++i) {
