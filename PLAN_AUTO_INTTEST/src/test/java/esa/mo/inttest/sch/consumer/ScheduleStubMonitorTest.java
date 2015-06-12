@@ -14,6 +14,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
@@ -24,9 +26,14 @@ import org.ccsds.moims.mo.mal.MALStandardError;
 import org.ccsds.moims.mo.mal.structures.Identifier;
 import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
+import org.ccsds.moims.mo.mal.structures.Time;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.ccsds.moims.mo.mal.transport.MALNotifyBody;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimeTrigger;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetails;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TriggerName;
 import org.junit.Test;
 
 import esa.mo.inttest.Util;
@@ -240,8 +247,16 @@ public class ScheduleStubMonitorTest extends ScheduleStubTestBase {
 		
 		schMon.clear(); // clear submit info
 		
-		schInst.setScheduleType(ScheduleType.INCREMENT_UPDATE);
-		schInst.setComment("new modified comment");
+		TimingDetailsList timings = new TimingDetailsList();
+		timings.add(new TimingDetails(TriggerName.EARLIEST_START, new TimeTrigger(new Time(), null),
+				null, null, null, null, null));
+		
+		ScheduleItemInstanceDetailsList items = new ScheduleItemInstanceDetailsList();
+		items.add(new ScheduleItemInstanceDetails(2L, schInstId,
+				null, null, timings, null));
+		
+		schInst.setScheduleType(ScheduleType.INCREMENT_ADD);
+		schInst.setScheduleItems(items);
 		
 		ScheduleInstanceDetailsList changes = new ScheduleInstanceDetailsList();
 		changes.add(schInst);

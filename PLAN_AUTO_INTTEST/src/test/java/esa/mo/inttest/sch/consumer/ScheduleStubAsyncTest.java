@@ -210,7 +210,7 @@ public class ScheduleStubAsyncTest extends ScheduleStubTestBase {
 		
 		submitSchedule(sch);
 		
-		sch.setScheduleType(ScheduleType.INCREMENT_UPDATE);
+		sch.setScheduleType(ScheduleType.INCREMENT_ADD);
 		sch.setComment("new modified comment");
 		
 		ScheduleInstanceDetailsList changes = new ScheduleInstanceDetailsList();

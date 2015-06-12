@@ -1,10 +1,10 @@
-package esa.mo.inttest.ca.consumer;
+package esa.mo.inttest.ev.subscriber;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import org.ccsds.moims.mo.com.archive.ArchiveHelper;
-import org.ccsds.moims.mo.com.archive.consumer.ArchiveStub;
+import org.ccsds.moims.mo.com.event.EventHelper;
+import org.ccsds.moims.mo.com.event.consumer.EventStub;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.consumer.MALConsumer;
 import org.ccsds.moims.mo.mal.consumer.MALConsumerManager;
@@ -15,14 +15,14 @@ import org.ccsds.moims.mo.mal.structures.SessionType;
 import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
 
-import esa.mo.inttest.ca.ComArchiveFactory;
+import esa.mo.inttest.ev.EventFactory;
 
 /**
  * COM Archive consumer factory.
  */
-public class ComArchiveConsumerFactory extends ComArchiveFactory {
+public class EventSubscriberFactory extends EventFactory {
 
-	private static final Logger LOG = Logger.getLogger(ComArchiveConsumerFactory.class.getName());
+	private static final Logger LOG = Logger.getLogger(EventSubscriberFactory.class.getName());
 	
 	private MALConsumerManager malConsMgr = null;
 	private URI provUri = null;
@@ -44,8 +44,8 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 		brokerUri = uri;
 	}
 	
-	private ArchiveStub initConsumer(String name) throws MALException {
-		LOG.entering(getClass().getName(), "initConsumer");
+	private EventStub initSubscriber(String name) throws MALException {
+		LOG.entering(getClass().getName(), "initSubscriber");
 		
 		String consName = (null != name && !name.isEmpty()) ? name : "CaCons";
 		Blob authId = new Blob("".getBytes());
@@ -56,23 +56,23 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 		UInteger priority = new UInteger(0L);
 		
 		MALConsumer malCons = malConsMgr.createConsumer(consName, provUri, brokerUri,
-				ArchiveHelper.ARCHIVE_SERVICE, authId, domain, network, sessionType, sessionName,
+				EventHelper.EVENT_SERVICE, authId, domain, network, sessionType, sessionName,
 				qos, System.getProperties(), priority);
 		
-		ArchiveStub cons = new ArchiveStub(malCons);
+		EventStub stub = new EventStub(malCons);
 		
-		LOG.exiting(getClass().getName(), "initConsumer");
-		return cons;
+		LOG.exiting(getClass().getName(), "initSubscriber");
+		return stub;
 	}
 	
 	/**
-	 * Create (start) Consumer.
+	 * Create (start) Subscriber.
 	 * @param name
 	 * @return
 	 * @throws IOException
 	 * @throws MALException
 	 */
-	public ArchiveStub start(String name) throws IOException, MALException {
+	public EventStub start(String name) throws IOException, MALException {
 		LOG.entering(getClass().getName(), "start");
 		
 		super.init();
@@ -80,7 +80,7 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 		if (malConsMgr == null) {
 			malConsMgr = malCtx.createConsumerManager();
 		}
-		ArchiveStub stub = initConsumer(name);
+		EventStub stub = initSubscriber(name);
 		
 		LOG.exiting(getClass().getName(), "start");
 		return stub;
@@ -91,11 +91,13 @@ public class ComArchiveConsumerFactory extends ComArchiveFactory {
 	 * @param cons
 	 * @throws MALException
 	 */
-	public void stop(ArchiveStub cons) throws MALException {
+	public void stop(EventStub cons) throws MALException {
 		LOG.entering(getClass().getName(), "stop");
 		
-		if (cons != null && cons.getConsumer() != null) {
-			cons.getConsumer().close();
+		if (cons != null) {
+			if (cons.getConsumer() != null) {
+				cons.getConsumer().close();
+			}
 		}
 		if (malConsMgr != null) {
 			malConsMgr.close();

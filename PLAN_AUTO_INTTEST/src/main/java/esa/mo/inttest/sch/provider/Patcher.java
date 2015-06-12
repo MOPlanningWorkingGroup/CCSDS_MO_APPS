@@ -10,7 +10,6 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDet
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
-import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetails;
@@ -84,92 +83,6 @@ public class Patcher {
 		}
 	}
 
-	/**
-	 * Update argument values.
-	 * @param idx
-	 * @param src
-	 * @param trg
-	 * @throws MALException
-	 */
-	protected void updateArgs(ArgumentValueList src, ArgumentValueList trg) {
-		for (int j = 0; j < src.size(); ++j) {
-			ArgumentValue argVal = src.get(j);
-			ArgumentValue trgArg = Util.findArg(argVal.getArgDefName(), trg);
-			// no null check here
-			trgArg.setValue(argVal.getValue());
-		}
-	}
-
-	/**
-	 * Update timings.
-	 * @param idx
-	 * @param src
-	 * @param trg
-	 * @throws MALException
-	 */
-	protected void updateTimings(TimingDetailsList src, TimingDetailsList trg) {
-		for (int j = 0; j < src.size(); ++j) {
-			TimingDetails tim = src.get(j);
-			TimingDetails trgTim = Util.findTiming(tim.getTriggerName(), trg);
-			// no null checks
-			trgTim.setEarliestOffset(tim.getEarliestOffset());
-			trgTim.setEventTrigger(tim.getEventTrigger());
-			trgTim.setLatestOffset(tim.getLatestOffset());
-			trgTim.setRepeat(tim.getRepeat());
-			trgTim.setSeparation(tim.getSeparation());
-			trgTim.setTimeTrigger(tim.getTimeTrigger());
-		}
-	}
-
-	/**
-	 * Update schedule items.
-	 * @param idx
-	 * @param src
-	 * @param trg
-	 * @throws MALException
-	 */
-	protected void updateItems(ScheduleItemInstanceDetailsList src, ScheduleItemInstanceDetailsList trg) {
-		for (int j = 0; j < src.size(); ++j) {
-			ScheduleItemInstanceDetails item = src.get(j);
-			ScheduleItemInstanceDetails trgIt = Util.findItem(item.getId(), trg);
-			// dont change schedule id
-			// no null checks
-			trgIt.setArgumentTypes(item.getArgumentTypes());
-			trgIt.setArgumentValues(item.getArgumentValues());
-			trgIt.setDelegateItem(item.getDelegateItem());
-			trgIt.setTimingConstraints(item.getTimingConstraints());
-		}
-	}
-
-	protected void patchUpdate(Map<Long, ScheduleStatusDetails> mods,
-			ScheduleInstanceDetails srcSch, SchItem it) {
-		// update fields
-		// can't update def id
-//		if (null != srcSch.getSchDefId()) {
-//			it.sch.setSchDefId(srcSch.getSchDefId());
-//			mods.put(it.sch.getId(), it.stat);
-//		}
-		if (null != srcSch.getComment()) {
-			it.sch.setComment(srcSch.getComment());
-			mods.put(it.sch.getId(), it.stat);
-		}
-		if (null != srcSch.getArgumentValues() && !srcSch.getArgumentValues().isEmpty()) {
-			// have something to update
-			updateArgs(srcSch.getArgumentValues(), it.sch.getArgumentValues());
-			mods.put(it.sch.getId(), it.stat);
-		}
-		if (null != srcSch.getTimingConstraints() && !srcSch.getTimingConstraints().isEmpty()) {
-			// have something to update
-			updateTimings(srcSch.getTimingConstraints(), it.sch.getTimingConstraints());
-			mods.put(it.sch.getId(), it.stat);
-		}
-		if (null != srcSch.getScheduleItems() && !srcSch.getScheduleItems().isEmpty()) {
-			// have something to update
-			updateItems(srcSch.getScheduleItems(), it.sch.getScheduleItems());
-			mods.put(it.sch.getId(), it.stat);
-		}
-	}
-
 	protected void addArgs(ArgumentValueList src, ArgumentValueList trg) {
 		for (int j = 0; j < src.size(); ++j) {
 			ArgumentValue srcArg = src.get(j);
@@ -234,14 +147,6 @@ public class Patcher {
 			if (ScheduleType.INCREMENT_REMOVE == srcSch.getScheduleType()) {
 				SchItem it = store.findSchItem(srcSch.getId());
 				patchRemove(mods, srcSch, it);
-			}
-		}
-		// updates
-		for (int i = 0; i < changes.size(); ++i) {
-			ScheduleInstanceDetails srcSch = changes.get(i);
-			if (ScheduleType.INCREMENT_UPDATE == srcSch.getScheduleType()) {
-				SchItem it = store.findSchItem(srcSch.getId());
-				patchUpdate(mods, srcSch, it);
 			}
 		}
 		// additions

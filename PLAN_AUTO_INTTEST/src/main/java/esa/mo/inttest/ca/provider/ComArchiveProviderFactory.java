@@ -14,6 +14,8 @@ import org.ccsds.moims.mo.mal.structures.UInteger;
 import org.ccsds.moims.mo.mal.structures.URI;
 
 import esa.mo.inttest.ca.ComArchiveFactory;
+import esa.mo.inttest.ev.publisher.EventPublisher;
+import esa.mo.inttest.ev.subscriber.EventSubscriber;
 
 /**
  * COM Archive provider factory.
@@ -33,6 +35,26 @@ public class ComArchiveProviderFactory extends ComArchiveFactory {
 	 */
 	public void setBrokerUri(URI broker) {
 		brokerUri = broker;
+	}
+	
+	public void setEventSubscriber(EventSubscriber evSub) throws MALException, MALInteractionException {
+		if (null != prov) {
+			prov.setEventSubscriber(evSub);
+		}
+	}
+	
+	public EventSubscriber getEventSubscriber() {
+		return (null != prov) ? prov.getEventSubscriber() : null;
+	}
+	
+	public void setEventPublisher(EventPublisher evPub) throws MALException, MALInteractionException {
+		if (null != prov) {
+			prov.setEventPublisher(evPub);
+		}
+	}
+	
+	public EventPublisher getEventPublisher() {
+		return (null != prov) ? prov.getEventPublisher() : null;
 	}
 	
 	/**

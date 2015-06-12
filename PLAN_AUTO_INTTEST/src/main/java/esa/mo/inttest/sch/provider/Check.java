@@ -153,8 +153,6 @@ public class Check {
 		boolean accepted = false;
 		if (ScheduleType.INCREMENT_REMOVE == ct) {
 			accepted = true;
-		} else if (ScheduleType.INCREMENT_UPDATE == ct) {
-			accepted = true;
 		} else if (ScheduleType.INCREMENT_ADD == ct) {
 			accepted = true;
 		}
@@ -262,7 +260,6 @@ public class Check {
 //			schItemSchId(i, j, item.getSchInstId(), sch.getId()); // FIXME ignore, overwrite?
 			// item doesn't have definition
 			schItemArgs(i, j, item);
-//			schItemNoExist(i, j, item.getId(), insts);
 			ScheduleItemInstanceDetails item2 = Util.findItem(item.getId(), dst);
 			if (null != item2) {
 				throw new MALException(pre+"schedule instance[" + i + "].item[" + j + "] alread exists, id: "+item.getId());
@@ -287,8 +284,7 @@ public class Check {
 			if (null == it) {
 				throw new MALException("can't find schedule instance[" + i + "] to change, id: " + sch.getId());
 			}
-			if (ScheduleType.INCREMENT_REMOVE == sch.getScheduleType() ||
-					ScheduleType.INCREMENT_UPDATE == sch.getScheduleType()) {
+			if (ScheduleType.INCREMENT_REMOVE == sch.getScheduleType()) {
 				schArgs(i, sch.getArgumentValues(), it.sch.getArgumentValues(), pre);
 				schTims(i, sch.getTimingConstraints(), it.sch.getTimingConstraints(), pre);
 				schItems(i, sch.getScheduleItems(), it.sch.getScheduleItems(), insts, pre);
@@ -375,18 +371,6 @@ public class Check {
 			throw new MALException("schedule instance[" + i + "] already exists, id: " + id);
 		}
 	}
-
-//	protected static void schItem(int i, int j, ScheduleItemInstanceDetails item) throws MALException {
-//		if (null == item) {
-//			throw new MALException("schedule instance[" + i + "].item[" + j + "] is null");
-//		}
-//	}
-
-//	protected static void schItemId(int i, int j, Long id) throws MALException {
-//		if (null == id) {
-//			throw new MALException("schedule instance[" + i + "].item[" + j + "].id is null");
-//		}
-//	}
 
 	protected static void schItemSchId(int i, int j, Long itemSchId, Long schId) throws MALException {
 		if (itemSchId != schId) {

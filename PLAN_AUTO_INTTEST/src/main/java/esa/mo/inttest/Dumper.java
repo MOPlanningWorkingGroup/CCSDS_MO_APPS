@@ -17,6 +17,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetails;
 import org.ccsds.moims.mo.com.archive.structures.ArchiveDetailsList;
+import org.ccsds.moims.mo.com.structures.ObjectDetails;
+import org.ccsds.moims.mo.com.structures.ObjectDetailsList;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectIdList;
 import org.ccsds.moims.mo.com.structures.ObjectKey;
@@ -521,6 +523,37 @@ public final class Dumper {
 	 */
 	public static String updHdrs(UpdateHeaderList uhl) {
 		return dumpUpdHdrs(uhl, STEP);
+	}
+	
+	protected static String dumpObj(ObjectDetails od, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != od) {
+			s.append("{\n");
+			s.append(ind).append(STEP).append("source=").append(dumpObjId(od.getSource(), ind+STEP)).append(",\n");
+			s.append(ind).append(STEP).append("related=").append(od.getRelated()).append("\n");
+			s.append(ind).append("}");
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	protected static String dumpObjs(ObjectDetailsList odl, String ind) {
+		StringBuilder s = new StringBuilder();
+		if (null != odl) {
+			openList(s, odl);
+			for (int i = 0; i < odl.size(); ++i) {
+				s.append(ind).append(STEP).append(i).append(": ").append(dumpObj(odl.get(i), ind+STEP)).append(",\n");
+			}
+			closeList(s, odl, ind);
+		} else {
+			s.append(NULL);
+		}
+		return s.toString();
+	}
+	
+	public static String objs(ObjectDetailsList odl) {
+		return dumpObjs(odl, STEP);
 	}
 	
 	private static String dumpObjKey(ObjectKey ok, String ind) {

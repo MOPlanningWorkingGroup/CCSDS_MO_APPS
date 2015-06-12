@@ -7,6 +7,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetai
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleDefinitionDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleInstanceDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetails;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
@@ -18,6 +20,7 @@ import org.ccsds.moims.mo.mal.structures.IdentifierList;
 import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Subscription;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
+import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 import org.junit.Test;
 
 public class ScheduleStubTest extends ScheduleStubTestBase {
@@ -140,8 +143,12 @@ public class ScheduleStubTest extends ScheduleStubTestBase {
 	public void testSubmitScheduleIncrement() throws MALException, MALInteractionException {
 		ScheduleInstanceDetails schInst = createAndSubmitSch();
 		
-		schInst.setScheduleType(ScheduleType.INCREMENT_UPDATE);
-		schInst.setComment("new modified comment");
+		ScheduleItemInstanceDetailsList items = new ScheduleItemInstanceDetailsList();
+		items.add(new ScheduleItemInstanceDetails(2L, schInst.getId(),
+				null, null, new TimingDetailsList(), null));
+		
+		schInst.setScheduleType(ScheduleType.INCREMENT_ADD);
+		schInst.setScheduleItems(items);
 		
 		ScheduleInstanceDetailsList changes = new ScheduleInstanceDetailsList();
 		changes.add(schInst);
