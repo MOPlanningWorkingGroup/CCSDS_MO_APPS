@@ -68,7 +68,7 @@ public class PlanningRequestConsumer extends PlanningRequestAdapter {
 	@SuppressWarnings("rawtypes")
 	public void monitorPlanningRequestsNotifyReceived(MALMessageHeader msgHdr, Identifier id, UpdateHeaderList updHdrs,
 			ObjectIdList objIds, PlanningRequestStatusDetailsList prStats, Map qosProps) {
-		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHeaders, List:objIds, List:schStatuses)" +
+		LOG.log(Level.INFO, "{4}.monitorPlanningRequestNotifyReceived(id={0}, List:updHeaders, List:objIds, List:prStatuses)" +
 				"\n  updHeaders[]={1}\n  objIds[]={2}\n  prStatuses[]={3}",
 				new Object[] { id, Dumper.updHdrs(updHdrs), Dumper.objIds(objIds), Dumper.prStats(prStats),
 				Dumper.fromBroker(broker, msgHdr) });
