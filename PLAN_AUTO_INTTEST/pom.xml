@@ -20,7 +20,9 @@
     <ccsds.specification.download.ref-skip>false</ccsds.specification.download.ref-skip>
     <spring.version>3.1.1.RELEASE</spring.version>
     <junit.version>4.11</junit.version>
+    <!-- those two below go in pair -->
     <log2file.value>false</log2file.value>
+    <skipLog2zip.value>true</skipLog2zip.value>
   </properties>
   
   <dependencies>
@@ -75,6 +77,7 @@
       <id>gen-log-files</id>
       <properties>
         <log2file.value>true</log2file.value>
+        <skipLog2zip.value>false</skipLog2zip.value>
       </properties>
     </profile>
   </profiles>
@@ -85,6 +88,7 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -94,6 +98,26 @@
             <log2file>${log2file.value}</log2file>
           </systemPropertyVariables>
         </configuration>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+<!--         <version>2.5.3</version> -->
+        <executions>
+          <execution>
+            <id>assemble-demo-logs</id>
+            <phase>test</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <skipAssembly>${skipLog2zip.value}</skipAssembly>
+              <descriptors>
+                <descriptor>src/test/resources/assemble-demo-logs.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
