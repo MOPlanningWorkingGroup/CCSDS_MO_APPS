@@ -16,6 +16,7 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemInstanceDet
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleItemStatusDetailsList;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetails;
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsList;
+import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
 import org.ccsds.moims.mo.com.structures.ObjectId;
 import org.ccsds.moims.mo.com.structures.ObjectTypeList;
 import org.ccsds.moims.mo.mal.MALException;
@@ -27,6 +28,7 @@ import org.ccsds.moims.mo.mal.structures.LongList;
 import org.ccsds.moims.mo.mal.structures.Union;
 import org.ccsds.moims.mo.mal.structures.UpdateType;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentDefinitionDetailsList;
+import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
 import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
 import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecord;
@@ -255,6 +257,29 @@ public class ThreeSchedulersDemoTest {
 		return instIds;
 	}
 	
+	protected void patchSchedule(Long id) throws MALException, MALInteractionException {
+		LongList ids = new LongList();
+		ids.add(id);
+		
+		ScheduleInstanceDetailsList scheds = cons2.getStub().getSchedule(ids);
+		ScheduleInstanceDetails schOld = scheds.get(0);
+		
+		ArgumentValueList args2 = new ArgumentValueList();
+		args2.add(new ArgumentValue(new Identifier("arg1"), new Union("test")));
+		
+		// add arg
+		ScheduleInstanceDetails sch2 = new ScheduleInstanceDetails();
+		sch2.setScheduleType(ScheduleType.INCREMENT_ADD); // add or update
+		sch2.setId(schOld.getId()); // required for addition
+		sch2.setSchDefId(schOld.getSchDefId()); // mandatory
+		sch2.setArgumentValues(args2);
+		
+		ScheduleInstanceDetailsList schInc = new ScheduleInstanceDetailsList();
+		schInc.add(sch2);
+		
+		cons2.getStub().submitScheduleIncrement(schInc);
+	}
+	
 	@Test
 	public void test() throws MALException, MALInteractionException {
 		Processor p = new Processor();
@@ -269,6 +294,8 @@ public class ThreeSchedulersDemoTest {
 		registerMonitor(sub3Id, cons3, CLIENT3);
 		
 		LongList instIds = addInstances(defIds);
+		
+		patchSchedule(instIds.get(1));
 		
 		p.acceptSubmitted();
 		

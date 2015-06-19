@@ -230,10 +230,10 @@ public class Check {
 			ArgumentValue arg = src.get(j);
 			schArg(i, j, arg, pre);
 			schArgName(i, j, arg.getArgDefName(), pre);
-			ArgumentValue argVal = Util.findArg(arg.getArgDefName(), dst);
-			if (null != argVal) {
-				throw new MALException(pre+"schedule instance[" + i + "].arg[" + j + "] already has arg, name: " + arg.getArgDefName());
-			}
+//			ArgumentValue argVal = Util.findArg(arg.getArgDefName(), dst);
+//			if (null != argVal) {
+//				throw new MALException(pre+"schedule instance[" + i + "].arg[" + j + "] already has arg, name: " + arg.getArgDefName());
+//			}
 			ArgumentDefinitionDetails argDef = schArgDefExists(i, j, arg.getArgDefName(), def.getArgumentDefs());
 			schArgVal(i, j, arg.getValue(), argDef);
 		}

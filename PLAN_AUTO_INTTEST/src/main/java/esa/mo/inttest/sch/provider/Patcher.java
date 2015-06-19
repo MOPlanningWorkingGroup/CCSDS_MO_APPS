@@ -12,6 +12,8 @@ import org.ccsds.moims.mo.automation.schedule.structures.ScheduleStatusDetailsLi
 import org.ccsds.moims.mo.automation.schedule.structures.ScheduleType;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValue;
 import org.ccsds.moims.mo.planningdatatypes.structures.ArgumentValueList;
+import org.ccsds.moims.mo.planningdatatypes.structures.InstanceState;
+import org.ccsds.moims.mo.planningdatatypes.structures.StatusRecordList;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetails;
 import org.ccsds.moims.mo.planningdatatypes.structures.TimingDetailsList;
 
@@ -86,6 +88,10 @@ public class Patcher {
 	protected void addArgs(ArgumentValueList src, ArgumentValueList trg) {
 		for (int j = 0; j < src.size(); ++j) {
 			ArgumentValue srcArg = src.get(j);
+			ArgumentValue trgArg = Util.findArg(srcArg.getArgDefName(), trg);
+			if (null != trgArg) {
+				trg.remove(trgArg);
+			}
 			trg.add(srcArg);
 		}
 	}
@@ -93,6 +99,10 @@ public class Patcher {
 	protected void addTimings(TimingDetailsList src, TimingDetailsList trg) {
 		for (int j = 0; j < src.size(); ++j) {
 			TimingDetails srcTim = src.get(j);
+			TimingDetails trgTim = Util.findTiming(srcTim.getTriggerName(), trg);
+			if (null != trgTim) {
+				trg.remove(trgTim);
+			}
 			trg.add(srcTim);
 		}
 	}
@@ -100,6 +110,10 @@ public class Patcher {
 	protected void addItems(ScheduleItemInstanceDetailsList src, ScheduleItemInstanceDetailsList trg) {
 		for (int j = 0; j < src.size(); ++j) {
 			ScheduleItemInstanceDetails srcItem = src.get(j);
+			ScheduleItemInstanceDetails trgItem = Util.findItem(srcItem.getId(), trg);
+			if (null != trgItem) {
+				trg.remove(trgItem);
+			}
 			trg.add(srcItem);
 		}
 	}
@@ -141,26 +155,26 @@ public class Patcher {
 	public ScheduleStatusDetailsList patch(ScheduleInstanceDetailsList changes) {
 		// TODO changed item statuses
 		Map<Long, ScheduleStatusDetails> mods = new HashMap<Long, ScheduleStatusDetails>();
-		// removals
+		
 		for (int i = 0; i < changes.size(); ++i) {
 			ScheduleInstanceDetails srcSch = changes.get(i);
 			if (ScheduleType.INCREMENT_REMOVE == srcSch.getScheduleType()) {
 				SchItem it = store.findSchItem(srcSch.getId());
 				patchRemove(mods, srcSch, it);
-			}
-		}
-		// additions
-		for (int i = 0; i < changes.size(); ++i) {
-			ScheduleInstanceDetails srcSch = changes.get(i);
-			if (ScheduleType.INCREMENT_ADD == srcSch.getScheduleType()) {
+			} else if (ScheduleType.INCREMENT_ADD == srcSch.getScheduleType()) {
 				SchItem it = store.findSchItem(srcSch.getId());
 				patchAdd(mods, srcSch, it);
 			}
 		}
+		
 		// convert modifications list
 		ScheduleStatusDetailsList schStats = new ScheduleStatusDetailsList();
 		for (ScheduleStatusDetails schStat: mods.values()) {
-			schStats.add(schStat);
+			// modify status records list and return changed status
+			StatusRecordList srl = new StatusRecordList();
+			srl.add(Util.addOrUpdateStatus(schStat, InstanceState.LAST_MODIFIED, Util.currentTime(), "patched"));
+			ScheduleStatusDetails ss = new ScheduleStatusDetails(schStat.getSchInstId(), srl, null);
+			schStats.add(ss);
 		}
 		return schStats;
 	}

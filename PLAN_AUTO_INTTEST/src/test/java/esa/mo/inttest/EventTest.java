@@ -67,6 +67,7 @@ import org.ccsds.moims.mo.mal.structures.URI;
 import org.ccsds.moims.mo.mal.structures.UpdateHeaderList;
 import org.ccsds.moims.mo.mal.transport.MALMessageHeader;
 import org.junit.After;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -97,6 +98,7 @@ public class EventTest {
 				Map qosProps)
 		{
 			LOG.log(Level.WARNING, "monitorEventNotifyErrorReceived={0}", err);
+			assertTrue(false);
 		}
 	}
 	

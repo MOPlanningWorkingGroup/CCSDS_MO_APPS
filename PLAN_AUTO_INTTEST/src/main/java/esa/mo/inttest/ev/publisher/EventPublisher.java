@@ -6,11 +6,16 @@ import java.util.logging.Logger;
 
 import org.ccsds.moims.mo.com.event.provider.EventInheritanceSkeleton;
 import org.ccsds.moims.mo.com.event.provider.MonitorEventPublisher;
+import org.ccsds.moims.mo.com.structures.ObjectDetails;
 import org.ccsds.moims.mo.com.structures.ObjectDetailsList;
+import org.ccsds.moims.mo.com.structures.ObjectId;
+import org.ccsds.moims.mo.com.structures.ObjectKey;
+import org.ccsds.moims.mo.com.structures.ObjectType;
 import org.ccsds.moims.mo.mal.MALException;
 import org.ccsds.moims.mo.mal.MALInteractionException;
 import org.ccsds.moims.mo.mal.provider.MALProvider;
 import org.ccsds.moims.mo.mal.provider.MALPublishInteractionListener;
+import org.ccsds.moims.mo.mal.structures.Element;
 import org.ccsds.moims.mo.mal.structures.ElementList;
 import org.ccsds.moims.mo.mal.structures.EntityKey;
 import org.ccsds.moims.mo.mal.structures.Identifier;
@@ -109,6 +114,7 @@ public class EventPublisher extends EventInheritanceSkeleton implements MALPubli
 	 */
 	@SuppressWarnings("rawtypes")
 	public void publish(ElementList el) throws MALException, MALInteractionException {
+		ElementList<Element> el2 = (ElementList<Element>)el;
 		UpdateHeaderList uhl = new UpdateHeaderList();
 		Time ts = Util.currentTime();
 		URI uri = getProvider().getURI(); // mandatory, dummy
@@ -117,7 +123,11 @@ public class EventPublisher extends EventInheritanceSkeleton implements MALPubli
 		uhl.add(new UpdateHeader(ts, uri, ut, ek));
 		
 		ObjectDetailsList odl = new ObjectDetailsList();
-		odl.add(null);
+		Long relId = null;
+		ObjectType ot = Util.createObjType(el2.get(0));
+		ObjectKey ok = new ObjectKey(domain, null);
+		ObjectId srcId = new ObjectId(ot, ok);
+		odl.add(new ObjectDetails(relId, srcId));
 		
 		evPub.publish(uhl, odl, el);
 	}
