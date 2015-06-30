@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * This source code is proprietary of CGI Estonia AS and covered by copyright.
+ * European Space Agency is granted a non-exclusive, free, worldwide license
+ * to use this source code without the right to commercialize it. 
+ * You may not use this code without prior written consent of CGI Estonia AS.
+ *******************************************************************************/
 package esa.mo.inttest.sch;
 
 import java.util.ArrayList;
